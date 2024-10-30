@@ -7,6 +7,7 @@ export const www = new sst.aws.Astro("Site", {
     dns: sst.cloudflare.dns(),
   },
   path: "./packages/www",
+  buildCommand: "bun run build",
   link: [api],
 });
 
