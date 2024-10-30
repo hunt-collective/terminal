@@ -13,7 +13,7 @@
   ],
   "dependencies": {
     "patch-package": "^8.0.0",
-    "sst": "3.2.12"
+    "sst": "3.2.70"
   },
   "devDependencies": {
     "typescript": "5.5.4"
