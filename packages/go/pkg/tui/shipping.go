@@ -6,7 +6,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	terminal "github.com/terminaldotshop/terminal-sdk-go"
-	"github.com/terminaldotshop/terminal-sdk-go/shared"
 	"github.com/terminaldotshop/terminal/go/pkg/api"
 	"github.com/terminaldotshop/terminal/go/pkg/tui/validate"
 )
@@ -271,7 +270,7 @@ func (m model) shippingFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 				return VisibleError{message: "phone is required for international orders"}
 			}
 
-			params := terminal.UserShippingNewParams{Address: shared.AddressParam{
+			params := terminal.UserShippingNewParams{
 				Name:     terminal.String(m.state.shipping.input.name),
 				Street1:  terminal.String(m.state.shipping.input.street1),
 				Street2:  terminal.String(m.state.shipping.input.street2),
@@ -280,7 +279,7 @@ func (m model) shippingFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 				Country:  terminal.String(m.state.shipping.input.country),
 				Zip:      terminal.String(m.state.shipping.input.zip),
 				Phone:    terminal.String(m.state.shipping.input.phone),
-			}}
+			}
 			response, err := m.client.User.Shipping.New(m.context, params)
 			if err != nil {
 				log.Error(err)

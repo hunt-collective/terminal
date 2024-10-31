@@ -5,6 +5,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/log"
 	terminal "github.com/terminaldotshop/terminal-sdk-go"
 	"github.com/terminaldotshop/terminal-sdk-go/option"
 	"github.com/terminaldotshop/terminal/go/pkg/api"
@@ -45,6 +46,7 @@ func (m model) LoadCmds() []tea.Cmd {
 	cmds = append(cmds, func() tea.Msg {
 		products, err := m.client.Product.List(m.context)
 		if err != nil {
+			log.Error(err)
 		}
 		return products.Result
 	})
