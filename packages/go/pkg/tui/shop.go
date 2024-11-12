@@ -6,6 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/terminaldotshop/terminal-sdk-go/shared"
 	"github.com/terminaldotshop/terminal/go/pkg/tui/theme"
 )
 
@@ -35,18 +36,28 @@ func (m model) ShopSwitch() (model, tea.Cmd) {
 func (m model) ShopUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		product := m.products[m.state.shop.selected]
 		switch msg.String() {
 		case "tab", "down", "j":
 			return m.UpdateSelected(false)
 		case "shift+tab", "up", "k":
 			return m.UpdateSelected(true)
 		case "+", "=", "right", "l":
+			if product.Subscription == shared.ProductSubscriptionRequired {
+				return m, nil
+			}
 			productVariantID := m.products[m.state.shop.selected].Variants[0].ID
 			return m.UpdateCart(productVariantID, 1)
 		case "-", "left", "h":
+			if product.Subscription == shared.ProductSubscriptionRequired {
+				return m, nil
+			}
 			productVariantID := m.products[m.state.shop.selected].Variants[0].ID
 			return m.UpdateCart(productVariantID, -1)
 		case "enter":
+			if product.Subscription == shared.ProductSubscriptionRequired {
+				return m, nil
+			}
 			return m.CartSwitch()
 		}
 	}
@@ -58,6 +69,13 @@ func (m model) ShopView() string {
 	base := m.theme.Base().Render
 	accent := m.theme.TextAccent().Render
 	bold := m.theme.TextHighlight().Bold(true).Render
+	button := m.theme.Base().
+		PaddingLeft(1).
+		PaddingRight(1).
+		Align(lipgloss.Center).
+		Background(m.theme.Accent()).
+		Foreground(m.theme.Background()).
+		Render
 
 	product := m.products[m.state.shop.selected]
 	variantID := product.Variants[0].ID
@@ -102,6 +120,10 @@ func (m model) ShopView() string {
 			Foreground(m.theme.Accent())
 	}
 
+	if product.Subscription == shared.ProductSubscriptionRequired {
+		quantity = button("subscribe") + " enter"
+	}
+
 	// TODO: do we need a category header?
 	// products.WriteString(menuItem.Copy().Background(m.theme.Body()).Foreground(m.theme.Accent()).Render("coffee beans"))
 	// products.WriteString("\n\n")
@@ -134,10 +156,20 @@ func (m model) ShopView() string {
 	// ratingWidth := lipgloss.Width(rating)
 	// ratingSpace := m.theme.Base().Width(detailWidth - ratingWidth - nameWidth - 2).Render()
 
+	// join all product.Variants into a string separated by `/` chars
+	variantNames := ""
+	for _, variant := range product.Variants {
+		if variant.Name == product.Variants[len(product.Variants)-1].Name {
+			variantNames += variant.Name
+		} else {
+			variantNames += variant.Name + "/"
+		}
+	}
+
 	detail := lipgloss.JoinVertical(
 		lipgloss.Left,
 		name, //+ratingSpace+rating,
-		base(strings.ToLower(product.Variants[0].Name)),
+		base(strings.ToLower(variantNames)),
 		"",
 		bold(fmt.Sprintf("$%.2v", product.Variants[0].Price/100)),
 		"",
