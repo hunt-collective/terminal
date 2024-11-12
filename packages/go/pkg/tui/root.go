@@ -109,7 +109,9 @@ func NewModel(
 				input: paymentInput{},
 			},
 			shipping: shippingState{
-				input: shippingInput{},
+				input: shippingInput{
+					country: "US",
+				},
 			},
 			footer: footerState{
 				commands: []footerCommand{},
