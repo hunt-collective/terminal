@@ -42,6 +42,15 @@ type SelectedCardUpdatedMsg struct {
 }
 
 func (m model) GetSelectedCard() *terminal.Card {
+	if m.IsSubscribing() {
+		for _, card := range m.cards {
+			if card.ID == m.subscription.CardID.Value {
+				return &card
+			}
+		}
+		return nil
+	}
+
 	for _, card := range m.cards {
 		if card.ID == m.cart.CardID {
 			return &card
@@ -51,7 +60,7 @@ func (m model) GetSelectedCard() *terminal.Card {
 }
 
 func (m model) PaymentSwitch() (model, tea.Cmd) {
-	if m.IsCartEmpty() {
+	if m.IsCartEmpty() && !m.IsSubscribing() {
 		return m, nil
 	}
 	m = m.SwitchPage(paymentPage)
@@ -137,7 +146,6 @@ func (m model) PaymentSwitch() (model, tea.Cmd) {
 	}
 
 	m = m.updatePaymentForm()
-
 	return m, m.state.payment.form.Init()
 }
 
@@ -200,6 +208,10 @@ func (m model) previousPaymentMethod() (model, tea.Cmd) {
 }
 
 func (m model) SetCard(cardID string) {
+	if m.IsSubscribing() {
+		return
+	}
+
 	params := terminal.CartSetCardParams{CardID: terminal.F(cardID)}
 	_, err := m.client.Cart.SetCard(m.context, params)
 	if err != nil {
@@ -209,12 +221,10 @@ func (m model) SetCard(cardID string) {
 func (m model) choosePaymentMethod() (model, tea.Cmd) {
 	if m.state.payment.selected < len(m.cards) { // existing method
 		cardID := m.cards[m.state.payment.selected].ID
-		m.cart.CardID = cardID
-		m, cmd := m.ShippingSwitch()
-		return m, tea.Batch(cmd, func() tea.Msg {
+		return m, func() tea.Msg {
 			m.SetCard(cardID)
-			return &SelectedCardUpdatedMsg{cardID: cardID}
-		})
+			return SelectedCardUpdatedMsg{cardID: cardID}
+		}
 	} else { // new
 		m.state.payment.input = paymentInput{}
 		m.state.payment.view = paymentFormView
@@ -236,7 +246,7 @@ func (m model) paymentListUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "enter":
 			return m.choosePaymentMethod()
 		case "esc":
-			return m.CartSwitch()
+			return m.ShippingSwitch()
 		}
 	}
 
@@ -251,7 +261,7 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 		switch msg.String() {
 		case "esc":
 			if len(m.cards) == 0 {
-				return m.CartSwitch()
+				return m.ShippingSwitch()
 			}
 			m.state.payment.view = paymentListView
 			return m, nil
@@ -269,14 +279,11 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		cards, _ := m.client.Card.List(m.context)
 
-		m, cmd := m.ShippingSwitch()
 		m.cards = cards.Result
-		m.cart.CardID = response.Result
-		return m, tea.Batch(cmd, func() tea.Msg {
-			params := terminal.CartSetCardParams{CardID: terminal.String(response.Result)}
-			m.client.Cart.SetCard(m.context, params)
+		return m, func() tea.Msg {
+			m.SetCard(response.Result)
 			return SelectedCardUpdatedMsg{cardID: response.Result}
-		})
+		}
 
 	case VisibleError:
 		m, cmd := m.PaymentSwitch()
@@ -335,6 +342,16 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) PaymentUpdate(msg tea.Msg) (model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case SelectedCardUpdatedMsg:
+		if m.IsSubscribing() {
+			m.subscription.CardID = terminal.String(msg.cardID)
+		} else {
+			m.cart.CardID = msg.cardID
+		}
+		return m.ConfirmSwitch()
+	}
+
 	if m.state.payment.view == paymentListView {
 		return m.paymentListUpdate(msg)
 	} else {
@@ -388,6 +405,7 @@ func (m model) paymentListView() string {
 
 	return m.theme.Base().Render(lipgloss.JoinVertical(
 		lipgloss.Left,
+		m.paymentCostsView(),
 		lipgloss.JoinVertical(lipgloss.Left, methods...),
 		accent("enter ")+base(hint),
 	))
@@ -396,8 +414,34 @@ func (m model) paymentListView() string {
 func (m model) paymentFormView() string {
 	return m.theme.Base().Render(lipgloss.JoinVertical(
 		lipgloss.Left,
-		"create new payment method:\n",
+		m.paymentCostsView(),
+		"\ncreate new payment method:\n",
 		m.state.payment.form.View(),
 		m.theme.TextError().Render(m.state.payment.error),
 	))
+}
+
+func (m model) paymentCostsView() string {
+	if m.IsSubscribing() {
+		price := m.state.subscribe.product.Variants[m.state.subscribe.selected].Price
+		view := strings.Builder{}
+		view.WriteString(fmt.Sprintf("Subtotal: %s", formatUSD(int(price))) + "\n")
+		view.WriteString(fmt.Sprintf("Shipping: %s", formatUSD(int(0))) + "\n")
+		view.WriteString(
+			m.theme.TextAccent().
+				Render(fmt.Sprintf("Total:    %s", formatUSD(int(price)))),
+		)
+
+		return view.String()
+	}
+
+	view := strings.Builder{}
+	view.WriteString(fmt.Sprintf("Subtotal: %s", formatUSD(int(m.cart.Amount.Subtotal))) + "\n")
+	view.WriteString(fmt.Sprintf("Shipping: %s", formatUSD(int(m.cart.Amount.Shipping))) + "\n")
+	view.WriteString(
+		m.theme.TextAccent().
+			Render(fmt.Sprintf("Total:    %s", formatUSD(int(m.cart.Amount.Subtotal+m.cart.Amount.Shipping)))),
+	)
+
+	return view.String()
 }

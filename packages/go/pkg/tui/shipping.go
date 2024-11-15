@@ -145,6 +145,10 @@ func (m model) previousAddress() (model, tea.Cmd) {
 }
 
 func (m model) SetShipping(shippingID string) error {
+	if m.IsSubscribing() {
+		return nil
+	}
+
 	params := terminal.CartSetShippingParams{ShippingID: terminal.F(shippingID)}
 	_, err := m.client.Cart.SetShipping(m.context, params)
 	if err != nil {
@@ -154,6 +158,15 @@ func (m model) SetShipping(shippingID string) error {
 }
 
 func (m model) GetSelectedAddress() *terminal.Shipping {
+	if m.IsSubscribing() {
+		for _, address := range m.addresses {
+			if address.ID == m.subscription.ShippingID.Value {
+				return &address
+			}
+		}
+		return nil
+	}
+
 	for _, address := range m.addresses {
 		if address.ID == m.cart.ShippingID {
 			return &address
@@ -165,7 +178,7 @@ func (m model) GetSelectedAddress() *terminal.Shipping {
 func (m model) chooseAddress() (model, tea.Cmd) {
 	if m.state.shipping.selected < len(m.addresses) { // existing address
 		shippingID := m.addresses[m.state.shipping.selected].ID
-		m.cart.ShippingID = shippingID
+
 		m.state.shipping.submitting = true
 		return m, func() tea.Msg {
 			err := m.SetShipping(shippingID)
@@ -201,7 +214,11 @@ func (m model) shippingListUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "enter":
 			return m.chooseAddress()
 		case "esc":
-			return m.PaymentSwitch()
+			if m.IsSubscribing() {
+				return m.SubscribeSwitch()
+			} else {
+				return m.CartSwitch()
+			}
 		}
 	}
 
@@ -221,7 +238,6 @@ func (m model) shippingFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 	case ShippingAddressAddedMsg:
 		m.addresses = msg.addresses
-		m.cart.ShippingID = msg.shippingID
 
 		return m, func() tea.Msg {
 			err := m.SetShipping(msg.shippingID)
@@ -297,11 +313,16 @@ func (m model) shippingFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 }
 
 func (m model) ShippingUpdate(msg tea.Msg) (model, tea.Cmd) {
-	switch msg.(type) {
+	switch msg := msg.(type) {
 	case SelectedShippingUpdatedMsg:
-		cart, _ := m.client.Cart.List(m.context)
-		m.cart = cart.Result
-		return m.ConfirmSwitch()
+		if m.IsSubscribing() {
+			m.subscription.ShippingID = terminal.String(msg.shippingID)
+		} else {
+			m.cart.ShippingID = msg.shippingID
+			cart, _ := m.client.Cart.List(m.context)
+			m.cart = cart.Result
+		}
+		return m.PaymentSwitch()
 	}
 
 	if m.state.shipping.view == shippingListView {

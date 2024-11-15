@@ -15,6 +15,7 @@ resources:
       product: Product
       productVariant: ProductVariant
       shipping: UserShipping
+      subscription: Subscription
       user: User
   product:
     methods:
@@ -43,6 +44,10 @@ resources:
     methods:
       get: get /order/{id}
       create: post /order
+  subscription:
+    methods:
+      list: get /subscription
+      create: put /subscription
 package:
   node:
     name: "@terminal/sdk"

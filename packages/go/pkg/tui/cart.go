@@ -188,7 +188,7 @@ func (m model) CartUpdate(msg tea.Msg) (model, tea.Cmd) {
 			if m.IsCartEmpty() {
 				return m, nil
 			}
-			return m.PaymentSwitch()
+			return m.ShippingSwitch()
 		case "esc":
 			return m.ShopSwitch()
 		}

@@ -56,7 +56,8 @@ func (m model) ShopUpdate(msg tea.Msg) (model, tea.Cmd) {
 			return m.UpdateCart(productVariantID, -1)
 		case "enter":
 			if product.Subscription == shared.ProductSubscriptionRequired {
-				return m, nil
+				m.state.subscribe.product = &product
+				return m.SubscribeSwitch()
 			}
 			return m.CartSwitch()
 		}
@@ -73,7 +74,7 @@ func (m model) ShopView() string {
 		PaddingLeft(1).
 		PaddingRight(1).
 		Align(lipgloss.Center).
-		Background(m.theme.Accent()).
+		Background(m.theme.Highlight()).
 		Foreground(m.theme.Background()).
 		Render
 

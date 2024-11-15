@@ -24,6 +24,7 @@ const (
 	shopPage
 	paymentPage
 	cartPage
+	subscribePage
 	shippingPage
 	confirmPage
 	finalPage
@@ -50,6 +51,7 @@ type model struct {
 	addresses       []terminal.Shipping
 	cards           []terminal.Card
 	cart            terminal.Cart
+	subscription    terminal.SubscriptionNewParams
 	renderer        *lipgloss.Renderer
 	theme           theme.Theme
 	fingerprint     string
@@ -67,16 +69,17 @@ type model struct {
 }
 
 type state struct {
-	splash   SplashState
-	cursor   cursorState
-	shipping shippingState
-	shop     shopState
-	footer   footerState
-	cart     cartState
-	payment  paymentState
-	confirm  confirmState
-	faq      faqState
-	menu     menuState
+	splash    SplashState
+	cursor    cursorState
+	shipping  shippingState
+	shop      shopState
+	footer    footerState
+	cart      cartState
+	subscribe subscribeState
+	payment   paymentState
+	confirm   confirmState
+	faq       faqState
+	menu      menuState
 }
 
 type children struct {
@@ -91,18 +94,22 @@ func NewModel(
 	ctx := context.Background()
 
 	result := model{
-		context:     ctx,
-		page:        splashPage,
-		renderer:    renderer,
-		fingerprint: fingerprint,
-		theme:       theme.BasicTheme(renderer, nil),
-		faqs:        LoadFaqs(),
+		context:      ctx,
+		page:         splashPage,
+		renderer:     renderer,
+		fingerprint:  fingerprint,
+		theme:        theme.BasicTheme(renderer, nil),
+		faqs:         LoadFaqs(),
+		subscription: terminal.SubscriptionNewParams{},
 		state: state{
 			splash: SplashState{},
 			shop: shopState{
 				selected: 0,
 			},
 			cart: cartState{
+				selected: 0,
+			},
+			subscribe: subscribeState{
 				selected: 0,
 			},
 			payment: paymentState{
@@ -197,6 +204,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m, cmd = m.ShopUpdate(msg)
 	case cartPage:
 		m, cmd = m.CartUpdate(msg)
+	case subscribePage:
+		m, cmd = m.SubscribeUpdate(msg)
 	case paymentPage:
 		m, cmd = m.PaymentUpdate(msg)
 	case shippingPage:
@@ -220,6 +229,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.page == faqPage
 
 	m.checkout = m.page == cartPage ||
+		m.page == subscribePage ||
 		m.page == paymentPage ||
 		m.page == shippingPage ||
 		m.page == confirmPage
@@ -305,6 +315,8 @@ func (m model) getContent() string {
 		page = m.FaqView()
 	case cartPage:
 		page = m.CartView()
+	case subscribePage:
+		page = m.SubscribeView()
 	case paymentPage:
 		page = m.PaymentView()
 	case shippingPage:

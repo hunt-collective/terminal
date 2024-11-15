@@ -12,7 +12,7 @@ require (
 	github.com/charmbracelet/wish v1.4.0
 	github.com/google/uuid v1.6.0
 	github.com/stripe/stripe-go/v78 v78.2.0
-	github.com/terminaldotshop/terminal-sdk-go v0.1.0-alpha.26
+	github.com/terminaldotshop/terminal-sdk-go v0.1.0-alpha.27
 	golang.org/x/crypto v0.21.0
 )
 

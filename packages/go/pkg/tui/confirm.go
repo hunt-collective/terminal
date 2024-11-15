@@ -31,25 +31,36 @@ func (m model) ConfirmUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
-			return m.ShippingSwitch()
+			return m.PaymentSwitch()
 		case "enter":
 			m.state.confirm.submitting = true
 			return m, func() tea.Msg {
-				order, err := m.client.Order.New(m.context)
-				if err != nil {
-					return VisibleError{
-						message: api.GetErrorMessage(err),
+				if m.IsSubscribing() {
+					subscription, err := m.client.Subscription.New(m.context, m.subscription)
+					if err != nil {
+						return VisibleError{
+							message: api.GetErrorMessage(err),
+						}
 					}
+					return subscription.Result
+				} else {
+					order, err := m.client.Order.New(m.context)
+					if err != nil {
+						return VisibleError{
+							message: api.GetErrorMessage(err),
+						}
+					}
+					return order.Result
 				}
-				return order.Result
 			}
 		}
 	case VisibleError:
 		m.state.confirm.submitting = false
 		m.state.payment.error = msg.message
 		log.Error(msg.message)
-		return m.PaymentSwitch()
+		return m.ShippingSwitch()
 	case terminal.Order:
+	case terminal.Subscription:
 		return m.FinalSwitch()
 	}
 	return m, nil
@@ -59,11 +70,19 @@ func (m model) ConfirmView() string {
 	if m.state.confirm.submitting {
 		return m.theme.Base().Width(m.widthContent).Render("submitting order...")
 	}
+
 	card := m.GetSelectedCard()
 	address := m.GetSelectedAddress().Address
 
 	view := strings.Builder{}
 
+	if m.IsSubscribing() {
+		view.WriteString(
+			m.state.subscribe.product.Name + ": " + m.state.subscribe.product.Variants[m.state.subscribe.selected].Name + "\n",
+		)
+		view.WriteString("Monthly Subscription\n")
+		view.WriteString("\n")
+	}
 	view.WriteString(address.Name + "\n")
 	view.WriteString(address.Street1 + "\n")
 	if address.Street2 != "" {
@@ -72,18 +91,31 @@ func (m model) ConfirmView() string {
 	view.WriteString(
 		address.City + ", " + address.Province + ", " + address.Country + " " + address.Zip + "\n",
 	)
-	view.WriteString("\n")
-	view.WriteString(m.cart.Shipping.Service + "\n")
-	if m.cart.Shipping.Timeframe != "" {
-		view.WriteString(m.cart.Shipping.Timeframe + "\n")
+	if !m.IsSubscribing() {
+		view.WriteString("\n")
+		view.WriteString(m.cart.Shipping.Service + "\n")
+		if m.cart.Shipping.Timeframe != "" {
+			view.WriteString(m.cart.Shipping.Timeframe + "\n")
+		}
 	}
 	view.WriteString("\n")
 	view.WriteString(fmt.Sprintf("CC: %s", formatLast4(card.Last4)) + "\n")
-	view.WriteString(fmt.Sprintf("Subtotal: %s", formatUSD(int(m.cart.Amount.Subtotal))) + "\n")
-	view.WriteString(fmt.Sprintf("Shipping: %s", formatUSD(int(m.cart.Amount.Shipping))) + "\n")
+	var subtotal int
+	var shipping int
+	if m.IsSubscribing() {
+		subtotal = int(m.state.subscribe.product.Variants[m.state.subscribe.selected].Price)
+		shipping = 0
+	} else {
+		subtotal = int(m.cart.Amount.Subtotal)
+		shipping = int(m.cart.Amount.Shipping)
+	}
+	total := subtotal + shipping
+
+	view.WriteString(fmt.Sprintf("Subtotal: %s", formatUSD(subtotal)) + "\n")
+	view.WriteString(fmt.Sprintf("Shipping: %s", formatUSD(shipping)) + "\n")
 	view.WriteString(
 		m.theme.TextAccent().
-			Render(fmt.Sprintf("Total:    %s", formatUSD(int(m.cart.Amount.Subtotal+m.cart.Amount.Shipping))) + "\n"),
+			Render(fmt.Sprintf("Total:    %s", formatUSD(total)) + "\n"),
 	)
 	view.WriteString("\n")
 	view.WriteString(m.theme.TextHighlight().Render("press enter to confirm") + "\n")
