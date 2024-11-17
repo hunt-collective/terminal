@@ -113,8 +113,8 @@ func NewModel(
 		accountPages: []page{
 			ordersPage,
 			subscriptionsPage,
-			// shippingPage,
-			// paymentPage,
+			shippingPage,
+			paymentPage,
 			faqPage,
 			aboutPage,
 		},
@@ -154,6 +154,7 @@ func NewModel(
 	}
 
 	result, _ = result.FaqInit()
+	result, _ = result.ShippingInit()
 	return result, nil
 }
 

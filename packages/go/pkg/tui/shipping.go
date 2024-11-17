@@ -47,15 +47,7 @@ type ShippingAddressAddedMsg struct {
 	addresses  []terminal.Shipping
 }
 
-func (m model) ShippingSwitch() (model, tea.Cmd) {
-	m = m.SwitchPage(shippingPage)
-	m.state.footer.commands = []footerCommand{
-		{key: "esc", value: "back"},
-		{key: "↑/↓", value: "addresses"},
-		{key: "x/del", value: "remove"},
-		{key: "enter", value: "select"},
-	}
-	m.state.shipping.submitting = false
+func (m model) ShippingInit() (model, tea.Cmd) {
 	m.state.shipping.form = huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().
@@ -102,6 +94,18 @@ func (m model) ShippingSwitch() (model, tea.Cmd) {
 		WithTheme(m.theme.Form()).
 		WithShowHelp(false)
 
+	return m, nil
+}
+
+func (m model) ShippingSwitch() (model, tea.Cmd) {
+	m = m.SwitchPage(shippingPage)
+	m.state.footer.commands = []footerCommand{
+		{key: "esc", value: "back"},
+		{key: "↑/↓", value: "addresses"},
+		{key: "x/del", value: "remove"},
+		{key: "enter", value: "select"},
+	}
+	m.state.shipping.submitting = false
 	m.state.shipping.view = shippingListView
 	if len(m.addresses) == 0 {
 		m.state.shipping.view = shippingFormView
@@ -179,6 +183,9 @@ func (m model) GetSelectedAddress() *terminal.Shipping {
 
 func (m model) chooseAddress() (model, tea.Cmd) {
 	if m.state.shipping.selected < len(m.addresses) { // existing address
+		if m.page == accountPage {
+			return m, nil
+		}
 		shippingID := m.addresses[m.state.shipping.selected].ID
 
 		m.state.shipping.submitting = true
@@ -245,6 +252,12 @@ func (m model) shippingListUpdate(msg tea.Msg) (model, tea.Cmd) {
 				return m.chooseAddress()
 			}
 		case "esc":
+			if m.page == accountPage {
+				m.state.account.focused = false
+				m.state.shipping.deleting = nil
+				return m, nil
+			}
+
 			if m.state.shipping.deleting != nil {
 				m.state.shipping.deleting = nil
 			} else if m.IsSubscribing() {
@@ -348,6 +361,10 @@ func (m model) shippingFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 func (m model) ShippingUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case SelectedShippingUpdatedMsg:
+		if m.page == accountPage {
+			break
+		}
+
 		if m.IsSubscribing() {
 			m.subscription.ShippingID = terminal.String(msg.shippingID)
 		} else {
