@@ -14,6 +14,10 @@ declare module "sst" {
       "publicKey": string
       "type": "sst.aws.Auth"
     }
+    "Auth2": {
+      "type": "sst.cloudflare.Worker"
+      "url": string
+    }
     "AuthAuthenticator": {
       "name": string
       "type": "sst.aws.Function"
@@ -22,6 +26,9 @@ declare module "sst" {
     "AuthFingerprintKey": {
       "type": "random.index/randomString.RandomString"
       "value": string
+    }
+    "AuthKV": {
+      "type": "sst.cloudflare.Kv"
     }
     "AuthKeypair": {
       "private": string
@@ -118,6 +125,14 @@ declare module "sst" {
       "id": string
       "secret": string
       "type": "stripe.index/webhookEndpoint.WebhookEndpoint"
+    }
+    "TwitchClientID": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "TwitchClientSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
     }
     "Vpc": {
       "type": "sst.aws.Vpc"

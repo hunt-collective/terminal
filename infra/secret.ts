@@ -7,6 +7,8 @@ export const secret = {
   IntervalKey: new sst.Secret("IntervalKey"),
   GithubClientID: new sst.Secret("GithubClientID"),
   GithubClientSecret: new sst.Secret("GithubClientSecret"),
+  TwitchClientID: new sst.Secret("TwitchClientID"),
+  TwitchClientSecret: new sst.Secret("TwitchClientSecret"),
 };
 
 export const allSecrets = Object.values(secret);

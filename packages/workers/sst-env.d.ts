@@ -112,6 +112,14 @@ declare module "sst" {
       "secret": string
       "type": "stripe.index/webhookEndpoint.WebhookEndpoint"
     }
+    "TwitchClientID": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
+    "TwitchClientSecret": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "Vpc": {
       "type": "sst.aws.Vpc"
     }
@@ -121,6 +129,8 @@ declare module "sst" {
 import * as cloudflare from "@cloudflare/workers-types";
 declare module "sst" {
   export interface Resource {
+    "Auth2": cloudflare.Service
+    "AuthKV": cloudflare.KVNamespace
     "AuthWorker": cloudflare.Service
     "OpenApiWorker": cloudflare.Service
   }
