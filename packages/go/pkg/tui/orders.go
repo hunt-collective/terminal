@@ -57,17 +57,17 @@ func (m model) OrdersUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 func (m model) formatOrderItem(orderItem terminal.OrderItem) string {
 	var product *terminal.Product
-	var variant *terminal.ProductVariant
+	// var variant *terminal.ProductVariant
 	for _, p := range m.products {
 		for _, v := range p.Variants {
 			if v.ID == orderItem.ProductVariantID {
 				product = &p
-				variant = &v
+				// variant = &v
 			}
 		}
 	}
 
-	return fmt.Sprintf("%dx %s (%s)", orderItem.Quantity, product.Name, variant.Name)
+	return fmt.Sprintf("%dx %s", orderItem.Quantity, product.Name)
 }
 
 func (m model) formatOrder(order terminal.Order, totalWidth int, index int) string {
