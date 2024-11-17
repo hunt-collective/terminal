@@ -34,6 +34,7 @@ import { Address } from "../address";
 import { Shippo } from "../shippo/index";
 import { VisibleError } from "../error";
 import { inventoryRecordTable } from "../inventory/inventory.sql";
+import { pipe, groupBy, values, map } from "remeda";
 
 export module Order {
   export const Item = z.object({
@@ -46,12 +47,14 @@ export module Order {
 
   export const Info = z.object({
     id: z.string(),
+    index: z.number().optional(),
     shipping: Address,
     amount: z.object({
       shipping: z.number(),
       subtotal: z.number(),
     }),
     tracking: z.object({
+      service: z.string().optional(),
       number: z.string().optional(),
       url: z.string().optional(),
     }),
@@ -67,6 +70,52 @@ export module Order {
       }),
     ),
   };
+
+  export const list = () =>
+    useTransaction(async (tx) => {
+      const rows = await tx
+        .select()
+        .from(orderTable)
+        .innerJoin(cartTable, eq(orderTable.userID, cartTable.userID))
+        .leftJoin(orderItemTable, eq(orderTable.id, orderItemTable.orderID))
+        .leftJoin(
+          productVariantTable,
+          eq(orderItemTable.productVariantID, productVariantTable.id),
+        )
+        .where(eq(orderTable.userID, useUserID()))
+        .orderBy(orderTable.id);
+      const result = pipe(
+        rows,
+        groupBy((x) => x.order.id),
+        values,
+        map(
+          (group): Info => ({
+            id: group[0].order.id,
+            // index: group[0].order.index,
+            shipping: group[0].order.shippingAddress,
+            amount: {
+              shipping: group[0].order.shippingAmount,
+              subtotal: group.reduce(
+                (acc, row) => acc + row.order_item!.amount,
+                0,
+              ),
+            },
+            tracking: {
+              service: group[0].cart.shippingService || undefined,
+              number: group[0].order.trackingNumber || undefined,
+              url: group[0].order.trackingURL || undefined,
+            },
+            items: group.map((row) => ({
+              id: row.order_item!.id,
+              amount: row.order_item!.amount,
+              quantity: row.order_item!.quantity,
+              productVariantID: row.order_item!.productVariantID!,
+            })),
+          }),
+        ),
+      );
+      return result as Info[];
+    });
 
   export const fromID = fn(Info.shape.id, (input) =>
     useTransaction((tx) =>

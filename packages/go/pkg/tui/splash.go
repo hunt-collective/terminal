@@ -19,6 +19,7 @@ type SplashState struct {
 	cards         bool
 	addresses     bool
 	subscriptions bool
+	orders        bool
 	delay         bool
 }
 
@@ -80,6 +81,13 @@ func (m model) LoadCmds() []tea.Cmd {
 		return subscriptions.Result
 	})
 
+	cmds = append(cmds, func() tea.Msg {
+		orders, err := m.client.Order.List(m.context)
+		if err != nil {
+		}
+		return orders.Result
+	})
+
 	return cmds
 }
 
@@ -90,6 +98,7 @@ func (m model) IsLoadingComplete() bool {
 		m.state.splash.cards &&
 		m.state.splash.addresses &&
 		m.state.splash.subscriptions &&
+		m.state.splash.orders &&
 		m.state.splash.delay
 }
 
@@ -134,6 +143,8 @@ func (m model) SplashUpdate(msg tea.Msg) (model, tea.Cmd) {
 		m.state.splash.addresses = true
 	case []terminal.Subscription:
 		m.state.splash.subscriptions = true
+	case []terminal.Order:
+		m.state.splash.orders = true
 	}
 
 	if m.IsLoadingComplete() {

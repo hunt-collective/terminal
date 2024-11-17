@@ -42,6 +42,7 @@ resources:
       setCard: put /cart/card
   order:
     methods:
+      list: get /order
       get: get /order/{id}
       create: post /order
   subscription:

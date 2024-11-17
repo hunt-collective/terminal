@@ -223,6 +223,8 @@ func (m model) UpdateSelectedTheme() model {
 
 	if highlight != "" {
 		m.theme = theme.BasicTheme(m.renderer, &highlight)
+	} else {
+		m.theme = theme.BasicTheme(m.renderer, nil)
 	}
 
 	return m

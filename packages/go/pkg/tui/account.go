@@ -39,6 +39,8 @@ func (m model) AccountUpdate(msg tea.Msg) (model, tea.Cmd) {
 		switch accountPage {
 		case subscriptionsPage:
 			return m.SubscriptionsUpdate(msg)
+		case ordersPage:
+			return m.OrdersUpdate(msg)
 			// case aboutPage:
 			// 	return m.AboutUpdate(msg)
 			// case faqPage:
@@ -55,11 +57,13 @@ func (m model) AccountUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "shift+tab", "up", "k":
 			return m.UpdateSelectedAccountPage(true)
 		case "enter", "right", "l":
-			if accountPage == subscriptionsPage {
+			if accountPage == subscriptionsPage || accountPage == ordersPage {
 				m.state.account.focused = true
 				switch accountPage {
 				case subscriptionsPage:
 					return m.SubscriptionsUpdate(msg)
+				case ordersPage:
+					return m.OrdersUpdate(msg)
 					// case aboutPage:
 					// 	return m.AboutUpdate(msg)
 					// case faqPage:
@@ -76,6 +80,8 @@ func (m model) AccountUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 func getAccountPageName(accountPage page) string {
 	switch accountPage {
+	case ordersPage:
+		return "Order History"
 	case subscriptionsPage:
 		return "Subscriptions"
 	case faqPage:
@@ -89,6 +95,8 @@ func getAccountPageName(accountPage page) string {
 
 func (m model) GetAccountPageContent(accountPage page, totalWidth int) string {
 	switch accountPage {
+	case ordersPage:
+		return m.OrdersView(totalWidth, m.state.account.focused)
 	case subscriptionsPage:
 		return m.SubscriptionsView(totalWidth, m.state.account.focused)
 	case faqPage:

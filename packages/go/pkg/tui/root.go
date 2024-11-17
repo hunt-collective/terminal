@@ -28,6 +28,7 @@ const (
 	confirmPage
 	finalPage
 	subscriptionsPage
+	ordersPage
 	aboutPage
 	faqPage
 )
@@ -54,6 +55,7 @@ type model struct {
 	addresses       []terminal.Shipping
 	cards           []terminal.Card
 	subscriptions   []terminal.Subscription
+	orders          []terminal.Order
 	cart            terminal.Cart
 	subscription    terminal.SubscriptionNewParams
 	renderer        *lipgloss.Renderer
@@ -78,6 +80,7 @@ type state struct {
 	cursor        cursorState
 	shipping      shippingState
 	subscriptions subscriptionsState
+	orders        ordersState
 	shop          shopState
 	account       accountState
 	footer        footerState
@@ -107,7 +110,7 @@ func NewModel(
 		fingerprint:  fingerprint,
 		theme:        theme.BasicTheme(renderer, nil),
 		faqs:         LoadFaqs(),
-		accountPages: []page{subscriptionsPage, faqPage, aboutPage},
+		accountPages: []page{ordersPage, subscriptionsPage, faqPage, aboutPage},
 		subscription: terminal.SubscriptionNewParams{},
 		state: state{
 			splash: SplashState{},
@@ -124,6 +127,9 @@ func NewModel(
 				selected: 0,
 			},
 			subscriptions: subscriptionsState{
+				selected: 0,
+			},
+			orders: ordersState{
 				selected: 0,
 			},
 			payment: paymentState{
@@ -217,6 +223,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.addresses = msg
 	case []terminal.Subscription:
 		m.subscriptions = msg
+	case []terminal.Order:
+		m.orders = msg
 	}
 
 	var cmd tea.Cmd
@@ -254,9 +262,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	m.hasMenu = m.page == shopPage ||
-		m.page == accountPage ||
-		m.page == aboutPage ||
-		m.page == faqPage
+		m.page == accountPage
+		// m.page == aboutPage ||
+		// m.page == faqPage
 
 	m.checkout = m.page == cartPage ||
 		m.page == subscribePage ||

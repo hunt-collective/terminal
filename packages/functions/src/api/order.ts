@@ -9,6 +9,31 @@ export module OrderApi {
     .openapi(
       createRoute({
         method: "get",
+        path: "/",
+        responses: {
+          200: {
+            content: {
+              "application/json": {
+                schema: Result(OrderSchema.array()),
+              },
+            },
+            description: "Returns a list of orders",
+          },
+        },
+      }),
+      async (c) => {
+        const result = await Order.list();
+        return c.json(
+          {
+            result,
+          },
+          200,
+        );
+      },
+    )
+    .openapi(
+      createRoute({
+        method: "get",
         path: "/{id}",
         responses: {
           404: {
