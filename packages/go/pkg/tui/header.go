@@ -19,8 +19,8 @@ func (m model) HeaderUpdate(msg tea.Msg) (model, tea.Cmd) {
 				return m.ShopSwitch()
 			case "a":
 				return m.AccountSwitch()
-			case "f":
-				return m.FaqSwitch()
+			// case "f":
+			// 	return m.FaqSwitch()
 			case "m":
 				return m.MenuSwitch()
 			case "q":

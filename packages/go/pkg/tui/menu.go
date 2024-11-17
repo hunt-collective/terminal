@@ -20,12 +20,20 @@ func (m model) MenuUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
+		case "s":
+			return m.ShopSwitch()
+		case "a":
+			return m.AccountSwitch()
+		case "c":
+			return m.CartSwitch()
 		case "esc":
 			switch m.state.menu.lastPage {
-			case aboutPage:
-				return m.AboutSwitch()
-			case faqPage:
-				return m.FaqSwitch()
+			// case aboutPage:
+			// 	return m.AboutSwitch()
+			// case faqPage:
+			// 	return m.FaqSwitch()
+			case accountPage:
+				return m.AccountSwitch()
 			// case paymentPage:
 			// 	return m.PaymentSwitch()
 			// case cartPage:
@@ -47,8 +55,8 @@ func (m model) MenuView() string {
 		table.New().
 			Border(lipgloss.HiddenBorder()).
 			Row(bold("s"), base("shop")).
-			Row(bold("a"), base("about")).
-			Row(bold("f"), base("faq")).
+			Row(bold("a"), base("account")).
+			// Row(bold("f"), base("faq")).
 			Row(bold("c"), base("cart")).
 			Row("").
 			StyleFunc(func(row, col int) lipgloss.Style {
@@ -60,7 +68,7 @@ func (m model) MenuView() string {
 	for _, cmd := range m.state.footer.commands {
 		if cmd.key == "s" ||
 			cmd.key == "a" ||
-			cmd.key == "f" ||
+			// cmd.key == "f" ||
 			cmd.key == "c" {
 			continue
 		}
