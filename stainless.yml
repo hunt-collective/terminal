@@ -34,6 +34,7 @@ resources:
     methods:
       list: get /card
       create: post /card
+      delete: delete /card/{id}
   cart:
     methods:
       list: get /cart

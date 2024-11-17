@@ -105,6 +105,28 @@ export module Card {
     },
   );
 
+  export const remove = fn(z.string(), (input) =>
+    useTransaction(async (tx) => {
+      const paymentMethodID = await tx
+        .select({ stripePaymentMethodID: cardTable.stripePaymentMethodID })
+        .from(cardTable)
+        .where(eq(cardTable.id, input))
+        .then((r) => r[0]!.stripePaymentMethodID);
+      if (!paymentMethodID)
+        throw new VisibleError(
+          "input",
+          "payment.invalid",
+          "Stripe payment method not found",
+        );
+      await stripe.paymentMethods
+        .detach(paymentMethodID)
+        .catch((e) => e.message as string);
+      await tx
+        .delete(cardTable)
+        .where(and(eq(cardTable.id, input), eq(cardTable.userID, useUserID())));
+    }),
+  );
+
   export const sync = fn(z.string(), (customerID) => {
     return useTransaction(async (tx) => {
       console.log("card.sync", customerID);

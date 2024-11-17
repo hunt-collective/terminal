@@ -158,7 +158,14 @@ export module User {
 
   export const removeShipping = fn(z.string(), (input) =>
     useTransaction(async (tx) => {
-      await tx.delete(userShippingTable).where(eq(userShippingTable.id, input));
+      await tx
+        .delete(userShippingTable)
+        .where(
+          and(
+            eq(userShippingTable.id, input),
+            eq(userShippingTable.userID, useUserID()),
+          ),
+        );
     }),
   );
 

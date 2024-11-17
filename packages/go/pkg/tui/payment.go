@@ -30,6 +30,7 @@ type paymentInput struct {
 
 type paymentState struct {
 	selected   int
+	deleting   *int
 	view       paymentView
 	input      paymentInput
 	form       *huh.Form
@@ -67,6 +68,7 @@ func (m model) PaymentSwitch() (model, tea.Cmd) {
 	m.state.footer.commands = []footerCommand{
 		{key: "esc", value: "back"},
 		{key: "↑/↓", value: "cards"},
+		{key: "x/del", value: "remove"},
 		{key: "enter", value: "select"},
 	}
 	m.state.payment.submitting = false
@@ -240,13 +242,44 @@ func (m model) paymentListUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "j", "down", "tab":
-			return m.nextPaymentMethod()
+			if m.state.payment.deleting == nil {
+				return m.nextPaymentMethod()
+			}
 		case "k", "up", "shift+tab":
-			return m.previousPaymentMethod()
+			if m.state.payment.deleting == nil {
+				return m.previousPaymentMethod()
+			}
+		case "delete", "d", "backspace", "x":
+			if m.state.payment.deleting == nil && m.state.payment.selected < len(m.cards) {
+				m.state.payment.deleting = &m.state.payment.selected
+			}
+			return m, nil
+		case "y":
+			if m.state.payment.deleting != nil {
+				m.state.payment.deleting = nil
+				m.client.Card.Delete(m.context, m.cards[m.state.payment.selected].ID)
+				if len(m.cards)-1 == 0 && m.page == accountPage {
+					m.state.account.focused = false
+				}
+				return m, func() tea.Msg {
+					cards, err := m.client.Card.List(m.context)
+					if err != nil {
+					}
+					return cards.Result
+				}
+			}
+			return m, nil
+		case "n":
+			m.state.payment.deleting = nil
+			return m, nil
 		case "enter":
 			return m.choosePaymentMethod()
 		case "esc":
-			return m.ShippingSwitch()
+			if m.state.payment.deleting != nil {
+				m.state.payment.deleting = nil
+			} else {
+				return m.ShippingSwitch()
+			}
 		}
 	}
 
@@ -389,6 +422,9 @@ func (m model) paymentListView() string {
 			expir,
 		)
 		content := lipgloss.JoinVertical(lipgloss.Left, number, expLine)
+		if m.state.payment.deleting != nil && *m.state.payment.deleting == i {
+			content = accent("are you sure?") + base("\n(y/n)")
+		}
 
 		method := m.CreateBox(content, i == m.state.payment.selected)
 		methods = append(methods, method)

@@ -62,5 +62,25 @@ export module CardApi {
         const result = await Card.create(c.req.valid("json"));
         return c.json({ result }, 200);
       },
+    )
+    .openapi(
+      createRoute({
+        method: "delete",
+        path: "/{id}",
+        responses: {
+          200: {
+            content: {
+              "application/json": {
+                schema: Result(z.literal("ok")),
+              },
+            },
+            description: "Card was deleted successfully",
+          },
+        },
+      }),
+      async (c) => {
+        await Card.remove(c.req.param("id"));
+        return c.json({ result: "ok" as const }, 200);
+      },
     );
 }

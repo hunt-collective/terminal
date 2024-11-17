@@ -31,6 +31,7 @@ type shippingInput struct {
 type shippingState struct {
 	view       shippingView
 	selected   int
+	deleting   *int
 	input      shippingInput
 	form       *huh.Form
 	submitting bool
@@ -51,6 +52,7 @@ func (m model) ShippingSwitch() (model, tea.Cmd) {
 	m.state.footer.commands = []footerCommand{
 		{key: "esc", value: "back"},
 		{key: "↑/↓", value: "addresses"},
+		{key: "x/del", value: "remove"},
 		{key: "enter", value: "select"},
 	}
 	m.state.shipping.submitting = false
@@ -208,13 +210,42 @@ func (m model) shippingListUpdate(msg tea.Msg) (model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "j", "down", "tab":
-			return m.nextAddress()
+			if m.state.shipping.deleting == nil {
+				return m.nextAddress()
+			}
 		case "k", "up", "shift+tab":
-			return m.previousAddress()
+			if m.state.shipping.deleting == nil {
+				return m.previousAddress()
+			}
+		case "delete", "d", "backspace", "x":
+			if m.state.shipping.deleting == nil && m.state.shipping.selected < len(m.addresses) {
+				m.state.shipping.deleting = &m.state.shipping.selected
+			}
+			return m, nil
+		case "y":
+			if m.state.shipping.deleting != nil {
+				m.state.shipping.deleting = nil
+				m.client.User.Shipping.Delete(m.context, m.addresses[m.state.shipping.selected].ID)
+				if len(m.addresses)-1 == 0 && m.page == accountPage {
+					m.state.account.focused = false
+				}
+				return m, func() tea.Msg {
+					shipping, err := m.client.User.Shipping.List(m.context)
+					if err != nil {
+					}
+					return shipping.Result
+				}
+			}
+			return m, nil
+		case "n":
+			m.state.shipping.deleting = nil
+			return m, nil
 		case "enter":
 			return m.chooseAddress()
 		case "esc":
-			if m.IsSubscribing() {
+			if m.state.shipping.deleting != nil {
+				m.state.shipping.deleting = nil
+			} else if m.IsSubscribing() {
 				return m.SubscribeSwitch()
 			} else {
 				return m.CartSwitch()
@@ -363,6 +394,9 @@ func (m model) shippingListView() string {
 	addresses := []string{}
 	for i, address := range m.addresses {
 		content := m.formatAddress(address.Address)
+		if m.state.shipping.deleting != nil && *m.state.shipping.deleting == i {
+			content = accent("are you sure?") + base("\n(y/n)")
+		}
 		box := m.CreateBox(content, i == m.state.shipping.selected)
 		addresses = append(addresses, box)
 	}
