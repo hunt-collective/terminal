@@ -4,7 +4,7 @@ import { allSecrets } from "./secret";
 
 export const bus = new sst.aws.Bus("Bus");
 
-bus.subscribe({
+bus.subscribe("Event", {
   handler: "./packages/functions/src/event/event.handler",
   link: [database, email, shortDomainEmail, ...allSecrets],
   timeout: "5 minutes",

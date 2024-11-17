@@ -9,7 +9,3 @@ export const auth2 = new sst.cloudflare.Worker("Auth2", {
   link: [kv, secret.TwitchClientID, secret.TwitchClientSecret],
   url: true,
 });
-
-export const outputs = {
-  auth2: auth2.url,
-};
