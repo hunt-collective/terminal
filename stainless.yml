@@ -48,6 +48,7 @@ resources:
     methods:
       list: get /subscription
       create: put /subscription
+      delete: delete /subscription/{id}
 package:
   node:
     name: "@terminal/sdk"

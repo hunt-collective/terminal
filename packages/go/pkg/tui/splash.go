@@ -13,12 +13,13 @@ import (
 )
 
 type SplashState struct {
-	user      bool
-	products  bool
-	cart      bool
-	cards     bool
-	addresses bool
-	delay     bool
+	user          bool
+	products      bool
+	cart          bool
+	cards         bool
+	addresses     bool
+	subscriptions bool
+	delay         bool
 }
 
 type UserSignedInMsg struct {
@@ -72,6 +73,13 @@ func (m model) LoadCmds() []tea.Cmd {
 		return addresses.Result
 	})
 
+	cmds = append(cmds, func() tea.Msg {
+		subscriptions, err := m.client.Subscription.List(m.context)
+		if err != nil {
+		}
+		return subscriptions.Result
+	})
+
 	return cmds
 }
 
@@ -81,6 +89,7 @@ func (m model) IsLoadingComplete() bool {
 		m.state.splash.cart &&
 		m.state.splash.cards &&
 		m.state.splash.addresses &&
+		m.state.splash.subscriptions &&
 		m.state.splash.delay
 }
 
@@ -123,6 +132,8 @@ func (m model) SplashUpdate(msg tea.Msg) (model, tea.Cmd) {
 		m.state.splash.cards = true
 	case []terminal.Shipping:
 		m.state.splash.addresses = true
+	case []terminal.Subscription:
+		m.state.splash.subscriptions = true
 	}
 
 	if m.IsLoadingComplete() {

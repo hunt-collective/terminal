@@ -33,20 +33,29 @@ func LoadFaqs() []FAQ {
 	return faqs
 }
 
+func (m model) FaqInit() (model, tea.Cmd) {
+	m.state.faq.faqs = []string{}
+	for _, faq := range m.faqs {
+		m.state.faq.faqs = append(
+			m.state.faq.faqs,
+			m.theme.TextAccent().Width(m.widthContent).Render(faq.Question),
+		)
+		m.state.faq.faqs = append(
+			m.state.faq.faqs,
+			m.theme.Base().Width(m.widthContent).Render(faq.Answer),
+		)
+		m.state.faq.faqs = append(m.state.faq.faqs, "")
+	}
+
+	return m, nil
+}
+
 func (m model) FaqSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(faqPage)
 	m.state.footer.commands = []footerCommand{
 		{key: "↑↓", value: "scroll"},
 		{key: "c", value: "cart"},
 	}
-
-	m.state.faq.faqs = []string{}
-	for _, faq := range m.faqs {
-		m.state.faq.faqs = append(m.state.faq.faqs, m.theme.TextAccent().Width(m.widthContent).Render(faq.Question))
-		m.state.faq.faqs = append(m.state.faq.faqs, m.theme.Base().Width(m.widthContent).Render(faq.Answer))
-		m.state.faq.faqs = append(m.state.faq.faqs, "")
-	}
-
 	return m, nil
 }
 

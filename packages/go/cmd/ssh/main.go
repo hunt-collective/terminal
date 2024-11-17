@@ -68,9 +68,11 @@ func main() {
 		wish.WithPublicKeyAuth(func(_ ssh.Context, key ssh.PublicKey) bool {
 			return true
 		}),
-		wish.WithKeyboardInteractiveAuth(func(ctx ssh.Context, challenger gossh.KeyboardInteractiveChallenge) bool {
-			return true
-		}),
+		wish.WithKeyboardInteractiveAuth(
+			func(ctx ssh.Context, challenger gossh.KeyboardInteractiveChallenge) bool {
+				return true
+			},
+		),
 	)
 	if err != nil {
 		log.Error("Could not start server", "error", err)

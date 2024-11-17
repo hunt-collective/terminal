@@ -19,15 +19,17 @@ type size = int
 const (
 	menuPage page = iota
 	splashPage
-	aboutPage
-	faqPage
 	shopPage
+	accountPage
 	paymentPage
 	cartPage
 	subscribePage
 	shippingPage
 	confirmPage
 	finalPage
+	subscriptionsPage
+	aboutPage
+	faqPage
 )
 
 const (
@@ -47,9 +49,11 @@ type model struct {
 	context         context.Context
 	client          *terminal.Client
 	user            terminal.User
+	accountPages    []page
 	products        []terminal.Product
 	addresses       []terminal.Shipping
 	cards           []terminal.Card
+	subscriptions   []terminal.Subscription
 	cart            terminal.Cart
 	subscription    terminal.SubscriptionNewParams
 	renderer        *lipgloss.Renderer
@@ -66,20 +70,23 @@ type model struct {
 	faqs            []FAQ
 	viewport        viewport.Model
 	hasScroll       bool
+	error           *VisibleError
 }
 
 type state struct {
-	splash    SplashState
-	cursor    cursorState
-	shipping  shippingState
-	shop      shopState
-	footer    footerState
-	cart      cartState
-	subscribe subscribeState
-	payment   paymentState
-	confirm   confirmState
-	faq       faqState
-	menu      menuState
+	splash        SplashState
+	cursor        cursorState
+	shipping      shippingState
+	subscriptions subscriptionsState
+	shop          shopState
+	account       accountState
+	footer        footerState
+	cart          cartState
+	subscribe     subscribeState
+	payment       paymentState
+	confirm       confirmState
+	faq           faqState
+	menu          menuState
 }
 
 type children struct {
@@ -100,6 +107,7 @@ func NewModel(
 		fingerprint:  fingerprint,
 		theme:        theme.BasicTheme(renderer, nil),
 		faqs:         LoadFaqs(),
+		accountPages: []page{subscriptionsPage, faqPage, aboutPage},
 		subscription: terminal.SubscriptionNewParams{},
 		state: state{
 			splash: SplashState{},
@@ -110,6 +118,12 @@ func NewModel(
 				selected: 0,
 			},
 			subscribe: subscribeState{
+				selected: 0,
+			},
+			account: accountState{
+				selected: 0,
+			},
+			subscriptions: subscriptionsState{
 				selected: 0,
 			},
 			payment: paymentState{
@@ -126,6 +140,7 @@ func NewModel(
 		},
 	}
 
+	result, _ = result.FaqInit()
 	return result, nil
 }
 
@@ -141,6 +156,11 @@ func (m model) SwitchPage(page page) model {
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case error:
+		m.error = &VisibleError{
+			message: api.GetErrorMessage(msg),
+		}
+		return m, nil
 	case tea.WindowSizeMsg:
 		m.viewportWidth = msg.Width
 		m.viewportHeight = msg.Height
@@ -168,6 +188,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m = m.updateViewport()
 	case tea.KeyMsg:
 		switch msg.String() {
+		case "esc":
+			if m.error != nil {
+				m.error = nil
+				return m, nil
+			}
 		case "ctrl+c":
 			return m, tea.Quit
 		}
@@ -190,6 +215,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.cards = msg
 	case []terminal.Shipping:
 		m.addresses = msg
+	case []terminal.Subscription:
+		m.subscriptions = msg
 	}
 
 	var cmd tea.Cmd
@@ -198,6 +225,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m, cmd = m.MenuUpdate(msg)
 	case splashPage:
 		m, cmd = m.SplashUpdate(msg)
+	case accountPage:
+		m, cmd = m.AccountUpdate(msg)
 	case aboutPage:
 		m, cmd = m.AboutUpdate(msg)
 	case shopPage:
@@ -225,6 +254,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	m.hasMenu = m.page == shopPage ||
+		m.page == accountPage ||
 		m.page == aboutPage ||
 		m.page == faqPage
 
@@ -248,6 +278,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m model) View() string {
 	if m.size == undersized {
 		return m.ResizeView()
+	}
+
+	if m.error != nil {
+		return m.ErrorView()
 	}
 
 	switch m.page {
@@ -309,10 +343,6 @@ func (m model) getContent() string {
 	switch m.page {
 	case shopPage:
 		page = m.ShopView()
-	case aboutPage:
-		page = m.AboutView()
-	case faqPage:
-		page = m.FaqView()
 	case cartPage:
 		page = m.CartView()
 	case subscribePage:
@@ -325,6 +355,8 @@ func (m model) getContent() string {
 		page = m.ConfirmView()
 	case finalPage:
 		page = m.FinalView()
+	case accountPage:
+		page = m.AccountView()
 	}
 	return page
 }

@@ -25,9 +25,10 @@ export module SubscriptionApi {
         },
       }),
       async (c) => {
+        const result = await Subscription.list();
         return c.json(
           {
-            result: await Subscription.list(),
+            result,
           },
           200,
         );
@@ -68,6 +69,27 @@ export module SubscriptionApi {
         const body = c.req.valid("json");
         await Subscription.create(body);
         return c.json({ result: true }, 200);
+      },
+    )
+    .openapi(
+      createRoute({
+        security: [{ Bearer: [] }],
+        method: "delete",
+        path: "/{id}",
+        responses: {
+          200: {
+            content: {
+              "application/json": {
+                schema: Result(z.literal("ok")),
+              },
+            },
+            description: "Subscription was cancelled successfully",
+          },
+        },
+      }),
+      async (c) => {
+        await Subscription.remove(c.req.param("id"));
+        return c.json({ result: "ok" as const }, 200);
       },
     );
 }

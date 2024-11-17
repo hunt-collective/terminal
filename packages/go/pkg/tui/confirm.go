@@ -36,13 +36,16 @@ func (m model) ConfirmUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.state.confirm.submitting = true
 			return m, func() tea.Msg {
 				if m.IsSubscribing() {
+					m.subscription.Quantity = terminal.Int(1)
+					m.subscription.Frequency = terminal.F(terminal.SubscriptionNewParamsFrequencyFixed)
 					subscription, err := m.client.Subscription.New(m.context, m.subscription)
 					if err != nil {
 						return VisibleError{
 							message: api.GetErrorMessage(err),
 						}
+						// return err
 					}
-					return subscription.Result
+					return subscription
 				} else {
 					order, err := m.client.Order.New(m.context)
 					if err != nil {
@@ -60,7 +63,8 @@ func (m model) ConfirmUpdate(msg tea.Msg) (model, tea.Cmd) {
 		log.Error(msg.message)
 		return m.ShippingSwitch()
 	case terminal.Order:
-	case terminal.Subscription:
+		return m.FinalSwitch()
+	case *terminal.SubscriptionNewResponse:
 		return m.FinalSwitch()
 	}
 	return m, nil
@@ -78,9 +82,10 @@ func (m model) ConfirmView() string {
 
 	if m.IsSubscribing() {
 		view.WriteString(
-			m.state.subscribe.product.Name + ": " + m.state.subscribe.product.Variants[m.state.subscribe.selected].Name + "\n",
+			m.theme.TextAccent().
+				Render(m.state.subscribe.product.Name + ": " + m.state.subscribe.product.Variants[m.state.subscribe.selected].Name),
 		)
-		view.WriteString("Monthly Subscription\n")
+		view.WriteString("\nMonthly Subscription\n")
 		view.WriteString("\n")
 	}
 	view.WriteString(address.Name + "\n")

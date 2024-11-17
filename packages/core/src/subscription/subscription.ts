@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { SubscriptionFrequency, subscriptionTable } from "./subscription.sql";
 import { useTransaction } from "../drizzle/transaction";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { useUserID } from "../actor";
 import { createID } from "../util/id";
 import { fn } from "../util/fn";
@@ -86,12 +86,25 @@ export module Subscription {
           .onDuplicateKeyUpdate({
             set: {
               quantity: sql`VALUES(quantity)`,
-              shippingID: sql`VALUES(shippingID)`,
-              cardID: sql`VALUES(cardID)`,
+              shippingID: sql`VALUES(shipping_id)`,
+              cardID: sql`VALUES(card_id)`,
               frequency: sql`VALUES(frequency)`,
               timeDeleted: null,
             },
           });
       }),
+  );
+
+  export const remove = fn(z.string(), (input) =>
+    useTransaction(async (tx) => {
+      await tx
+        .delete(subscriptionTable)
+        .where(
+          and(
+            eq(subscriptionTable.id, input),
+            eq(subscriptionTable.userID, useUserID()),
+          ),
+        );
+    }),
   );
 }
