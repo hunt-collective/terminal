@@ -41,10 +41,10 @@ func (m model) AccountUpdate(msg tea.Msg) (model, tea.Cmd) {
 			return m.SubscriptionsUpdate(msg)
 		case ordersPage:
 			return m.OrdersUpdate(msg)
-			// case aboutPage:
-			// 	return m.AboutUpdate(msg)
-			// case faqPage:
-			// 	return m.FaqUpdate(msg)
+		case shippingPage:
+			return m.ShippingUpdate(msg)
+		case paymentPage:
+			return m.PaymentUpdate(msg)
 		}
 	}
 
@@ -57,17 +57,17 @@ func (m model) AccountUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "shift+tab", "up", "k":
 			return m.UpdateSelectedAccountPage(true)
 		case "enter", "right", "l":
-			if accountPage == subscriptionsPage || accountPage == ordersPage {
+			if accountPage == subscriptionsPage || accountPage == ordersPage || accountPage == shippingPage || accountPage == paymentPage {
 				m.state.account.focused = true
 				switch accountPage {
 				case subscriptionsPage:
 					return m.SubscriptionsUpdate(msg)
 				case ordersPage:
 					return m.OrdersUpdate(msg)
-					// case aboutPage:
-					// 	return m.AboutUpdate(msg)
-					// case faqPage:
-					// 	return m.FaqUpdate(msg)
+				case shippingPage:
+					return m.ShippingUpdate(msg)
+				case paymentPage:
+					return m.PaymentUpdate(msg)
 				}
 
 			}
@@ -84,6 +84,10 @@ func getAccountPageName(accountPage page) string {
 		return "Order History"
 	case subscriptionsPage:
 		return "Subscriptions"
+	case shippingPage:
+		return "Addresses"
+	case paymentPage:
+		return "Payment Methods"
 	case faqPage:
 		return "FAQ"
 	case aboutPage:
@@ -99,6 +103,8 @@ func (m model) GetAccountPageContent(accountPage page, totalWidth int) string {
 		return m.OrdersView(totalWidth, m.state.account.focused)
 	case subscriptionsPage:
 		return m.SubscriptionsView(totalWidth, m.state.account.focused)
+	case shippingPage:
+		return m.ShippingView(totalWidth, m.state.account.focused)
 	case faqPage:
 		return m.FaqView()
 	case aboutPage:

@@ -5,7 +5,6 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/log"
 	terminal "github.com/terminaldotshop/terminal-sdk-go"
 	"github.com/terminaldotshop/terminal-sdk-go/option"
 	"github.com/terminaldotshop/terminal/go/pkg/api"
@@ -13,14 +12,8 @@ import (
 )
 
 type SplashState struct {
-	user          bool
-	products      bool
-	cart          bool
-	cards         bool
-	addresses     bool
-	subscriptions bool
-	orders        bool
-	delay         bool
+	data  bool
+	delay bool
 }
 
 type UserSignedInMsg struct {
@@ -39,66 +32,17 @@ func (m model) LoadCmds() []tea.Cmd {
 	}))
 
 	cmds = append(cmds, func() tea.Msg {
-		user, err := m.client.User.Me(m.context)
+		response, err := m.client.User.Init(m.context)
 		if err != nil {
 		}
-		return user.Result
-	})
-
-	cmds = append(cmds, func() tea.Msg {
-		products, err := m.client.Product.List(m.context)
-		if err != nil {
-			log.Error(err)
-		}
-		return products.Result
-	})
-
-	cmds = append(cmds, func() tea.Msg {
-		cart, err := m.client.Cart.List(m.context)
-		if err != nil {
-		}
-		return cart.Result
-	})
-
-	cmds = append(cmds, func() tea.Msg {
-		cards, err := m.client.Card.List(m.context)
-		if err != nil {
-		}
-		return cards.Result
-	})
-
-	cmds = append(cmds, func() tea.Msg {
-		addresses, err := m.client.User.Shipping.List(m.context)
-		if err != nil {
-		}
-		return addresses.Result
-	})
-
-	cmds = append(cmds, func() tea.Msg {
-		subscriptions, err := m.client.Subscription.List(m.context)
-		if err != nil {
-		}
-		return subscriptions.Result
-	})
-
-	cmds = append(cmds, func() tea.Msg {
-		orders, err := m.client.Order.List(m.context)
-		if err != nil {
-		}
-		return orders.Result
+		return response.Result
 	})
 
 	return cmds
 }
 
 func (m model) IsLoadingComplete() bool {
-	return m.state.splash.user &&
-		m.state.splash.products &&
-		m.state.splash.cart &&
-		m.state.splash.cards &&
-		m.state.splash.addresses &&
-		m.state.splash.subscriptions &&
-		m.state.splash.orders &&
+	return m.state.splash.data &&
 		m.state.splash.delay
 }
 
@@ -131,20 +75,8 @@ func (m model) SplashUpdate(msg tea.Msg) (model, tea.Cmd) {
 		return m, tea.Batch(m.LoadCmds()...)
 	case DelayCompleteMsg:
 		m.state.splash.delay = true
-	case terminal.User:
-		m.state.splash.user = true
-	case []terminal.Product:
-		m.state.splash.products = true
-	case terminal.Cart:
-		m.state.splash.cart = true
-	case []terminal.Card:
-		m.state.splash.cards = true
-	case []terminal.Shipping:
-		m.state.splash.addresses = true
-	case []terminal.Subscription:
-		m.state.splash.subscriptions = true
-	case []terminal.Order:
-		m.state.splash.orders = true
+	case terminal.UserInitResponseResult:
+		m.state.splash.data = true
 	}
 
 	if m.IsLoadingComplete() {

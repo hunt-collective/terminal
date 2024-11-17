@@ -34,3 +34,7 @@ func (m model) CreateBoxCustom(content string, selected bool, totalWidth int) st
 func (m model) CreateCenteredBox(content string, selected bool) string {
 	return m._createBoxInner(content, selected, lipgloss.Center, 0, m.widthContent-2)
 }
+
+func (m model) CreateCenteredBoxCustom(content string, selected bool, totalWidth int) string {
+	return m._createBoxInner(content, selected, lipgloss.Center, 0, totalWidth)
+}

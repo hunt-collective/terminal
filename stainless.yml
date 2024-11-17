@@ -23,6 +23,7 @@ resources:
   user:
     methods:
       me: get /user/me
+      init: get /user/init
       update: put /user/me
     subresources:
       shipping:

@@ -2,16 +2,19 @@ import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { Result } from "./common";
 import { User } from "@terminal/core/user/index";
 import { useUserID } from "@terminal/core/actor";
-import { Address } from "@terminal/core/address";
+import { CardApi } from "./card";
+import { CartApi } from "./cart";
+import { SubscriptionApi } from "./subscription";
+import { OrderApi } from "./order";
+import { ProductApi } from "./product";
+import { Cart } from "@terminal/core/cart/index";
+import { Product } from "@terminal/core/product/index";
+import { Card } from "@terminal/core/card/index";
+import { Subscription } from "@terminal/core/subscription/subscription";
+import { Order } from "@terminal/core/order/order";
+import { Schema } from "./schema";
 
 export module UserApi {
-  export const AddressSchema = z.object(Address.shape).openapi("Address");
-  export const UserSchema = z.object(User.Info.shape).openapi("User");
-  export const UserShippingSchema = z
-    .object(User.Shipping.shape)
-    .extend({ address: AddressSchema })
-    .openapi("UserShipping");
-
   export const route = new OpenAPIHono()
     .openapi(
       createRoute({
@@ -29,7 +32,7 @@ export module UserApi {
           200: {
             content: {
               "application/json": {
-                schema: Result(UserSchema),
+                schema: Result(Schema.UserSchema),
               },
             },
             description: "Returns user",
@@ -42,6 +45,69 @@ export module UserApi {
           return c.json({ error: "User not found" }, 404);
         }
         return c.json({ result }, 200);
+      },
+    )
+    .openapi(
+      createRoute({
+        method: "get",
+        path: "/init",
+        responses: {
+          404: {
+            content: {
+              "application/json": {
+                schema: z.object({ error: z.string() }),
+              },
+            },
+            description: "User not found",
+          },
+          200: {
+            content: {
+              "application/json": {
+                schema: Result(
+                  z.object({
+                    user: Schema.UserSchema,
+                    products: ProductApi.ProductSchema.array(),
+                    cart: CartApi.CartSchema,
+                    addresses: Schema.UserShippingSchema.array(),
+                    cards: CardApi.CardSchema.array(),
+                    subscriptions: SubscriptionApi.SubscriptionSchema.array(),
+                    orders: OrderApi.OrderSchema.array(),
+                  }),
+                ),
+              },
+            },
+            description: "Returns initial app data",
+          },
+        },
+      }),
+      async (c) => {
+        const [user, products, cart, addresses, cards, subscriptions, orders] =
+          await Promise.all([
+            User.fromID(useUserID()),
+            Product.list(),
+            Cart.get(),
+            User.shipping(),
+            Card.list(),
+            Subscription.list(),
+            Order.list(),
+          ]);
+        if (!user) {
+          return c.json({ error: "User not found" }, 404);
+        }
+        return c.json(
+          {
+            result: {
+              user,
+              products,
+              cart,
+              addresses,
+              cards,
+              subscriptions,
+              orders,
+            },
+          },
+          200,
+        );
       },
     )
     .openapi(
@@ -69,7 +135,7 @@ export module UserApi {
           200: {
             content: {
               "application/json": {
-                schema: Result(UserSchema),
+                schema: Result(Schema.UserSchema),
               },
             },
             description: "Returns user",
@@ -91,7 +157,7 @@ export module UserApi {
           200: {
             content: {
               "application/json": {
-                schema: Result(UserShippingSchema.array()),
+                schema: Result(Schema.UserShippingSchema.array()),
               },
             },
             description: "Returns shipping addresses",
@@ -120,7 +186,7 @@ export module UserApi {
           200: {
             content: {
               "application/json": {
-                schema: Result(UserShippingSchema.shape.id),
+                schema: Result(Schema.UserShippingSchema.shape.id),
               },
             },
             description: "Returns shipping address ID",

@@ -104,13 +104,20 @@ func NewModel(
 	ctx := context.Background()
 
 	result := model{
-		context:      ctx,
-		page:         splashPage,
-		renderer:     renderer,
-		fingerprint:  fingerprint,
-		theme:        theme.BasicTheme(renderer, nil),
-		faqs:         LoadFaqs(),
-		accountPages: []page{ordersPage, subscriptionsPage, faqPage, aboutPage},
+		context:     ctx,
+		page:        splashPage,
+		renderer:    renderer,
+		fingerprint: fingerprint,
+		theme:       theme.BasicTheme(renderer, nil),
+		faqs:        LoadFaqs(),
+		accountPages: []page{
+			ordersPage,
+			subscriptionsPage,
+			// shippingPage,
+			// paymentPage,
+			faqPage,
+			aboutPage,
+		},
 		subscription: terminal.SubscriptionNewParams{},
 		state: state{
 			splash: SplashState{},
@@ -211,6 +218,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.state.cart.lastUpdateID == msg.updateID {
 			m.cart = msg.updated
 		}
+	case terminal.UserInitResponseResult:
+		m.user = msg.User
+		m.products = msg.Products
+		m.cart = msg.Cart
+		m.cards = msg.Cards
+		m.addresses = msg.Addresses
+		m.subscriptions = msg.Subscriptions
+		m.orders = msg.Orders
 	case terminal.User:
 		m.user = msg
 	case []terminal.Product:
@@ -358,7 +373,7 @@ func (m model) getContent() string {
 	case paymentPage:
 		page = m.PaymentView()
 	case shippingPage:
-		page = m.ShippingView()
+		page = m.ShippingView(m.widthContent-2, false)
 	case confirmPage:
 		page = m.ConfirmView()
 	case finalPage:

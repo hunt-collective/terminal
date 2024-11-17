@@ -54,7 +54,7 @@ func main() {
 		sshPort = "2222"
 	}
 	if httpPort == "" {
-		httpPort = "8001"
+		httpPort = "8000"
 	}
 
 	s, err := wish.NewServer(

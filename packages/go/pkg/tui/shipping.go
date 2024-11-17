@@ -241,7 +241,9 @@ func (m model) shippingListUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.state.shipping.deleting = nil
 			return m, nil
 		case "enter":
-			return m.chooseAddress()
+			if m.state.shipping.deleting == nil {
+				return m.chooseAddress()
+			}
 		case "esc":
 			if m.state.shipping.deleting != nil {
 				m.state.shipping.deleting = nil
@@ -363,13 +365,13 @@ func (m model) ShippingUpdate(msg tea.Msg) (model, tea.Cmd) {
 	}
 }
 
-func (m model) ShippingView() string {
+func (m model) ShippingView(totalWidth int, focused bool) string {
 	if m.state.shipping.submitting {
-		return m.theme.Base().Width(m.widthContent).Render("calculating shipping costs...")
+		return m.theme.Base().Width(totalWidth).Render("calculating shipping costs...")
 	}
 
 	if m.state.shipping.view == shippingListView {
-		return m.shippingListView()
+		return m.shippingListView(totalWidth, focused)
 	} else {
 		return m.shippingFormView()
 	}
@@ -387,7 +389,7 @@ func (m model) formatAddress(address terminal.Address) string {
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
 
-func (m model) shippingListView() string {
+func (m model) shippingListView(totalWidth int, focused bool) string {
 	base := m.theme.Base().Render
 	accent := m.theme.TextAccent().Render
 
@@ -397,12 +399,20 @@ func (m model) shippingListView() string {
 		if m.state.shipping.deleting != nil && *m.state.shipping.deleting == i {
 			content = accent("are you sure?") + base("\n(y/n)")
 		}
-		box := m.CreateBox(content, i == m.state.shipping.selected)
+		box := m.CreateBoxCustom(
+			content,
+			i == m.state.shipping.selected && (focused || m.page != accountPage),
+			totalWidth,
+		)
 		addresses = append(addresses, box)
 	}
 
 	newAddressIndex := len(m.addresses)
-	newAddress := m.CreateCenteredBox("add address", m.state.shipping.selected == newAddressIndex)
+	newAddress := m.CreateCenteredBoxCustom(
+		"add address",
+		m.state.shipping.selected == newAddressIndex,
+		totalWidth,
+	)
 	addresses = append(addresses, newAddress)
 
 	hint := "use selected address"

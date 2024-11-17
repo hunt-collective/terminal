@@ -273,7 +273,9 @@ func (m model) paymentListUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.state.payment.deleting = nil
 			return m, nil
 		case "enter":
-			return m.choosePaymentMethod()
+			if m.state.payment.deleting == nil {
+				return m.choosePaymentMethod()
+			}
 		case "esc":
 			if m.state.payment.deleting != nil {
 				m.state.payment.deleting = nil

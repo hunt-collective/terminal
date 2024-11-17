@@ -1,8 +1,8 @@
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { Result } from "./common";
 import { Cart } from "@terminal/core/cart/index";
-import { UserApi } from "./user";
 import { CardApi } from "./card";
+import { Schema } from "./schema";
 
 export module CartApi {
   export const CartItemSchema = z.object(Cart.Item.shape).openapi("CartItem");
@@ -81,7 +81,7 @@ export module CartApi {
             content: {
               "application/json": {
                 schema: z.object({
-                  shippingID: UserApi.UserShippingSchema.shape.id,
+                  shippingID: Schema.UserShippingSchema.shape.id,
                 }),
               },
             },
