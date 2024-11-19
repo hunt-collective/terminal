@@ -51,6 +51,7 @@ func (m model) SplashInit() tea.Cmd {
 		// TODO: error handling
 		token, err := api.FetchUserToken(m.fingerprint)
 		if err != nil {
+			return tea.Quit
 		}
 
 		client := terminal.NewClient(
