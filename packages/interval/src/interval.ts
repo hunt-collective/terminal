@@ -6,6 +6,7 @@ import { Cart } from "./routes/cart";
 import { User } from "./routes/user";
 import { Order } from "./routes/order";
 import { InventoryPage } from "./routes/inventory";
+import { Subs } from "./routes/subs";
 
 const interval = new Interval({
   apiKey: Resource.IntervalKey.value,
@@ -15,6 +16,7 @@ const interval = new Interval({
     user: User,
     order: Order,
     inventory: InventoryPage,
+    subs: Subs,
   },
 });
 
