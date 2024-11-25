@@ -16,6 +16,7 @@ import {
   isNull,
   sql,
   sum,
+  desc,
 } from "drizzle-orm";
 import { cartItemTable, cartTable } from "../cart/cart.sql";
 import {
@@ -83,7 +84,7 @@ export module Order {
           eq(orderItemTable.productVariantID, productVariantTable.id),
         )
         .where(eq(orderTable.userID, useUserID()))
-        .orderBy(orderTable.id);
+        .orderBy(desc(orderTable.id));
       const result = pipe(
         rows,
         groupBy((x) => x.order.id),

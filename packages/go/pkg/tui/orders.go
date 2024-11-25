@@ -89,9 +89,9 @@ func (m model) formatOrder(order terminal.Order, totalWidth int, index int) stri
 		lines = append(lines, m.formatOrderItem(item))
 	}
 
-	if index == m.state.orders.selected && m.state.account.focused {
-		lines = append(lines, order.Tracking.Service+" ("+order.Tracking.Number+")")
-	}
+	// if index == m.state.orders.selected && m.state.account.focused {
+	// 	lines = append(lines, order.Tracking.Service+" ("+order.Tracking.Number+")")
+	// }
 
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
@@ -102,7 +102,7 @@ func (m model) OrdersView(totalWidth int, focused bool) string {
 
 	orders := []string{}
 	for i, order := range m.orders {
-		content := m.formatOrder(order, totalWidth, i)
+		content := m.formatOrder(order, totalWidth, len(m.orders)-i-1)
 		box := m.CreateBoxCustom(
 			content,
 			focused && i == m.state.orders.selected,
