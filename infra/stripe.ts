@@ -1,3 +1,4 @@
+import { database } from "./database";
 import { domain } from "./dns";
 import { secret } from "./secret";
 
@@ -31,7 +32,12 @@ export const webhook = new stripe.WebhookEndpoint("StripeWebhook", {
 new sst.aws.Cron("StripeAnalytics", {
   schedule: "cron(0 7 ? * MON *)",
   job: {
-    link: [secret.StripePublic, secret.StripeSecret, secret.SlackWebhook],
+    link: [
+      secret.StripePublic,
+      secret.StripeSecret,
+      secret.SlackWebhook,
+      database,
+    ],
     handler: "./packages/functions/src/cron/stripe.handler",
   },
 });
