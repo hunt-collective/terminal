@@ -29,7 +29,7 @@ export async function handler() {
     `Total Subscriptions: ${subs} (${subsPercent > 0 ? "+" : ""}${subsPercent}%)`,
   ];
   console.log(lines.join("\n"));
-  fetch(Resource.SlackWebhook.value, {
+  await fetch(Resource.SlackWebhook.value, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
