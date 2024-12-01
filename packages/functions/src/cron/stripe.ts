@@ -1,21 +1,32 @@
 import { Resource } from "sst";
 import { Stripe } from "stripe";
 import { DateTime } from "luxon";
+import { and, db, isNull, lt, gt, or } from "@terminal/core/drizzle/index";
+import { subscriptionTable } from "@terminal/core/subscription/subscription.sql";
 
 const stripe = new Stripe(Resource.StripeSecret.value, {
   httpClient: Stripe.createFetchHttpClient(),
 });
 
 export async function handler() {
-  const start = DateTime.now().minus({ weeks: 1 }).startOf("week");
-  const [current, previous] = await Promise.all([
-    getTotal(start),
-    getTotal(start.minus({ weeks: 1 })),
+  const current = DateTime.now().minus({ weeks: 1 }).startOf("week");
+  console.log(`Analyzing ${current.toFormat("LLL dd")}`);
+  const last = current.minus({ weeks: 1 });
+  const [revenue, revenueLast, subs, subsLast] = await Promise.all([
+    getRevenue(current),
+    getRevenue(last),
+    getSubscription(current),
+    getSubscription(last),
   ]);
-  const percent = Number((((current - previous) / previous) * 100).toFixed(2));
+  const revenuePercent = Number(
+    (((revenue - revenueLast) / revenueLast) * 100).toFixed(2),
+  );
+  const subsPercent = Number((((subs - subsLast) / subsLast) * 100).toFixed(2));
+
   const lines = [
-    `${start.toFormat("LLL dd")}`,
-    `Net Revenue: ${current.toLocaleString()} ${percent > 0 ? "(+" + percent + "%)" : ""}`,
+    `${current.toFormat("LLL dd")} Summary`,
+    `Net Revenue: $${revenue.toLocaleString()} (${revenuePercent > 0 ? "+" : ""}${revenuePercent}%)`,
+    `Total Subscriptions: ${subs} (${subsPercent > 0 ? "+" : ""}${subsPercent}%)`,
   ];
   console.log(lines.join("\n"));
   fetch(Resource.SlackWebhook.value, {
@@ -29,9 +40,8 @@ export async function handler() {
   });
 }
 
-async function getTotal(start: DateTime) {
+async function getRevenue(start: DateTime) {
   const end = start.endOf("week");
-  console.log("range", start.toISO(), end.toISO());
   const run = await stripe.reporting.reportRuns.create({
     report_type: "balance.summary.1",
     parameters: {
@@ -59,4 +69,19 @@ async function getTotal(start: DateTime) {
     console.log("waiting for report to finish...");
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
+}
+
+async function getSubscription(start: DateTime) {
+  const end = start.endOf("week");
+  const total = await db.$count(
+    subscriptionTable,
+    and(
+      or(
+        isNull(subscriptionTable.timeDeleted),
+        gt(subscriptionTable.timeDeleted, end.toJSDate()),
+      ),
+      lt(subscriptionTable.timeCreated, end.toJSDate()),
+    ),
+  );
+  return total;
 }
