@@ -29,15 +29,17 @@ export async function handler() {
     `Total Subscriptions: ${subs} (${subsPercent > 0 ? "+" : ""}${subsPercent}%)`,
   ];
   console.log(lines.join("\n"));
-  await fetch(Resource.SlackWebhook.value, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      text: ["```", ...lines, "```"].join("\n"),
-    }),
-  });
+  if (Resource.App.stage === "production") {
+    await fetch(Resource.SlackWebhook.value, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: ["```", ...lines, "```"].join("\n"),
+      }),
+    });
+  }
 }
 
 async function getRevenue(start: DateTime) {
