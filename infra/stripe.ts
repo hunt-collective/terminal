@@ -38,6 +38,7 @@ new sst.aws.Cron("StripeAnalytics", {
       secret.SlackWebhook,
       database,
     ],
+    timeout: "5 minutes",
     handler: "./packages/functions/src/cron/stripe.handler",
   },
 });

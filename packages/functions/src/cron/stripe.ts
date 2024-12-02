@@ -44,6 +44,7 @@ export async function handler() {
 
 async function getRevenue(start: DateTime) {
   const end = start.endOf("week");
+  console.log("getting revenue for", start.toISO(), end.toISO());
   const run = await stripe.reporting.reportRuns.create({
     report_type: "balance.summary.1",
     parameters: {
@@ -69,7 +70,7 @@ async function getRevenue(start: DateTime) {
       return parseFloat(activity!.net_amount!);
     }
     console.log("waiting for report to finish...");
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 5000));
   }
 }
 
