@@ -8,9 +8,9 @@ type FaqProps = {
 
 const FaqComponent: Component<FaqProps> = (props) => {
   return (
-    <Editor>
-      {props.faqs.map((faq, i) => (
-        <Line number={i + 1}>
+    <Editor class="max-w-xl">
+      {props.faqs.map((faq) => (
+        <Line>
           <p>
             <span class="text-white mr-2">{faq.question}</span># {faq.answer}
           </p>

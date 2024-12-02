@@ -37,8 +37,9 @@ func (m model) ConfirmUpdate(msg tea.Msg) (model, tea.Cmd) {
 			return m, func() tea.Msg {
 				if m.IsSubscribing() {
 					m.subscription.Quantity = terminal.Int(1)
-					m.subscription.Frequency = terminal.F(terminal.SubscriptionNewParamsFrequencyFixed)
-					subscription, err := m.client.Subscription.New(m.context, m.subscription)
+					m.subscription.Frequency = terminal.F(terminal.SubscriptionFrequencyFixed)
+					params := terminal.SubscriptionNewParams{Subscription: m.subscription}
+					subscription, err := m.client.Subscription.New(m.context, params)
 					if err != nil {
 						return VisibleError{
 							message: api.GetErrorMessage(err),
@@ -53,7 +54,7 @@ func (m model) ConfirmUpdate(msg tea.Msg) (model, tea.Cmd) {
 							message: api.GetErrorMessage(err),
 						}
 					}
-					return order.Result
+					return order.Data
 				}
 			}
 		}
@@ -76,7 +77,7 @@ func (m model) ConfirmView() string {
 	}
 
 	card := m.GetSelectedCard()
-	address := m.GetSelectedAddress().Address
+	address := m.GetSelectedAddress()
 
 	view := strings.Builder{}
 

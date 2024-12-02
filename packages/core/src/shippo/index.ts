@@ -4,7 +4,6 @@ import { fn } from "../util/fn";
 import { useTransaction } from "../drizzle/transaction";
 import { orderItemTable, orderTable } from "../order/order.sql";
 import { productTable, productVariantTable } from "../product/product.sql";
-import { Address } from "../address";
 import { VisibleError } from "../error";
 import { z } from "zod";
 import { userTable } from "../user/user.sql";
@@ -43,6 +42,19 @@ const CUSTOMS_DECLARATION_ITEM = {
 };
 
 export module Shippo {
+  const Address = z.object({
+    name: z.string(),
+    street1: z.string(),
+    street2: z.string().optional(),
+    city: z.string(),
+    province: z.string().optional(),
+    country: z
+      .string()
+      .length(2, "Country must be a 2 character country code (ISO 3166-1)"),
+    zip: z.string(),
+    phone: z.string().optional(),
+  });
+
   export const createShipmentRate = fn(
     z.object({
       ounces: z.number(),
@@ -238,7 +250,9 @@ export module Shippo {
   });
 
   export const assertValidAddress = fn(
-    Address.omit({ country: true }).extend({ country: z.string() }),
+    Address.omit({ country: true }).extend({
+      country: z.string(),
+    }),
     async (input) => {
       const result = await api("POST", "/v1/addresses", {
         name: input.name,

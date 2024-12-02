@@ -8,6 +8,7 @@
   },
   "devDependencies": {},
   "dependencies": {
+    "@apiture/openapi-down-convert": "^0.14.0",
     "@aws-sdk/client-sesv2": "3.606.0",
     "@hono/valibot-validator": "0.2.2",
     "@hono/zod-openapi": "0.11.0",
@@ -16,7 +17,9 @@
     "airtable": "0.12.2",
     "hono": "*",
     "sst": "3.4.0",
-    "valibot": "1.0.0-beta.6",
-    "zod": "3.23.8"
+    "valibot": "1.0.0-beta.9",
+    "hono-openapi": "0.2.1",
+    "zod": "*",
+    "zod-openapi": "4.1.0"
   }
 }

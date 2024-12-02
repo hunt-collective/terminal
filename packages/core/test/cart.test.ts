@@ -1,11 +1,11 @@
-import { expect, describe, it } from "bun:test";
+import { expect, describe } from "bun:test";
 import { withTestUser } from "./util";
 import { Cart } from "../src/cart/index";
 import { Product } from "../src/product/index";
 import { createID } from "../src/util/id";
-import { User } from "../src/user";
 import { Card } from "../src/card";
 import { Order } from "../src/order/order";
+import { Address } from "../src/address";
 
 describe("cart", async () => {
   const price = 1000;
@@ -46,7 +46,7 @@ describe("cart", async () => {
       token: "tok_visa",
     });
 
-    const shippingID = await User.addShipping({
+    const addressID = await Address.create({
       name: "John Smith",
       zip: "33133",
       city: "Miami",
@@ -55,7 +55,7 @@ describe("cart", async () => {
       province: "FL",
     });
 
-    await Cart.setShipping(shippingID);
+    await Cart.setAddress(addressID);
     await Cart.setCard(cardID);
     const orderID = await Order.convertCart();
     console.log(orderID);

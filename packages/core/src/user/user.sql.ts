@@ -5,7 +5,7 @@ import {
   text,
   varchar,
 } from "drizzle-orm/mysql-core";
-import { address, id, ulid, timestamps } from "../drizzle/types";
+import { id, ulid, timestamps } from "../drizzle/types";
 import { z } from "zod";
 
 export const UserFlags = z.object({
@@ -44,14 +44,3 @@ export const userFingerprintTable = mysqlTable(
     }),
   }),
 );
-
-export const userShippingTable = mysqlTable("user_shipping", {
-  ...id,
-  ...timestamps,
-  userID: ulid("user_id")
-    .references(() => userTable.id, {
-      onDelete: "cascade",
-    })
-    .notNull(),
-  address: address("address").notNull(),
-});

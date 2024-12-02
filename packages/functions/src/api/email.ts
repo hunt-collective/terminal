@@ -1,29 +1,27 @@
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
+import { z } from "zod";
 import { Result } from "./common";
 import { EmailOctopus } from "@terminal/core/email-octopus";
+import { Hono } from "hono";
+import { describeRoute } from "hono-openapi";
+import { validator, resolver } from "hono-openapi/zod";
+import { Examples } from "@terminal/core/examples";
 
 export module EmailApi {
-  export const route = new OpenAPIHono().openapi(
-    createRoute({
-      method: "post",
-      path: "/subscription",
-      request: {
-        body: {
-          content: {
-            "application/json": {
-              schema: z.object({ email: z.string().min(1) }),
-            },
-          },
-        },
-      },
+  export const route = new Hono().post(
+    "/subscription",
+    describeRoute({
+      tags: ["Marketing"],
+      summary: "Subscribe",
+      description: "Subscribe to email updates from Terminal.",
+      security: [],
       responses: {
         400: {
           content: {
             "application/json": {
-              schema: z.object({ error: z.string() }),
+              schema: resolver(z.object({ error: z.string() })),
             },
           },
-          description: "Email is required",
+          description: "Error response.",
         },
         200: {
           content: {
@@ -31,15 +29,24 @@ export module EmailApi {
               schema: Result(z.literal("ok")),
             },
           },
-          description: "Email subscription was created",
+          description: "Email subscription was created.",
         },
       },
     }),
+    validator(
+      "json",
+      z.object({
+        email: z.string().email().min(1).openapi({
+          description: "Email address to subscribe to Terminal updates with.",
+          example: Examples.User.email,
+        }),
+      }),
+    ),
     async (c) => {
       const body = c.req.valid("json");
       if (!body.email) return c.json({ error: "Email is required" }, 400);
       await EmailOctopus.subscribe({ email: body.email });
-      return c.json({ result: "ok" as const }, 200);
+      return c.json({ data: "ok" as const }, 200);
     },
   );
 }

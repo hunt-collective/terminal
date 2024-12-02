@@ -1,8 +1,8 @@
-import { createSubjects } from "@openauthjs/core";
-import { email, object, pipe, string } from "valibot";
+import { createSubjects } from "@openauthjs/openauth";
+import { z } from "zod";
 
 export const subjects = createSubjects({
-  user: object({
-    email: pipe(string(), email()),
+  user: z.object({
+    email: z.string().email(),
   }),
 });

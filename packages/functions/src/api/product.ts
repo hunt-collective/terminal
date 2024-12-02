@@ -1,36 +1,31 @@
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
+import { z } from "zod";
 import { Result } from "./common";
 import { Product } from "@terminal/core/product/index";
+import { Hono } from "hono";
+import { describeRoute } from "hono-openapi";
+import { Examples } from "@terminal/core/examples";
 
 export module ProductApi {
-  export const ProductVariantSchema = z
-    .object(Product.Variant.shape)
-    .openapi("ProductVariant");
-
-  export const ProductSchema = z
-    .object(Product.Info.shape)
-    .extend({
-      variants: ProductVariantSchema.array(),
-    })
-    .openapi("Product");
-
-  export const route = new OpenAPIHono().openapi(
-    createRoute({
-      security: [
-        {
-          Bearer: [],
-        },
-      ],
-      method: "get",
-      path: "/",
+  export const route = new Hono().get(
+    "/",
+    describeRoute({
+      tags: ["Products"],
+      summary: "List products",
+      description: "List all products for sale in the Terminal shop.",
+      security: [],
       responses: {
         200: {
           content: {
             "application/json": {
-              schema: Result(ProductSchema.array()),
+              schema: Result(
+                Product.Info.array().openapi({
+                  description: "A list of products.",
+                  example: [Examples.Product],
+                }),
+              ),
             },
           },
-          description: "Returns a list of products",
+          description: "A list of products.",
         },
       },
     }),
@@ -38,7 +33,7 @@ export module ProductApi {
       c.header("Cache-Control", "s-maxage=60");
       return c.json(
         {
-          result: await Product.list(),
+          data: await Product.list(),
         },
         200,
       );

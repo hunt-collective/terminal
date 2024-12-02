@@ -2,9 +2,10 @@
 
 organization:
   name: terminal
-  docs: https://docs.terminal.com
+  docs: https://terminal.shop/docs
   contact: dev@terminal.com
-  github_org: terminaldotshop
+openapi:
+  code_samples: mintlify
 resources:
   $shared:
     models:
@@ -14,7 +15,6 @@ resources:
       order: Order
       product: Product
       productVariant: ProductVariant
-      shipping: UserShipping
       subscription: Subscription
       user: User
   product:
@@ -25,12 +25,11 @@ resources:
       me: get /user/me
       init: get /user/init
       update: put /user/me
-    subresources:
-      shipping:
-        methods:
-          list: get /user/shipping
-          create: post /user/shipping
-          delete: delete /user/shipping/{id}
+  address:
+    methods:
+      list: get /address
+      create: post /address
+      delete: delete /address/{id}
   card:
     methods:
       list: get /card
@@ -40,7 +39,7 @@ resources:
     methods:
       list: get /cart
       setItem: put /cart/item
-      setShipping: put /cart/shipping
+      setAddress: put /cart/address
       setCard: put /cart/card
   order:
     methods:
@@ -52,15 +51,9 @@ resources:
       list: get /subscription
       create: put /subscription
       delete: delete /subscription/{id}
-package:
-  node:
-    name: "@terminal/sdk"
-    repo: terminal-sdk-js
-    skip: false
-  go:
-    name: 'terminal'
-    repo: terminal-sdk-go
-    skip: false
+  email:
+    methods:
+      create: post /email/subscription
 settings:
   license: Apache-2.0
 client_settings:
@@ -71,8 +64,8 @@ client_settings:
         security_scheme: Bearer
       read_env: TERMINAL_BEARER_TOKEN
 environments:
-  production: https://openapi.terminal.shop/
-  dev: https://openapi.dev.terminal.shop/
+  production: https://api.terminal.shop/
+  dev: https://api.dev.terminal.shop/
 query_settings:
   nested_format: brackets
   array_format: comma
@@ -86,4 +79,14 @@ readme:
       type: request
       endpoint: get /product
       params: *ref_0
-
+targets:
+  node:
+    package_name: '@terminal/sdk'
+    production_repo: terminaldotshop/terminal-sdk-js
+    publish:
+      npm: true
+    skip: false
+  go:
+    package_name: terminal
+    production_repo: terminaldotshop/terminal-sdk-go
+    skip: false

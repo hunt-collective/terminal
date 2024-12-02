@@ -100,7 +100,7 @@ func (m model) SubscribeUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "esc":
 			m.state.subscribe.selected = 0
 			m.state.subscribe.product = nil
-			m.subscription = terminal.SubscriptionNewParams{}
+			m.subscription = terminal.SubscriptionParam{}
 			return m.ShopSwitch()
 		}
 	}

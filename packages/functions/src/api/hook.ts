@@ -6,11 +6,6 @@ import { Resource } from "sst";
 export module Hook {
   export const route = new Hono().post("/stripe", async (ctx) => {
     const sig = ctx.req.header("stripe-signature");
-    console.log({
-      sig,
-      secret: Resource.StripeWebhook.secret,
-      id: Resource.StripeWebhook.id,
-    });
     const evt = await stripe.webhooks.constructEventAsync(
       await ctx.req.text(),
       sig!,

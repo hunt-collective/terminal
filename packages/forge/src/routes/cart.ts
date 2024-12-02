@@ -1,10 +1,11 @@
 import { Layout, Page, io } from "@forgeapp/sdk";
 import { useTransaction } from "@terminal/core/drizzle/transaction";
 import { cartItemTable, cartTable } from "@terminal/core/cart/cart.sql";
-import { userShippingTable, userTable } from "@terminal/core/user/user.sql";
+import { userTable } from "@terminal/core/user/user.sql";
 import { cardTable } from "@terminal/core/card/card.sql";
 import { eq, sql, sum } from "@terminal/core/drizzle/index";
 import { productVariantTable } from "@terminal/core/product/product.sql";
+import { addressTable } from "@terminal/core/address/address.sql";
 
 export const Cart = new Page({
   name: "Cart",
@@ -21,7 +22,7 @@ export const Cart = new Page({
                   userID: userTable.id,
                   email: userTable.email,
                   cardID: cardTable.id,
-                  shippingID: userShippingTable.id,
+                  addressID: addressTable.id,
                   items: sum(cartItemTable.quantity),
                   cost: sql`SUM(${cartItemTable.quantity} * ${productVariantTable.price})`,
                 })
@@ -37,15 +38,15 @@ export const Cart = new Page({
                   eq(cartItemTable.productVariantID, productVariantTable.id),
                 )
                 .leftJoin(
-                  userShippingTable,
-                  eq(cartTable.shippingID, userShippingTable.id),
+                  addressTable,
+                  eq(cartTable.addressID, addressTable.id),
                 )
                 .groupBy(
                   cartTable.id,
                   userTable.id,
                   userTable.email,
                   cardTable.id,
-                  userShippingTable.id,
+                  addressTable.id,
                 )
                 .offset(input.offset)
                 .limit(input.pageSize),

@@ -8,7 +8,7 @@ import {
 } from "drizzle-orm/mysql-core";
 import { dollar, id, ulid, timestamps } from "../drizzle/types";
 import { inventoryTable } from "../inventory/inventory.sql";
-import { z } from "zod";
+import { SubscriptionSetting } from "../subscription/subscription";
 
 export const productTable = mysqlTable("product", {
   ...id,
@@ -55,9 +55,3 @@ export const productVariantInventoryTable = mysqlTable(
     }),
   }),
 );
-
-export const SubscriptionSetting = z.union([
-  z.literal("allowed"),
-  z.literal("required"),
-]);
-export type SubscriptionSetting = z.infer<typeof SubscriptionSetting>;

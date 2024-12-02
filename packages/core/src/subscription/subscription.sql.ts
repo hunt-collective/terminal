@@ -2,8 +2,9 @@ import { mysqlTable, unique, int, varchar } from "drizzle-orm/mysql-core";
 import { cardTable } from "../card/card.sql";
 import { id, timestamp, timestamps, ulid } from "../drizzle/types";
 import { productVariantTable } from "../product/product.sql";
-import { userTable, userShippingTable } from "../user/user.sql";
+import { userTable } from "../user/user.sql";
 import { z } from "zod";
+import { addressTable } from "../address/address.sql";
 
 export const subscriptionTable = mysqlTable(
   "subscription",
@@ -27,8 +28,8 @@ export const subscriptionTable = mysqlTable(
       })
       .notNull(),
     quantity: int("quantity").notNull(),
-    shippingID: ulid("shipping_id")
-      .references(() => userShippingTable.id)
+    addressID: ulid("shipping_id")
+      .references(() => addressTable.id)
       .notNull(),
     cardID: ulid("card_id")
       .references(() => cardTable.id)
@@ -39,11 +40,11 @@ export const subscriptionTable = mysqlTable(
   }),
 );
 
-export const SubscriptionFrequency = z.union([
-  z.literal("fixed"),
-  z.literal("daily"),
-  z.literal("weekly"),
-  z.literal("monthly"),
-  z.literal("yearly"),
+export const SubscriptionFrequency = z.enum([
+  "fixed",
+  "daily",
+  "weekly",
+  "monthly",
+  "yearly",
 ]);
 export type SubscriptionFrequency = z.infer<typeof SubscriptionFrequency>;

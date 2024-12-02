@@ -6,7 +6,7 @@ import {
 import { createID } from "../util/id";
 import { orderItemTable, orderTable } from "./order.sql";
 import { assertFlag, useUserID } from "../actor";
-import { userShippingTable, userTable } from "../user/user.sql";
+import { userTable } from "../user/user.sql";
 import {
   and,
   eq,
@@ -31,36 +31,99 @@ import { bus } from "sst/aws/bus";
 import { Resource } from "sst";
 import { stripe } from "../stripe";
 import { Stripe } from "stripe";
-import { Address } from "../address";
 import { Shippo } from "../shippo/index";
 import { VisibleError } from "../error";
 import { inventoryRecordTable } from "../inventory/inventory.sql";
 import { pipe, groupBy, values, map } from "remeda";
+import { Common } from "../common";
+import { Examples } from "../examples";
+import { Address } from "../address";
+import { addressTable } from "../address/address.sql";
 
 export module Order {
-  export const Item = z.object({
-    id: z.string(),
-    description: z.string().optional(),
-    amount: z.number(),
-    quantity: z.number().int().gte(0),
-    productVariantID: z.string().optional(),
-  });
+  export const Item = z
+    .object({
+      id: z.string().openapi({
+        description: Common.IdDescription,
+        example: Examples.OrderItem.id,
+      }),
+      description: z.string().optional().openapi({
+        description: "Description of the item in the order.",
+      }),
+      amount: z.number().int().openapi({
+        description: "Amount of the item in the order, in cents (USD).",
+        example: Examples.OrderItem.amount,
+      }),
+      quantity: z.number().int().min(0).openapi({
+        description: "Quantity of the item in the order.",
+        example: Examples.OrderItem.quantity,
+      }),
+      productVariantID: z.string().optional().openapi({
+        description: "ID of the product variant of the item in the order.",
+        example: Examples.OrderItem.productVariantID,
+      }),
+    })
+    .openapi({ ref: "OrderItem", example: Examples.OrderItem });
 
-  export const Info = z.object({
-    id: z.string(),
-    index: z.number().optional(),
-    shipping: Address,
-    amount: z.object({
-      shipping: z.number(),
-      subtotal: z.number(),
-    }),
-    tracking: z.object({
-      service: z.string().optional(),
-      number: z.string().optional(),
-      url: z.string().optional(),
-    }),
-    items: z.array(Item),
-  });
+  export const Info = z
+    .object({
+      id: z.string().openapi({
+        description: Common.IdDescription,
+        example: Examples.Order.id,
+      }),
+      index: z.number().int().optional().openapi({
+        description: "Zero-based index of the order for this user only.",
+        example: Examples.Order.index,
+      }),
+      shipping: Address.Inner.openapi({
+        description: "Shipping address of the order.",
+        example: Examples.Order.shipping,
+      }),
+      amount: z
+        .object({
+          shipping: z.number().int().openapi({
+            description: "Shipping amount of the order, in cents (USD).",
+            example: Examples.Order.amount.shipping,
+          }),
+          subtotal: z.number().int().openapi({
+            description: "Subtotal amount of the order, in cents (USD).",
+            example: Examples.Order.amount.subtotal,
+          }),
+        })
+        .openapi({
+          description: "The subtotal and shipping amounts of the order.",
+          example: Examples.Order.amount,
+        }),
+      tracking: z
+        .object({
+          service: z.string().optional().openapi({
+            description: "Shipping service of the order.",
+            example: Examples.Order.tracking.service,
+          }),
+          number: z.string().optional().openapi({
+            description: "Tracking number of the order.",
+            example: Examples.Order.tracking.number,
+          }),
+          url: z.string().optional().openapi({
+            description: "Tracking URL of the order.",
+            example: Examples.Order.tracking.url,
+          }),
+        })
+        .openapi({
+          description: "Tracking information of the order.",
+          example: Examples.Order.tracking,
+        }),
+      items: Item.array().openapi({
+        description: "Items in the order.",
+        example: Examples.Order.items,
+      }),
+    })
+    .openapi({
+      ref: "Order",
+      description: "An order from the Terminal shop.",
+      example: Examples.Order,
+    });
+
   export type Info = z.infer<typeof Info>;
 
   export const Event = {
@@ -179,7 +242,7 @@ export module Order {
 
       const cart = await tx
         .select({
-          shipping: userShippingTable.address,
+          shipping: addressTable.address,
           card: getTableColumns(cardTable),
           stripeCustomerID: userTable.stripeCustomerID,
           email: userTable.email,
@@ -187,10 +250,7 @@ export module Order {
           shippoRateID: cartTable.shippoRateID,
         })
         .from(cartTable)
-        .innerJoin(
-          userShippingTable,
-          eq(cartTable.shippingID, userShippingTable.id),
-        )
+        .innerJoin(addressTable, eq(cartTable.addressID, addressTable.id))
         .innerJoin(cardTable, eq(cartTable.cardID, cardTable.id))
         .innerJoin(userTable, eq(cartTable.userID, userTable.id))
         .where(eq(cartTable.userID, userID))
@@ -273,7 +333,7 @@ export module Order {
     z.object({
       email: z.string().email(),
       items: z.record(z.number().int()),
-      address: Address,
+      address: Address.Inner,
     }),
     async (input) => {
       await Shippo.assertValidAddress(input.address);

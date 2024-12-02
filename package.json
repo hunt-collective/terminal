@@ -16,9 +16,13 @@
     "patch-package": "^8.0.0",
     "sst": "3.4.0",
     "remeda": "2.3.0",
-    "hono": "4.6.12"
+    "hono": "4.6.12",
+    "zod": "3.24.1"
   },
   "devDependencies": {
     "typescript": "5.5.4"
+  },
+  "patchedDependencies": {
+    "hono-openapi@0.2.1": "patches/hono-openapi@0.2.1.patch"
   }
 }

@@ -23,8 +23,9 @@ const tweets = [
 "ssh terminal.shop" via @terminaldotshop`,
 ]
 
+// @ts-ignore
 const randomTweet = tweets[Math.floor(Math.random() * tweets.length)]
-const tweetUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(randomTweet)}`
-
-return Astro.redirect(tweetUrl)
+return Astro.redirect(
+  `https://x.com/intent/tweet?text=${encodeURIComponent(randomTweet)}`,
+)
 ---

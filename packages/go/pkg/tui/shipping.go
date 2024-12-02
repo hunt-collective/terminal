@@ -44,7 +44,7 @@ type SelectedShippingUpdatedMsg struct {
 
 type ShippingAddressAddedMsg struct {
 	shippingID string
-	addresses  []terminal.Shipping
+	addresses  []terminal.Address
 }
 
 func (m model) ShippingSwitch() (model, tea.Cmd) {
@@ -151,18 +151,18 @@ func (m model) SetShipping(shippingID string) error {
 		return nil
 	}
 
-	params := terminal.CartSetShippingParams{ShippingID: terminal.F(shippingID)}
-	_, err := m.client.Cart.SetShipping(m.context, params)
+	params := terminal.CartSetAddressParams{AddressID: terminal.F(shippingID)}
+	_, err := m.client.Cart.SetAddress(m.context, params)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (m model) GetSelectedAddress() *terminal.Shipping {
+func (m model) GetSelectedAddress() *terminal.Address {
 	if m.IsSubscribing() {
 		for _, address := range m.addresses {
-			if address.ID == m.subscription.ShippingID.Value {
+			if address.ID == m.subscription.AddressID.Value {
 				return &address
 			}
 		}
@@ -170,7 +170,7 @@ func (m model) GetSelectedAddress() *terminal.Shipping {
 	}
 
 	for _, address := range m.addresses {
-		if address.ID == m.cart.ShippingID {
+		if address.ID == m.cart.AddressID {
 			return &address
 		}
 	}
@@ -225,15 +225,15 @@ func (m model) shippingListUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "y":
 			if m.state.shipping.deleting != nil {
 				m.state.shipping.deleting = nil
-				m.client.User.Shipping.Delete(m.context, m.addresses[m.state.shipping.selected].ID)
+				m.client.Address.Delete(m.context, m.addresses[m.state.shipping.selected].ID)
 				if len(m.addresses)-1 == 0 && m.page == accountPage {
 					m.state.account.focused = false
 				}
 				return m, func() tea.Msg {
-					shipping, err := m.client.User.Shipping.List(m.context)
+					shipping, err := m.client.Address.List(m.context)
 					if err != nil {
 					}
-					return shipping.Result
+					return shipping.Data
 				}
 			}
 			return m, nil
@@ -322,7 +322,7 @@ func (m model) shippingFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 				return VisibleError{message: "phone is required for international orders"}
 			}
 
-			params := terminal.UserShippingNewParams{
+			params := terminal.AddressNewParams{
 				Name:     terminal.String(m.state.shipping.input.name),
 				Street1:  terminal.String(m.state.shipping.input.street1),
 				Street2:  terminal.String(m.state.shipping.input.street2),
@@ -332,15 +332,15 @@ func (m model) shippingFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 				Zip:      terminal.String(m.state.shipping.input.zip),
 				Phone:    terminal.String(m.state.shipping.input.phone),
 			}
-			response, err := m.client.User.Shipping.New(m.context, params)
+			response, err := m.client.Address.New(m.context, params)
 			if err != nil {
 				log.Error(err)
 				return VisibleError{message: api.GetErrorMessage(err)}
 			}
-			addresses, _ := m.client.User.Shipping.List(m.context)
+			addresses, _ := m.client.Address.List(m.context)
 			return ShippingAddressAddedMsg{
-				shippingID: response.Result,
-				addresses:  addresses.Result,
+				shippingID: response.Data,
+				addresses:  addresses.Data,
 			}
 		}
 	}
@@ -352,11 +352,11 @@ func (m model) ShippingUpdate(msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case SelectedShippingUpdatedMsg:
 		if m.IsSubscribing() {
-			m.subscription.ShippingID = terminal.String(msg.shippingID)
+			m.subscription.AddressID = terminal.String(msg.shippingID)
 		} else {
-			m.cart.ShippingID = msg.shippingID
+			m.cart.AddressID = msg.shippingID
 			cart, _ := m.client.Cart.List(m.context)
-			m.cart = cart.Result
+			m.cart = cart.Data
 		}
 		return m.PaymentSwitch()
 	}
@@ -398,7 +398,7 @@ func (m model) shippingListView(totalWidth int, focused bool) string {
 
 	addresses := []string{}
 	for i, address := range m.addresses {
-		content := m.formatAddress(address.Address)
+		content := m.formatAddress(address)
 		if m.state.shipping.deleting != nil && *m.state.shipping.deleting == i {
 			content = accent("are you sure?") + base("\n(y/n)")
 		}

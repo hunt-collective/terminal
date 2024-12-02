@@ -52,12 +52,12 @@ type model struct {
 	user            terminal.User
 	accountPages    []page
 	products        []terminal.Product
-	addresses       []terminal.Shipping
+	addresses       []terminal.Address
 	cards           []terminal.Card
 	subscriptions   []terminal.Subscription
 	orders          []terminal.Order
 	cart            terminal.Cart
-	subscription    terminal.SubscriptionNewParams
+	subscription    terminal.SubscriptionParam
 	renderer        *lipgloss.Renderer
 	theme           theme.Theme
 	fingerprint     string
@@ -118,7 +118,7 @@ func NewModel(
 			faqPage,
 			aboutPage,
 		},
-		subscription: terminal.SubscriptionNewParams{},
+		subscription: terminal.SubscriptionParam{},
 		state: state{
 			splash: SplashState{},
 			shop: shopState{
@@ -218,7 +218,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.state.cart.lastUpdateID == msg.updateID {
 			m.cart = msg.updated
 		}
-	case terminal.UserInitResponseResult:
+	case terminal.UserInitResponseData:
 		m.user = msg.User
 		m.products = msg.Products
 		m.cart = msg.Cart
@@ -236,7 +236,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.cart = msg
 	case []terminal.Card:
 		m.cards = msg
-	case []terminal.Shipping:
+	case []terminal.Address:
 		m.addresses = msg
 	case []terminal.Subscription:
 		m.subscriptions = msg

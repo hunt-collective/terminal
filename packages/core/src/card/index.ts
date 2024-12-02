@@ -1,5 +1,5 @@
-import { and, eq, inArray, not, sql } from "drizzle-orm";
 import { z } from "zod";
+import { and, eq, inArray, not, sql } from "drizzle-orm";
 import { useTransaction } from "../drizzle/transaction";
 import { stripe } from "../stripe";
 import { fn } from "../util/fn";
@@ -8,17 +8,45 @@ import { createID } from "../util/id";
 import { useUserID } from "../actor";
 import { cardTable } from "./card.sql";
 import { VisibleError } from "../error";
+import { Common } from "../common";
+import { Examples } from "../examples";
 
 export module Card {
-  export const Info = z.object({
-    id: z.string(),
-    brand: z.string(),
-    expiration: z.object({
-      year: z.number().int(),
-      month: z.number().int(),
-    }),
-    last4: z.string(),
-  });
+  export const Info = z
+    .object({
+      id: z.string().openapi({
+        description: Common.IdDescription,
+        example: Examples.Card.id,
+      }),
+      brand: z.string().openapi({
+        description: "Brand of the card.",
+        example: Examples.Card.brand,
+      }),
+      expiration: z
+        .object({
+          year: z.number().int().openapi({
+            description: "Expiration year of the card.",
+            example: Examples.Card.expiration.year,
+          }),
+          month: z.number().int().openapi({
+            description: "Expiration month of the card.",
+            example: Examples.Card.expiration.month,
+          }),
+        })
+        .openapi({
+          description: "Expiration of the card.",
+          example: Examples.Card.expiration,
+        }),
+      last4: z.string().openapi({
+        description: "Last four digits of the card.",
+        example: Examples.Card.last4,
+      }),
+    })
+    .openapi({
+      ref: "Card",
+      description: "Credit card used for payments in the Terminal shop.",
+      example: Examples.Card,
+    });
 
   export type Info = z.infer<typeof Info>;
 
