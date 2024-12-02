@@ -9,7 +9,10 @@ const stripe = new Stripe(Resource.StripeSecret.value, {
 });
 
 export async function handler() {
-  const current = DateTime.now().minus({ weeks: 1 }).startOf("week");
+  const current = DateTime.utc()
+    .minus({ weeks: 1 })
+    .startOf("week")
+    .minus({ day: 2 });
   console.log(`Analyzing ${current.toFormat("LLL dd")}`);
   const last = current.minus({ weeks: 1 });
   const [revenue, revenueLast, subs, subsLast] = await Promise.all([
@@ -43,10 +46,10 @@ export async function handler() {
 }
 
 async function getRevenue(start: DateTime) {
-  const end = start.endOf("week");
+  const end = start.plus({ days: 7 });
   console.log("getting revenue for", start.toISO(), end.toISO());
   const run = await stripe.reporting.reportRuns.create({
-    report_type: "balance.summary.1",
+    report_type: "balance_change_from_activity.summary.1",
     parameters: {
       interval_start: start.toUnixInteger(),
       interval_end: end.toUnixInteger(),
@@ -69,13 +72,13 @@ async function getRevenue(start: DateTime) {
       const activity = parsed.find((row) => row.category === "activity");
       return parseFloat(activity!.net_amount!);
     }
-    console.log("waiting for report to finish...");
+    console.log("waiting for report to finish", { status: report.status });
     await new Promise((resolve) => setTimeout(resolve, 5000));
   }
 }
 
 async function getSubscription(start: DateTime) {
-  const end = start.endOf("week");
+  const end = start.plus({ days: 7 });
   const total = await db.$count(
     subscriptionTable,
     and(
@@ -88,3 +91,5 @@ async function getSubscription(start: DateTime) {
   );
   return total;
 }
+
+await handler();
