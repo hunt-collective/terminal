@@ -9,10 +9,7 @@ const stripe = new Stripe(Resource.StripeSecret.value, {
 });
 
 export async function handler() {
-  const current = DateTime.utc()
-    .minus({ weeks: 1 })
-    .startOf("week")
-    .minus({ day: 2 });
+  const current = DateTime.utc().minus({ weeks: 1 }).startOf("week");
   console.log(`Analyzing ${current.toFormat("LLL dd")}`);
   const last = current.minus({ weeks: 1 });
   const [revenue, revenueLast, subs, subsLast] = await Promise.all([
