@@ -49,7 +49,7 @@ async function getRevenue(start: DateTime) {
   const end = start.plus({ days: 7 });
   console.log("getting revenue for", start.toISO(), end.toISO());
   const run = await stripe.reporting.reportRuns.create({
-    report_type: "balance_change_from_activity.summary.1",
+    report_type: "balance.summary.1",
     parameters: {
       interval_start: start.toUnixInteger(),
       interval_end: end.toUnixInteger(),
@@ -91,5 +91,3 @@ async function getSubscription(start: DateTime) {
   );
   return total;
 }
-
-await handler();
