@@ -1,21 +1,7 @@
-import { Layout, Page, io } from "@interval/sdk";
+import { Layout, Page, io } from "@forgeapp/sdk";
 import { useTransaction } from "@terminal/core/drizzle/transaction";
-import {
-  and,
-  count,
-  desc,
-  eq,
-  isNotNull,
-  isNull,
-  like,
-  or,
-  sql,
-} from "@terminal/core/drizzle/index";
+import { and, count, desc, eq, isNull } from "@terminal/core/drizzle/index";
 import { subscriptionTable } from "@terminal/core/subscription/subscription.sql";
-import {
-  productTable,
-  productVariantTable,
-} from "@terminal/core/product/product.sql";
 import { userShippingTable, userTable } from "@terminal/core/user/user.sql";
 
 export const Subs = new Page({
@@ -28,6 +14,17 @@ export const Subs = new Page({
         .where(and(isNull(subscriptionTable.timeDeleted))),
     );
 
+    const frequencyTotals = await useTransaction((tx) =>
+      tx
+        .select({
+          frequency: subscriptionTable.frequency,
+          count: count(subscriptionTable.id),
+        })
+        .from(subscriptionTable)
+        .where(isNull(subscriptionTable.timeDeleted))
+        .groupBy(subscriptionTable.frequency),
+    );
+
     return new Layout({
       title: "Subscription",
       menuItems: [],
@@ -38,6 +35,12 @@ export const Subs = new Page({
             level: 3,
           },
         ),
+        io.display.chart("Subscription Frequencies", {
+          type: "pie",
+          data: frequencyTotals,
+          dataKeys: ["count"],
+          dataLabelKey: "frequency",
+        }),
         io.display.table("Subscriptions", {
           getData: async (input) => {
             return useTransaction(async (tx) => ({

@@ -6,5 +6,5 @@ COPY package.json ./
 COPY packages/*/package.json ./packages/
 COPY packages ./packages
 RUN bun install
-WORKDIR /app/packages/interval
-CMD bun run ./src/interval.ts
+WORKDIR /app/packages/forge
+CMD bun run ./src/forge.ts

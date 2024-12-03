@@ -1,4 +1,4 @@
-import { Action, Page, io, ctx, Layout } from "@interval/sdk";
+import { Action, Page, io, ctx, Layout } from "@forgeapp/sdk";
 import { eq } from "@terminal/core/drizzle/index";
 import { useTransaction } from "@terminal/core/drizzle/transaction";
 import { inventoryTable } from "@terminal/core/inventory/inventory.sql";

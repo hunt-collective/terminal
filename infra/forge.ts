@@ -4,18 +4,18 @@ import { database } from "./database";
 import { allSecrets } from "./secret";
 
 const bucket = new sst.aws.Bucket("IntervalBucket");
-cluster.addService("Interval", {
+cluster.addService("Forge", {
   link: [...allSecrets, database, bucket, bus],
   cpu: "0.25 vCPU",
   memory: "0.5 GB",
   image: {
-    dockerfile: "packages/interval/Dockerfile",
+    dockerfile: "packages/forge/Dockerfile",
   },
   environment: {
     DRIZZLE_LOG: "true",
   },
   dev: {
-    directory: "packages/interval",
+    directory: "packages/forge",
     command: "bun dev",
   },
 });

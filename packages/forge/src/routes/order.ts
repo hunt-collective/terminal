@@ -1,4 +1,4 @@
-import { Action, Layout, Page, ctx, io } from "@interval/sdk";
+import { Action, Layout, Page, ctx, io } from "@forgeapp/sdk";
 import { useTransaction } from "@terminal/core/drizzle/transaction";
 import { entries, groupBy, map, pipe } from "remeda";
 import {

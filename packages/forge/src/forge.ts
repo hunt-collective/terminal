@@ -1,4 +1,4 @@
-import { Interval } from "@interval/sdk";
+import { Forge } from "@forgeapp/sdk";
 import { Resource } from "sst";
 
 import Product from "./routes/product";
@@ -8,8 +8,9 @@ import { Order } from "./routes/order";
 import { InventoryPage } from "./routes/inventory";
 import { Subs } from "./routes/subs";
 
-const interval = new Interval({
+const forge = new Forge({
   apiKey: Resource.IntervalKey.value,
+  endpoint: "wss://terminal.app.forgeapp.io/websocket",
   routes: {
     product: Product,
     cart: Cart,
@@ -20,4 +21,4 @@ const interval = new Interval({
   },
 });
 
-interval.listen();
+forge.listen();
