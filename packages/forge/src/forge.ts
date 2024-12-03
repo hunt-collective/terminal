@@ -9,7 +9,7 @@ import { InventoryPage } from "./routes/inventory";
 import { Subs } from "./routes/subs";
 
 const forge = new Forge({
-  apiKey: Resource.IntervalKey.value,
+  apiKey: Resource.ForgeKey.value,
   endpoint: "wss://terminal.app.forgeapp.io/websocket",
   routes: {
     product: Product,

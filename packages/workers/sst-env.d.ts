@@ -51,6 +51,14 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "Forge": {
+      "service": string
+      "type": "sst.aws.Service"
+    }
+    "ForgeKey": {
+      "type": "sst.sst.Secret"
+      "value": string
+    }
     "GithubClientID": {
       "type": "sst.sst.Secret"
       "value": string
@@ -59,17 +67,9 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "Interval": {
-      "service": string
-      "type": "sst.aws.Service"
-    }
     "IntervalBucket": {
       "name": string
       "type": "sst.aws.Bucket"
-    }
-    "IntervalKey": {
-      "type": "sst.sst.Secret"
-      "value": string
     }
     "OpenApi": {
       "name": string
