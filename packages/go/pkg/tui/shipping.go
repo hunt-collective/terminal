@@ -248,6 +248,9 @@ func (m model) shippingListUpdate(msg tea.Msg) (model, tea.Cmd) {
 			if m.state.shipping.deleting != nil {
 				m.state.shipping.deleting = nil
 			} else if m.IsSubscribing() {
+				if m.SubscribeItemCount() == 1 {
+					return m.ShopSwitch()
+				}
 				return m.SubscribeSwitch()
 			} else {
 				return m.CartSwitch()

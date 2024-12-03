@@ -68,6 +68,13 @@ func (m model) SubscribeSwitch() (model, tea.Cmd) {
 		{key: "enter", value: "select"},
 	}
 
+	if m.SubscribeItemCount() == 1 {
+		m.subscription.ProductVariantID = terminal.String(
+			m.VisibleSubscribeItems()[0].ID,
+		)
+		return m.ShippingSwitch()
+	}
+
 	return m, nil
 }
 
