@@ -42,4 +42,14 @@ export default $config({
     }
     return outputs;
   },
+  console: {
+    autodeploy: {
+      runner: {
+        engine: "codebuild",
+        cache: {
+          paths: ["/var/lib/docker/image/overlay2"],
+        },
+      },
+    },
+  },
 });
