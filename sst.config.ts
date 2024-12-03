@@ -47,7 +47,7 @@ export default $config({
       runner: {
         engine: "codebuild",
         cache: {
-          paths: ["/var/lib/docker/image/overlay2"],
+          paths: ["/var/lib/docker/buildkit"],
         },
       },
     },
