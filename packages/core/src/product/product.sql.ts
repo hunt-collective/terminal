@@ -4,6 +4,7 @@ import {
   varchar,
   int,
   primaryKey,
+  json,
 } from "drizzle-orm/mysql-core";
 import { dollar, id, ulid, timestamps } from "../drizzle/types";
 import { inventoryTable } from "../inventory/inventory.sql";
@@ -18,6 +19,7 @@ export const productTable = mysqlTable("product", {
   subscription: varchar("subscription", {
     length: 255,
   }).$type<SubscriptionSetting>(),
+  tags: json("tags").$type<Record<string, string>>(),
 });
 
 export const productVariantTable = mysqlTable("product_variant", {

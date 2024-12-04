@@ -66,6 +66,50 @@ func (m model) ShopUpdate(msg tea.Msg) (model, tea.Cmd) {
 	return m, nil
 }
 
+func (m model) UpdateSelected(previous bool) (model, tea.Cmd) {
+	var next int
+	if previous {
+		next = m.state.shop.selected - 1
+	} else {
+		next = m.state.shop.selected + 1
+	}
+
+	if next < 0 {
+		next = 0
+	}
+	max := len(m.products) - 1
+	if next > max {
+		next = max
+	}
+
+	m.state.shop.selected = next
+	m = m.UpdateSelectedTheme()
+	return m, nil
+}
+
+func (m model) reorderProducts() model {
+	var featured, staples []shared.Product
+
+	// Split into featured and staples while maintaining relative order within each category
+	for _, p := range m.products {
+		if val, exists := p.Tags["featured"]; !exists || val != "true" {
+			staples = append(staples, p)
+		} else {
+			featured = append(featured, p)
+		}
+	}
+
+	// Combine featured first, then staples
+	m.products = append(featured, staples...)
+
+	// Reset selection to avoid any out-of-bounds issues
+	if len(m.products) > 0 {
+		m.state.shop.selected = 0
+	}
+
+	return m
+}
+
 func (m model) ShopView() string {
 	base := m.theme.Base().Render
 	accent := m.theme.TextAccent().Render
@@ -77,31 +121,47 @@ func (m model) ShopView() string {
 		Background(m.theme.Highlight()).
 		Foreground(m.theme.Background()).
 		Render
-
 	product := m.products[m.state.shop.selected]
 	variantID := product.Variants[0].ID
 	cartItem, _ := m.GetCartItem(variantID)
-
 	minus := base("- ")
 	plus := base(" +")
 	count := accent(fmt.Sprintf(" %d ", cartItem.Quantity))
 	quantity := minus + count + plus
 
 	menuWidth := 0
-	products := strings.Builder{}
-	for _, product := range m.products {
-		w := lipgloss.Width(product.Name)
+	var featuredCount int
+
+	// Calculate max width and count featured products
+	for _, p := range m.products {
+		w := lipgloss.Width(p.Name)
 		if w > menuWidth {
 			menuWidth = w
+		}
+		if val, exists := p.Tags["featured"]; exists && val == "true" {
+			featuredCount++
+		}
+	}
+
+	// Only consider section header widths if we have featured products
+	if featuredCount > 0 {
+		featuredHeader := "~ featured ~"
+		staplesHeader := "~ staples ~"
+		headerWidth := lipgloss.Width(featuredHeader)
+		if w := lipgloss.Width(staplesHeader); w > headerWidth {
+			headerWidth = w
+		}
+		if headerWidth > menuWidth {
+			menuWidth = headerWidth
 		}
 	}
 
 	var menuItem lipgloss.Style
 	var highlightedMenuItem lipgloss.Style
+	var sectionHeader lipgloss.Style
 
 	if m.size < large {
 		menuWidth = m.widthContent
-
 		menuItem = m.theme.Base().
 			Width(menuWidth).
 			Align(lipgloss.Center)
@@ -109,6 +169,10 @@ func (m model) ShopView() string {
 			Width(menuWidth).
 			Align(lipgloss.Center).
 			Background(m.theme.Highlight()).
+			Foreground(m.theme.Accent())
+		sectionHeader = m.theme.Base().
+			Width(menuWidth).
+			Align(lipgloss.Center).
 			Foreground(m.theme.Accent())
 	} else {
 		menuItem = m.theme.Base().
@@ -119,45 +183,73 @@ func (m model) ShopView() string {
 			Padding(0, 1).
 			Background(m.theme.Highlight()).
 			Foreground(m.theme.Accent())
+		sectionHeader = m.theme.Base().
+			Width(menuWidth+2).
+			Padding(0, 1).
+			Foreground(m.theme.Accent())
 	}
 
 	if product.Subscription == shared.ProductSubscriptionRequired {
 		quantity = button("subscribe") + " enter"
 	}
 
-	// TODO: do we need a category header?
-	// products.WriteString(menuItem.Copy().Background(m.theme.Body()).Foreground(m.theme.Accent()).Render("coffee beans"))
-	// products.WriteString("\n\n")
+	var products strings.Builder
 
-	for i := range m.products {
-		name := m.products[i].Name
+	// If we have featured products, show sections
+	if featuredCount > 0 {
+		// Featured section
+		products.WriteString(sectionHeader.Render("~ featured ~"))
+		products.WriteString("\n")
 
-		var content string
-		if i == m.state.shop.selected {
-			content = highlightedMenuItem.Render(name)
-		} else {
-			content = menuItem.Render(name)
+		for i := 0; i < featuredCount; i++ {
+			var content string
+			if i == m.state.shop.selected {
+				content = highlightedMenuItem.Render(m.products[i].Name)
+			} else {
+				content = menuItem.Render(m.products[i].Name)
+			}
+			products.WriteString(content + "\n")
 		}
 
-		products.WriteString(content + "\n")
+		if featuredCount < len(m.products) {
+			products.WriteString("\n")
+			// Staples section
+			products.WriteString(sectionHeader.Render("~ staples ~"))
+			products.WriteString("\n")
+
+			for i := featuredCount; i < len(m.products); i++ {
+				var content string
+				if i == m.state.shop.selected {
+					content = highlightedMenuItem.Render(m.products[i].Name)
+				} else {
+					content = menuItem.Render(m.products[i].Name)
+				}
+				products.WriteString(content + "\n")
+			}
+			products.WriteString("\n")
+		}
+	} else {
+		// No sections, just list all products
+		for i, p := range m.products {
+			var content string
+			if i == m.state.shop.selected {
+				content = highlightedMenuItem.Render(p.Name)
+			} else {
+				content = menuItem.Render(p.Name)
+			}
+			products.WriteString(content + "\n")
+		}
 	}
 
 	productList := m.theme.Base().Render(products.String())
 	productListWidth := lipgloss.Width(productList)
-
 	detailPaddingLeft := 2
 	detailWidth := m.widthContent - productListWidth - detailPaddingLeft
 	detailStyle := m.theme.Base().
 		PaddingLeft(detailPaddingLeft).
 		Width(detailWidth)
-	name := accent(product.Name)
-	// TODO: ratings? real ones?
-	// nameWidth := lipgloss.Width(name)
-	// rating := accent("★★★★★")
-	// ratingWidth := lipgloss.Width(rating)
-	// ratingSpace := m.theme.Base().Width(detailWidth - ratingWidth - nameWidth - 2).Render()
 
-	// join all product.Variants into a string separated by `/` chars
+	name := accent(product.Name)
 	variantNames := ""
 	for _, variant := range product.Variants {
 		if variant.Name == product.Variants[len(product.Variants)-1].Name {
@@ -169,7 +261,7 @@ func (m model) ShopView() string {
 
 	detail := lipgloss.JoinVertical(
 		lipgloss.Left,
-		name, //+ratingSpace+rating,
+		name,
 		base(strings.ToLower(variantNames)),
 		"",
 		bold(fmt.Sprintf("$%.2v", product.Variants[0].Price/100)),
@@ -185,7 +277,6 @@ func (m model) ShopView() string {
 	} else if m.size < large {
 		detailStyle := m.theme.Base().
 			Width(m.widthContent)
-
 		content = m.theme.Base().
 			Width(m.widthContent).
 			Render(lipgloss.JoinVertical(
@@ -228,25 +319,4 @@ func (m model) UpdateSelectedTheme() model {
 	}
 
 	return m
-}
-
-func (m model) UpdateSelected(previous bool) (model, tea.Cmd) {
-	var next int
-	if previous {
-		next = m.state.shop.selected - 1
-	} else {
-		next = m.state.shop.selected + 1
-	}
-
-	if next < 0 {
-		next = 0
-	}
-	max := len(m.products) - 1
-	if next > max {
-		next = max
-	}
-
-	m.state.shop.selected = next
-	m = m.UpdateSelectedTheme()
-	return m, nil
 }

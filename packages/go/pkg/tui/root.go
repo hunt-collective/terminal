@@ -226,10 +226,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.addresses = msg.Addresses
 		m.subscriptions = msg.Subscriptions
 		m.orders = msg.Orders
+		m = m.reorderProducts()
 	case terminal.User:
 		m.user = msg
 	case []terminal.Product:
 		m.products = msg
+		m = m.reorderProducts()
 	case terminal.Cart:
 		m.cart = msg
 	case []terminal.Card:

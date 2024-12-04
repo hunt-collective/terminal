@@ -112,6 +112,10 @@ export default new Page({
                   label: "Description",
                   value: product.description,
                 },
+                ...Object.entries(product.tags || {}).map(([key, value]) => ({
+                  label: key,
+                  value,
+                })),
               ],
             }),
             io.display.link("Add Variant", {
@@ -157,22 +161,26 @@ export default new Page({
       unlisted: true,
       async handler() {
         const product = await selectProduct();
-        const [name, description, order, subscription] = await io.group([
-          io.input.text("name", {
-            defaultValue: product.name,
-          }),
-          io.input.text("description", {
-            defaultValue: product.description,
-            multiline: true,
-          }),
-          io.input.number("order", {
-            defaultValue: product.order,
-          }),
-          io.select.single("subscription", {
-            options: ["none", "allowed", "required"],
-            defaultValue: product.subscription || "none",
-          }),
-        ]);
+        const [name, description, order, subscription, featured] =
+          await io.group([
+            io.input.text("name", {
+              defaultValue: product.name,
+            }),
+            io.input.text("description", {
+              defaultValue: product.description,
+              multiline: true,
+            }),
+            io.input.number("order", {
+              defaultValue: product.order,
+            }),
+            io.select.single("subscription", {
+              options: ["none", "allowed", "required"],
+              defaultValue: product.subscription || "none",
+            }),
+            io.input.boolean("featured", {
+              defaultValue: product.tags?.["featured"] === "true" || false,
+            }),
+          ]);
         await Product.edit({
           id: product.id,
           name,
@@ -180,6 +188,7 @@ export default new Page({
           order,
           subscription:
             subscription === "none" ? undefined : (subscription as any),
+          tags: { ...product.tags, featured: featured ? "true" : "false" },
         });
         await ctx.redirect({
           route: "product/detail",

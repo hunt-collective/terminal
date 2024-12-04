@@ -25,6 +25,7 @@ export module Product {
     variants: Variant.array(),
     order: z.number().int().optional(),
     subscription: SubscriptionSetting.optional(),
+    tags: z.record(z.string()).optional(),
   });
 
   export type Info = z.infer<typeof Info>;
@@ -57,6 +58,7 @@ export module Product {
                   name: item.product_variant!.name,
                   price: item.product_variant!.price,
                 })),
+            tags: group[0].product.tags || undefined,
           }),
         ),
       );
@@ -89,6 +91,7 @@ export module Product {
                   name: item.product_variant!.name,
                   price: item.product_variant!.price,
                 })),
+            tags: group[0].product.tags || undefined,
           }),
         ),
         first(),
@@ -104,10 +107,12 @@ export module Product {
       id: true,
       order: true,
       subscription: true,
+      tags: true,
     }).partial({
       name: true,
       description: true,
       order: true,
+      tags: true,
     }),
     (input) =>
       useTransaction(async (tx) => {
@@ -118,6 +123,7 @@ export module Product {
             description: input.description,
             order: input.order,
             subscription: input.subscription || null,
+            tags: input.tags || null,
           })
           .where(eq(productTable.id, input.id));
       }),
