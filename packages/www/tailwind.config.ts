@@ -1,5 +1,6 @@
 import type { Config } from 'tailwindcss'
 import defaultTheme from 'tailwindcss/defaultTheme'
+import starlightPlugin from '@astrojs/starlight-tailwind'
 
 export default {
   content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue,svg}'],
@@ -12,9 +13,11 @@ export default {
         normal: '-0.32px',
       },
       fontFamily: {
+        sans: ['geist', 'geist-fallback', ...defaultTheme.fontFamily.sans],
         mono: ['geist', 'geist-fallback', ...defaultTheme.fontFamily.sans],
       },
       colors: {
+        accent: 'hsla(22, 100%, 50%, 1)',
         black: '#000000',
         white: '#FFFFFF',
         lime: '#24FF00',
@@ -86,5 +89,5 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [starlightPlugin()],
 } satisfies Config

@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@astrojs/solid-js": "4.4.1",
+    "@astrojs/starlight-tailwind": "^2.0.3",
     "@astrojs/tailwind": "^5.1.0",
     "@solid-primitives/autofocus": "^0.0.111",
     "@solid-primitives/date": "^2.0.21",
