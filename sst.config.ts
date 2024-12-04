@@ -46,9 +46,6 @@ export default $config({
     autodeploy: {
       runner: {
         engine: "codebuild",
-        cache: {
-          paths: ["/var/lib/docker/buildkit"],
-        },
       },
     },
   },
