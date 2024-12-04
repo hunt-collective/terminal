@@ -15,7 +15,14 @@ import { Print } from "./print";
 import { EmailApi } from "./email";
 import { ZodError } from "zod";
 import { SubscriptionApi } from "./subscription";
+import { createClient } from "@openauthjs/core";
+import { Resource } from "sst";
+import { subjects } from "../subject";
 
+const client = createClient({
+  clientID: "api",
+  issuer: Resource.AuthWorker.url,
+});
 const auth: MiddlewareHandler = async (c, next) => {
   const authHeader =
     c.req.query("authorization") ?? c.req.header("authorization");
@@ -29,13 +36,13 @@ const auth: MiddlewareHandler = async (c, next) => {
       );
     }
     const bearerToken = match[1];
-    const result = await session.verify(bearerToken!);
-    if (result.type === "user") {
+    const result = await client.verify(subjects, bearerToken!);
+    if (result.subject.type === "user") {
       return ActorContext.with(
         {
           type: "user",
           properties: {
-            userID: result.properties.userID,
+            userID: result.subject.properties.userID,
           },
         },
         next,

@@ -14,10 +14,6 @@ declare module "sst" {
       "publicKey": string
       "type": "sst.aws.Auth"
     }
-    "Auth2": {
-      "type": "sst.cloudflare.Worker"
-      "url": string
-    }
     "AuthAuthenticator": {
       "name": string
       "type": "sst.aws.Function"
@@ -27,13 +23,14 @@ declare module "sst" {
       "type": "random.index/randomString.RandomString"
       "value": string
     }
-    "AuthKV": {
-      "type": "sst.cloudflare.Kv"
-    }
     "AuthKeypair": {
       "private": string
       "public": string
       "type": "tls.index/privateKey.PrivateKey"
+    }
+    "AuthTable": {
+      "name": string
+      "type": "sst.aws.Dynamo"
     }
     "AuthWorker": {
       "type": "sst.cloudflare.Worker"

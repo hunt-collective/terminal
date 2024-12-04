@@ -1,4 +1,12 @@
-import { eq, and, getTableColumns, isNull } from "drizzle-orm";
+import {
+  eq,
+  and,
+  getTableColumns,
+  isNull,
+  desc,
+  asc,
+  inArray,
+} from "drizzle-orm";
 import { db } from "../drizzle";
 import { userFingerprintTable, userShippingTable, userTable } from "./user.sql";
 import { z } from "zod";
@@ -17,6 +25,9 @@ import { bus } from "sst/aws/bus";
 import { Resource } from "sst";
 import { Card } from "../card";
 import { Shippo } from "../shippo/index";
+import { orderTable } from "../order/order.sql";
+import { cardTable } from "../card/card.sql";
+import { subscriptionTable } from "../subscription/subscription.sql";
 
 export module User {
   export const Info = z.object({
@@ -82,6 +93,57 @@ export module User {
     },
   );
 
+  export const merge = fn(z.string().array(), async (ids) => {
+    const primary = ids.shift();
+    if (!primary) throw new Error("No primary user");
+    await useTransaction(async (tx) => {
+      await tx
+        .update(userFingerprintTable)
+        .set({
+          userID: primary,
+        })
+        .where(inArray(userFingerprintTable.userID, ids));
+
+      await tx
+        .update(orderTable)
+        .set({
+          userID: primary,
+        })
+        .where(inArray(orderTable.userID, ids));
+
+      await tx
+        .update(userShippingTable)
+        .set({
+          userID: primary,
+        })
+        .where(inArray(userShippingTable.userID, ids));
+
+      // do not merge cards for now
+      // await tx
+      //   .update(cardTable)
+      //   .set({
+      //     userID: primary,
+      //   })
+      //   .where(inArray(cardTable.userID, ids));
+
+      await tx
+        .update(subscriptionTable)
+        .set({
+          userID: primary,
+        })
+        .where(inArray(subscriptionTable.userID, ids));
+
+      await tx
+        .update(userTable)
+        .set({
+          timeDeleted: new Date(),
+        })
+        .where(inArray(userTable.id, ids));
+    });
+
+    return primary;
+  });
+
   export const update = fn(
     Info.pick({ name: true, email: true, id: true }).partial({
       name: true,
@@ -129,7 +191,8 @@ export module User {
         .select()
         .from(userTable)
         .where(and(eq(userTable.email, email), isNull(userTable.timeDeleted)))
-        .then((rows) => rows.map(serialize).at(0)),
+        .orderBy(asc(userTable.timeCreated))
+        .then((rows) => rows.map(serialize)),
     ),
   );
 

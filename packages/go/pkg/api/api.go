@@ -1,12 +1,12 @@
 package api
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/stripe/stripe-go/v78"
@@ -25,8 +25,8 @@ type FingerprintRequest struct {
 }
 
 type UserCredentials struct {
-	UserID      string `json:"userID"`
-	AccessToken string `json:"accessToken"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 func GetErrorMessage(err error) string {
@@ -37,32 +37,29 @@ func GetErrorMessage(err error) string {
 	}
 }
 
-func (u UserCredentials) String() string {
-	return fmt.Sprintf("{UserID: '%s', AccessToken: '%s...'}", u.UserID, string(u.AccessToken[:10]))
-}
-
 func FetchUserToken(publicKey string) (*UserCredentials, error) {
-	fingerprint := FingerprintRequest{Fingerprint: publicKey}
-
-	resp, body, err := authPost("ssh/login", fingerprint)
+	data := url.Values{}
+	data.Set("grant_type", "client_credentials")
+	data.Set("client_id", "ssh")
+	data.Set("client_secret", resource.Resource.AuthFingerprintKey.Value)
+	data.Set("fingerprint", publicKey)
+	data.Set("provider", "ssh")
+	resp, err := http.PostForm(resource.Resource.AuthWorker.Url+"/token", data)
 	if err != nil {
 		return nil, err
 	}
-
-	if resp.StatusCode == 500 {
-		return nil, errors.New(fmt.Sprintf("Server error: %s", string(body)))
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		body, _ := io.ReadAll(resp.Body)
+		fmt.Println(string(body))
+		return nil, errors.New(fmt.Sprintf("failed to auth: " + string(body)))
 	}
-
-	var creds UserCredentials
-	if err := json.Unmarshal(body, &creds); err != nil {
-		return nil, errors.New(fmt.Sprintf("Error: %s, Body: %s", err, body))
+	credentials := UserCredentials{}
+	err = json.NewDecoder(resp.Body).Decode(&credentials)
+	if err != nil {
+		return nil, err
 	}
-
-	if creds.AccessToken == "" {
-		return nil, errors.New(fmt.Sprintf("Failed to fetch: %s", publicKey))
-	}
-
-	return &creds, nil
+	return &credentials, nil
 }
 
 func StripeCreditCard(card *stripe.CardParams) (*stripe.Token, *string) {
@@ -80,28 +77,4 @@ func StripeCreditCard(card *stripe.CardParams) (*stripe.Token, *string) {
 	}
 
 	return tokenResult, nil
-}
-
-func authPost(path string, payload any) (*http.Response, []byte, error) {
-	buf, err := json.Marshal(payload)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	url := fmt.Sprintf("%s/%s", resource.Resource.AuthWorker.Url, path)
-	request, err := http.NewRequest("POST", url, bytes.NewReader(buf))
-	if err != nil {
-		return nil, nil, err
-	}
-
-	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("Authorization", "Bearer "+resource.Resource.AuthFingerprintKey.Value)
-	resp, err := http.DefaultClient.Do(request)
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return resp, body, nil
 }

@@ -10,12 +10,25 @@ sst.Linkable.wrap(random.RandomString, (resource) => ({
     value: resource.result,
   },
 }));
+
 export const authFingerprintKey = new random.RandomString(
   "AuthFingerprintKey",
   {
     length: 32,
   },
 );
+
+const authTable = new sst.aws.Dynamo("AuthTable", {
+  fields: {
+    pk: "string",
+    sk: "string",
+  },
+  ttl: "expiry",
+  primaryIndex: {
+    hashKey: "pk",
+    rangeKey: "sk",
+  },
+});
 
 const authFn = new sst.aws.Auth("Auth", {
   authenticator: {
@@ -25,9 +38,12 @@ const authFn = new sst.aws.Auth("Auth", {
       secret.StripeSecret,
       database,
       email,
-      authFingerprintKey,
       secret.GithubClientID,
       secret.GithubClientSecret,
+      secret.TwitchClientSecret,
+      secret.TwitchClientID,
+      authTable,
+      authFingerprintKey,
     ],
     permissions: [
       {
@@ -35,7 +51,7 @@ const authFn = new sst.aws.Auth("Auth", {
         resources: ["*"],
       },
     ],
-    handler: "./packages/functions/src/auth.handler",
+    handler: "./packages/functions/src/auth2.handler",
   },
 });
 
@@ -59,6 +75,7 @@ const apiFn = new sst.aws.Function("OpenApi", {
     secret.ShippoSecret,
     secret.EmailOctopusSecret,
     authFn,
+    auth,
     database,
     webhook,
   ],

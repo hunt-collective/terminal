@@ -29,6 +29,10 @@ declare module "sst" {
       "public": string
       "type": "tls.index/privateKey.PrivateKey"
     }
+    "AuthTable": {
+      "name": string
+      "type": "sst.aws.Dynamo"
+    }
     "Bus": {
       "arn": string
       "name": string
@@ -133,8 +137,6 @@ declare module "sst" {
 import * as cloudflare from "@cloudflare/workers-types";
 declare module "sst" {
   export interface Resource {
-    "Auth2": cloudflare.Service
-    "AuthKV": cloudflare.KVNamespace
     "AuthWorker": cloudflare.Service
     "OpenApiWorker": cloudflare.Service
   }
