@@ -14,7 +14,7 @@
   ],
   "dependencies": {
     "patch-package": "^8.0.0",
-    "sst": "3.3.44"
+    "sst": "0.0.0-1733339533"
   },
   "devDependencies": {
     "typescript": "5.5.4"
