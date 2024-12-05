@@ -11,9 +11,18 @@ export default defineConfig({
     starlight({
       title: 'Terminal',
       customCss: ['./src/styles/global.css'],
+      sidebar: [
+        { slug: 'docs', label: 'Docs' },
+        {
+          label: 'Examples',
+          autogenerate: { directory: 'examples' },
+        },
+        'contributing',
+      ],
       components: {
-        PageFrame: './src/components/page-frame.astro',
-        Header: './src/components/header.astro',
+        Head: './src/components/starlight/head.astro',
+        PageFrame: './src/components/starlight/page-frame.astro',
+        Header: './src/components/starlight/header.astro',
       },
     }),
   ],
