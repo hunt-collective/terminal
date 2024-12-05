@@ -2,7 +2,6 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { MiddlewareHandler } from "hono";
 import { logger } from "hono/logger";
 import { VisibleError } from "@terminal/core/error";
-import { session } from "../session";
 import { ProductApi } from "./product";
 import { UserApi } from "./user";
 import { handle, streamHandle } from "hono/aws-lambda";
