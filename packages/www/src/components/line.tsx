@@ -39,7 +39,15 @@ const LineComponent: Component<LineProps> = (props) => {
         [props.class ?? '']: !!props.class,
       }}
     >
-      <div class="text-center pr-10 self-start">{number}</div>
+      <div
+        class="text-center self-start"
+        classList={{
+          'pr-10': number?.toString().length === 1,
+          'pr-7': number?.toString().length === 2,
+        }}
+      >
+        {number}
+      </div>
       {props.children}
       <svg
         class="hidden w-5 h-5 ml-6 text-gray-10 shrink-0"
