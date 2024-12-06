@@ -1,9 +1,31 @@
-import { type Component, type JSX } from 'solid-js'
+import { type Component, type JSX, type ParentProps } from 'solid-js'
 import Line from '@components/line'
 import Editor from '@components/editor'
 import Caret from '@components/caret'
 
 type CronProps = {} & JSX.HTMLAttributes<HTMLDivElement>
+type SpanProps = ParentProps & JSX.HTMLAttributes<HTMLSpanElement>
+
+const Code: Component<SpanProps> = ({ class: className, ...props }) => {
+  return (
+    <span
+      class={`whitespace-pre bg-gray-6 py-0 px-3 w-full ${className}`}
+      {...props}
+    >
+      <span class="leading-5">```{`\n`}</span>
+      <span class="text-gray-300 leading-10">{props.children}</span>
+      <span class="leading-5">{`\n`}```</span>
+    </span>
+  )
+}
+
+const Inline: Component<SpanProps> = ({ class: className, ...props }) => {
+  return (
+    <span class={`text-gray-300 bg-gray-6 -m-1 py-1 ${className}`} {...props}>
+      `{props.children}`
+    </span>
+  )
+}
 
 const CronComponent: Component<CronProps> = () => {
   return (
@@ -32,11 +54,7 @@ const CronComponent: Component<CronProps> = () => {
         </p>
       </Line>
       <Line>
-        <p class="whitespace-pre bg-gray-900 py-0 px-4 w-full">
-          ```{`\n`}
-          <span class="text-white">ssh terminal.shop</span>
-          {`\n`}```
-        </p>
+        <Code>ssh terminal.shop</Code>
       </Line>
       <Line />
       <Line>
@@ -50,9 +68,9 @@ const CronComponent: Component<CronProps> = () => {
       <Line />
       <Line>
         <p>
-          Now navigate to `Cron` and hit `Enter`. This will take you to the
-          checkout flow where you can provide your mailing address and payment
-          info.
+          Now navigate to <Inline>Cron</Inline> and hit <Inline>Enter</Inline>.
+          This will take you to the checkout flow where you can provide your
+          mailing address and payment info.
         </p>
       </Line>
       <Line />
@@ -67,9 +85,11 @@ const CronComponent: Component<CronProps> = () => {
       <Line>
         <p>
           You can also manage your subscription from inside the SSH store. Hit
-          `a` to navigate to the account settings page after you SSH in, and
-          then navigate to `Subscriptions`. From there you can cancel your
-          subscription if you're just not feeling it anymore.
+          {` `}
+          <Inline>a</Inline> to navigate to the account settings page after you
+          SSH in, and then navigate to <Inline>Subscriptions</Inline>. From
+          there you can cancel your subscription if you're just not feeling it
+          anymore.
         </p>
       </Line>
       <Line />
