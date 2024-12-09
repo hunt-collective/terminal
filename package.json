@@ -14,7 +14,9 @@
   ],
   "dependencies": {
     "patch-package": "^8.0.0",
-    "sst": "0.0.0-1733339533"
+    "sst": "3.3.59",
+    "remeda": "2.3.0",
+    "hono": "4.6.12"
   },
   "devDependencies": {
     "typescript": "5.5.4"

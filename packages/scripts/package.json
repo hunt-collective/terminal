@@ -9,7 +9,7 @@
   "devDependencies": {},
   "dependencies": {
     "@terminal/core": "workspace:*",
-    "remeda": "2.2.1",
-    "sst": "0.0.0-1733339533"
+    "remeda": "*",
+    "sst": "3.3.59"
   }
 }

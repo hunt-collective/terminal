@@ -8,7 +8,7 @@ import { Select } from "@openauthjs/core/ui/select";
 import { TwitchAdapter } from "@openauthjs/core/adapter/twitch";
 import { GithubAdapter } from "@openauthjs/core/adapter/github";
 import { subjects } from "./subject.js";
-import { THEME_TERMINAL } from "@openauthjs/core/ui/theme";
+import { THEME_TERMINAL } from "@openauthjs/openauth/ui/theme";
 import { Resource } from "sst";
 import { DynamoStorage } from "@openauthjs/core/storage/dynamo";
 import { handle } from "hono/aws-lambda";

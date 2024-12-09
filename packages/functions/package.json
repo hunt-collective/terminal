@@ -11,11 +11,11 @@
     "@aws-sdk/client-sesv2": "3.606.0",
     "@hono/valibot-validator": "0.2.2",
     "@hono/zod-openapi": "0.11.0",
-    "@openauthjs/core": "^0.0.15",
+    "@openauthjs/openauth": "0.0.19",
     "@terminal/core": "workspace:",
     "airtable": "0.12.2",
-    "hono": "^4.6.12",
-    "sst": "0.0.0-1733339533",
+    "hono": "*",
+    "sst": "3.3.59",
     "valibot": "1.0.0-beta.6",
     "zod": "3.23.8"
   }
