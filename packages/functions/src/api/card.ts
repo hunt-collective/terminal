@@ -1,26 +1,27 @@
-import { z } from "zod";
-import "zod-openapi/extend";
+import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { Result } from "./common";
 import { Card } from "@terminal/core/card/index";
-import { Hono } from "hono";
-import { describeRoute } from "hono-openapi";
-import { validator } from "hono-openapi/zod";
 
 export module CardApi {
-  export const CardSchema = z.object(Card.Info.shape).openapi({ ref: "Card" });
-  export const route = new Hono()
-    .get(
-      "/",
-      describeRoute({
-        description: "Returns a list of cards",
+  export const CardSchema = z.object(Card.Info.shape).openapi("Card");
+  export const route = new OpenAPIHono()
+    .openapi(
+      createRoute({
+        security: [
+          {
+            Bearer: [],
+          },
+        ],
+        method: "get",
+        path: "/",
         responses: {
           200: {
-            description: "Returns a list of cards",
             content: {
               "application/json": {
                 schema: Result(CardSchema.array()),
               },
             },
+            description: "Returns a list of cards",
           },
         },
       }),
@@ -33,9 +34,19 @@ export module CardApi {
         );
       },
     )
-    .post(
-      "/",
-      describeRoute({
+    .openapi(
+      createRoute({
+        method: "post",
+        path: "/",
+        request: {
+          body: {
+            content: {
+              "application/json": {
+                schema: z.object({ token: z.string() }),
+              },
+            },
+          },
+        },
         responses: {
           200: {
             content: {
@@ -47,15 +58,15 @@ export module CardApi {
           },
         },
       }),
-      validator("json", z.object({ token: z.string() })),
       async (c) => {
         const result = await Card.create(c.req.valid("json"));
         return c.json({ result }, 200);
       },
     )
-    .delete(
-      "/{id}",
-      describeRoute({
+    .openapi(
+      createRoute({
+        method: "delete",
+        path: "/{id}",
         responses: {
           200: {
             content: {
@@ -67,10 +78,8 @@ export module CardApi {
           },
         },
       }),
-      validator("param", z.object({ id: z.string() })),
       async (c) => {
-        const param = c.req.valid("param");
-        await Card.remove(param.id);
+        await Card.remove(c.req.param("id"));
         return c.json({ result: "ok" as const }, 200);
       },
     );
