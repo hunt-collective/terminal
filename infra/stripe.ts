@@ -11,30 +11,23 @@ sst.Linkable.wrap(stripe.WebhookEndpoint, (endpoint) => {
   };
 });
 
-export const webhook = new stripe.WebhookEndpoint(
-  "StripeWebhook",
-  {
-    url: $interpolate`https://api.${domain}/hook/stripe`,
-    metadata: {
-      stage: $app.stage,
-    },
-    enabledEvents: [
-      "payment_method.attached",
-      "payment_method.detached",
-      "payment_method.updated",
-      "product.created",
-      "product.updated",
-      "product.deleted",
-      "price.created",
-      "price.updated",
-      "price.deleted",
-    ],
+export const webhook = new stripe.WebhookEndpoint("StripeWebhook", {
+  url: $interpolate`https://api.${domain}/hook/stripe`,
+  metadata: {
+    stage: $app.stage,
   },
-  {
-    import: "we_1PX5ycDgGJQx1Mr6OzMdZ9bG",
-    ignoreChanges: ["*"],
-  },
-);
+  enabledEvents: [
+    "payment_method.attached",
+    "payment_method.detached",
+    "payment_method.updated",
+    "product.created",
+    "product.updated",
+    "product.deleted",
+    "price.created",
+    "price.updated",
+    "price.deleted",
+  ],
+});
 
 new sst.aws.Cron("StripeAnalytics", {
   schedule: "cron(0 12 ? * MON *)",
