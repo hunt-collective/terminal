@@ -12,6 +12,7 @@ import { THEME_TERMINAL } from "@openauthjs/openauth/ui/theme";
 import { Resource } from "sst";
 import { handle } from "hono/aws-lambda";
 import { User } from "@terminal/core/user/index";
+import { Api } from "@terminal/core/api/api";
 
 const app = authorizer({
   subjects,
@@ -68,9 +69,17 @@ const app = authorizer({
     }>,
   },
   allow: async (input) => {
-    const hostname = new URL(input.redirectURI).hostname;
+    const url = new URL(input.redirectURI);
+    const hostname = url.hostname;
     if (hostname.endsWith("terminal.shop")) return true;
     if (hostname === "localhost") return true;
+    if (
+      await Api.verifyRedirect({
+        id: input.clientID,
+        redirectURI: url.origin + url.pathname,
+      })
+    )
+      return true;
     return false;
   },
   success: async (ctx, value) => {

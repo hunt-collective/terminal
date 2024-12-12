@@ -88,7 +88,7 @@ export module Order {
       const result = pipe(
         rows,
         groupBy((x) => x.order.id),
-        values,
+        values(),
         map(
           (group): Info => ({
             id: group[0].order.id,

@@ -43,7 +43,7 @@ export module Product {
       const result = pipe(
         rows,
         groupBy((x) => x.product.id),
-        values,
+        values(),
         map(
           (group): Info => ({
             id: group[0].product.id,
@@ -78,7 +78,7 @@ export module Product {
       const result = pipe(
         rows,
         groupBy((x) => x.product.id),
-        values,
+        values(),
         map(
           (group): Info => ({
             id: group[0].product.id,

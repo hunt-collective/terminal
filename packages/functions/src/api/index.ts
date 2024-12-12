@@ -14,13 +14,13 @@ import { Print } from "./print";
 import { EmailApi } from "./email";
 import { ZodError } from "zod";
 import { SubscriptionApi } from "./subscription";
-import { createClient } from "@openauthjs/core";
+import { createClient } from "@openauthjs/openauth/client";
 import { Resource } from "sst";
 import { subjects } from "../subject";
 
 const client = createClient({
   clientID: "api",
-  issuer: Resource.AuthWorker.url,
+  issuer: Resource.Auth.url,
 });
 const auth: MiddlewareHandler = async (c, next) => {
   const authHeader =
@@ -36,6 +36,8 @@ const auth: MiddlewareHandler = async (c, next) => {
     }
     const bearerToken = match[1];
     const result = await client.verify(subjects, bearerToken!);
+    if (result.err)
+      throw new VisibleError("input", "auth.invalid", "Invalid bearer token");
     if (result.subject.type === "user") {
       return ActorContext.with(
         {
