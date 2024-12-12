@@ -8,7 +8,7 @@ import (
 )
 
 type resource struct {
-	OpenApiWorker struct {
+	ApiWorker struct {
 		Url string `json:"url"`
 	}
 	AuthWorker struct {

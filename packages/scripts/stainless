@@ -1,4 +1,4 @@
 #!/bin/bash
 
-url=$(echo $SST_RESOURCE_OpenApiWorker | jq -r '.url')
+url=$(echo $SST_RESOURCE_ApiWorker | jq -r '.url')
 stainless-cli generate all --openapi <(curl $url/doc) --config ./stainless.yml
