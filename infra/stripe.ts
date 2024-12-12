@@ -32,6 +32,7 @@ export const webhook = new stripe.WebhookEndpoint(
   },
   {
     import: "we_1PX5ycDgGJQx1Mr6OzMdZ9bG",
+    ignoreChanges: ["*"],
   },
 );
 
