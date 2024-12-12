@@ -10,22 +10,31 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "Api": {
-      "type": "sst.aws.Router"
-      "url": string
+    "Auth": {
+      "publicKey": string
+      "type": "sst.aws.Auth"
     }
-    "ApiFn": {
+    "AuthAuthenticator": {
       "name": string
       "type": "sst.aws.Function"
-      "url": string
-    }
-    "Auth": {
-      "type": "sst.aws.Auth"
       "url": string
     }
     "AuthFingerprintKey": {
       "type": "random.index/randomString.RandomString"
       "value": string
+    }
+    "AuthKeypair": {
+      "private": string
+      "public": string
+      "type": "tls.index/privateKey.PrivateKey"
+    }
+    "AuthTable": {
+      "name": string
+      "type": "sst.aws.Dynamo"
+    }
+    "AuthWorker": {
+      "type": "sst.cloudflare.Worker"
+      "url": string
     }
     "Bus": {
       "arn": string
@@ -68,6 +77,15 @@ declare module "sst" {
     "IntervalBucket": {
       "name": string
       "type": "sst.aws.Bucket"
+    }
+    "OpenApi": {
+      "name": string
+      "type": "sst.aws.Function"
+      "url": string
+    }
+    "OpenApiWorker": {
+      "type": "sst.cloudflare.Worker"
+      "url": string
     }
     "SSH": {
       "service": string
