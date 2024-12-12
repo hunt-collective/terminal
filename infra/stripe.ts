@@ -12,7 +12,7 @@ sst.Linkable.wrap(stripe.WebhookEndpoint, (endpoint) => {
 });
 
 export const webhook = new stripe.WebhookEndpoint("StripeWebhook", {
-  url: $interpolate`https://openapi.${domain}/hook/stripe`,
+  url: $interpolate`https://api.${domain}/hook/stripe`,
   metadata: {
     stage: $app.stage,
   },

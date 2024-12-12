@@ -14,7 +14,7 @@
   ],
   "dependencies": {
     "patch-package": "^8.0.0",
-    "sst": "3.3.59",
+    "sst": "3.3.74",
     "remeda": "2.3.0",
     "hono": "4.6.12"
   },

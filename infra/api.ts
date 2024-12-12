@@ -18,20 +18,8 @@ export const authFingerprintKey = new random.RandomString(
   },
 );
 
-const authTable = new sst.aws.Dynamo("AuthTable", {
-  fields: {
-    pk: "string",
-    sk: "string",
-  },
-  ttl: "expiry",
-  primaryIndex: {
-    hashKey: "pk",
-    rangeKey: "sk",
-  },
-});
-
-const authFn = new sst.aws.Auth("Auth", {
-  authenticator: {
+export const auth = new sst.aws.Auth("Auth", {
+  authorizer: {
     url: true,
     link: [
       bus,
@@ -42,7 +30,6 @@ const authFn = new sst.aws.Auth("Auth", {
       secret.GithubClientSecret,
       secret.TwitchClientSecret,
       secret.TwitchClientID,
-      authTable,
       authFingerprintKey,
     ],
     permissions: [
@@ -53,19 +40,14 @@ const authFn = new sst.aws.Auth("Auth", {
     ],
     handler: "./packages/functions/src/auth2.handler",
   },
-});
-
-export const auth = new sst.cloudflare.Worker("AuthWorker", {
-  url: true,
-  domain: "auth." + domain,
-  handler: "./packages/workers/src/proxy.ts",
-  environment: {
-    ORIGIN_URL: authFn.url,
-    NO_CACHE: "true",
+  domain: {
+    name: "auth." + domain,
+    dns: sst.cloudflare.dns(),
   },
+  forceUpgrade: "v2",
 });
 
-const apiFn = new sst.aws.Function("OpenApi", {
+const apiFn = new sst.aws.Function("ApiFn", {
   handler: "./packages/functions/src/api/index.handler",
   streaming: !$dev,
   link: [
@@ -74,7 +56,6 @@ const apiFn = new sst.aws.Function("OpenApi", {
     secret.StripeSecret,
     secret.ShippoSecret,
     secret.EmailOctopusSecret,
-    authFn,
     auth,
     database,
     webhook,
@@ -82,13 +63,13 @@ const apiFn = new sst.aws.Function("OpenApi", {
   url: true,
 });
 
-export const api = new sst.cloudflare.Worker("OpenApiWorker", {
-  url: true,
-  dev: false,
-  domain: "openapi." + domain,
-  handler: "./packages/workers/src/proxy.ts",
-  environment: {
-    ORIGIN_URL: apiFn.url,
+export const api = new sst.aws.Router("Api", {
+  routes: {
+    "/*": apiFn.url,
+  },
+  domain: {
+    name: "api." + domain,
+    dns: sst.cloudflare.dns(),
   },
 });
 
@@ -102,5 +83,5 @@ new sst.aws.Cron("InventoryTracker", {
 
 export const outputs = {
   auth: auth.url,
-  openapi: api.url,
+  api: api.url,
 };

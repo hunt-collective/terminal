@@ -1,16 +1,15 @@
-import { authorizer } from "@openauthjs/core";
-import { PasswordAdapter } from "@openauthjs/core/adapter/password";
-import { Adapter } from "@openauthjs/core/adapter/adapter";
-import { PasswordUI } from "@openauthjs/core/ui/password";
-import { CodeAdapter } from "@openauthjs/core/adapter/code";
-import { CodeUI } from "@openauthjs/core/ui/code";
-import { Select } from "@openauthjs/core/ui/select";
-import { TwitchAdapter } from "@openauthjs/core/adapter/twitch";
-import { GithubAdapter } from "@openauthjs/core/adapter/github";
+import { authorizer } from "@openauthjs/openauth";
+import { PasswordAdapter } from "@openauthjs/openauth/adapter/password";
+import { Adapter } from "@openauthjs/openauth/adapter/adapter";
+import { PasswordUI } from "@openauthjs/openauth/ui/password";
+import { CodeAdapter } from "@openauthjs/openauth/adapter/code";
+import { CodeUI } from "@openauthjs/openauth/ui/code";
+import { Select } from "@openauthjs/openauth/ui/select";
+import { TwitchAdapter } from "@openauthjs/openauth/adapter/twitch";
+import { GithubAdapter } from "@openauthjs/openauth/adapter/github";
 import { subjects } from "./subject.js";
 import { THEME_TERMINAL } from "@openauthjs/openauth/ui/theme";
 import { Resource } from "sst";
-import { DynamoStorage } from "@openauthjs/core/storage/dynamo";
 import { handle } from "hono/aws-lambda";
 import { User } from "@terminal/core/user/index";
 
@@ -23,11 +22,6 @@ const app = authorizer({
         hide: true,
       },
     },
-  }),
-  storage: DynamoStorage({
-    pk: "pk",
-    sk: "sk",
-    table: Resource.AuthTable.name,
   }),
   providers: {
     password: PasswordAdapter(
