@@ -44,7 +44,7 @@ func FetchUserToken(publicKey string) (*UserCredentials, error) {
 	data.Set("client_secret", resource.Resource.AuthFingerprintKey.Value)
 	data.Set("fingerprint", publicKey)
 	data.Set("provider", "ssh")
-	resp, err := http.PostForm(resource.Resource.AuthWorker.Url+"/token", data)
+	resp, err := http.PostForm(resource.Resource.Auth.Url+"/token", data)
 	if err != nil {
 		return nil, err
 	}

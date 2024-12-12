@@ -11,7 +11,7 @@ type resource struct {
 	Api struct {
 		Url string `json:"url"`
 	}
-	AuthWorker struct {
+	Auth struct {
 		Url string `json:"url"`
 	}
 	StripePublic struct {
