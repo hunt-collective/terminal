@@ -11,27 +11,22 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
-    "Auth": {
-      "publicKey": string
-      "type": "sst.aws.Auth"
+    "Api": {
+      "type": "sst.aws.Router"
+      "url": string
     }
-    "AuthAuthenticator": {
+    "ApiFn": {
       "name": string
       "type": "sst.aws.Function"
+      "url": string
+    }
+    "Auth": {
+      "type": "sst.aws.Auth"
       "url": string
     }
     "AuthFingerprintKey": {
       "type": "random.index/randomString.RandomString"
       "value": string
-    }
-    "AuthKeypair": {
-      "private": string
-      "public": string
-      "type": "tls.index/privateKey.PrivateKey"
-    }
-    "AuthTable": {
-      "name": string
-      "type": "sst.aws.Dynamo"
     }
     "Bus": {
       "arn": string
@@ -75,11 +70,6 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
-    "OpenApi": {
-      "name": string
-      "type": "sst.aws.Function"
-      "url": string
-    }
     "SSH": {
       "service": string
       "type": "sst.aws.Service"
@@ -117,7 +107,6 @@ declare module "sst" {
     }
     "StripeWebhook": {
       "id": string
-      "secret": string
       "type": "stripe.index/webhookEndpoint.WebhookEndpoint"
     }
     "TwitchClientID": {
@@ -131,13 +120,5 @@ declare module "sst" {
     "Vpc": {
       "type": "sst.aws.Vpc"
     }
-  }
-}
-// cloudflare 
-import * as cloudflare from "@cloudflare/workers-types";
-declare module "sst" {
-  export interface Resource {
-    "AuthWorker": cloudflare.Service
-    "OpenApiWorker": cloudflare.Service
   }
 }
