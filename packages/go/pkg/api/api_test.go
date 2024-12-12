@@ -11,7 +11,7 @@ import (
 
 func TestGetProduct(t *testing.T) {
 	client := terminal.NewClient(
-		option.WithBaseURL(resource.Resource.ApiWorker.Url),
+		option.WithBaseURL(resource.Resource.Api.Url),
 	)
 	ctx := context.Background()
 	client.Product.List(ctx)

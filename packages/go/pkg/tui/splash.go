@@ -55,7 +55,7 @@ func (m model) SplashInit() tea.Cmd {
 		}
 
 		client := terminal.NewClient(
-			option.WithBaseURL(resource.Resource.ApiWorker.Url),
+			option.WithBaseURL(resource.Resource.Api.Url),
 			option.WithBearerToken(token.AccessToken),
 		)
 
