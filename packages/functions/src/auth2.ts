@@ -96,6 +96,10 @@ const app = authorizer({
     }
 
     let email = undefined as string | undefined;
+    if (value.provider === "code") {
+      email = value.claims.email;
+    }
+
     if (value.provider === "github") {
       const access = value.tokenset.access;
       const response = await fetch("https://api.github.com/user/emails", {
@@ -112,6 +116,8 @@ const app = authorizer({
       }
       email = primary.email;
     }
+
+    console.log("found email", email);
 
     if (email) {
       const matching = await User.fromEmail(email);
