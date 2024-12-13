@@ -15,7 +15,7 @@
     "@terminal/core": "workspace:",
     "airtable": "0.12.2",
     "hono": "*",
-    "sst": "3.3.74",
+    "sst": "3.4.0",
     "valibot": "1.0.0-beta.6",
     "zod": "3.23.8"
   }
