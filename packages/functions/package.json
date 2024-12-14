@@ -14,7 +14,7 @@
     "@terminal/core": "workspace:",
     "airtable": "0.12.2",
     "hono": "*",
-    "sst": "3.4.0",
+    "sst": "3.4.2",
     "hono-openapi": "0.2.1",
     "zod": "*",
     "zod-openapi": "4.1.0"
