@@ -70,7 +70,7 @@ func (m model) SubscriptionsUpdate(msg tea.Msg) (model, tea.Cmd) {
 					subscriptions, err := m.client.Subscription.List(m.context)
 					if err != nil {
 					}
-					return subscriptions.Result
+					return subscriptions.Data
 				}
 			}
 			return m, nil

@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          curl https://openapi.terminal.shop/doc > openapi.json
+          curl https://api.terminal.shop/doc > openapi.json
         
       - uses: stainless-api/upload-openapi-spec-action@main
         with:

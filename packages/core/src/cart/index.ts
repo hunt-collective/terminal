@@ -3,61 +3,122 @@ import { createTransaction, useTransaction } from "../drizzle/transaction";
 import { fn } from "../util/fn";
 import { cartItemTable, cartTable } from "./cart.sql";
 import { createID } from "../util/id";
-import {
-  SubscriptionSetting,
-  productTable,
-  productVariantTable,
-} from "../product/product.sql";
+import { productTable, productVariantTable } from "../product/product.sql";
 import { and, eq, getTableColumns, sql, sum } from "drizzle-orm";
 import { useUserID } from "../actor";
-import { userShippingTable } from "../user/user.sql";
 import { cardTable } from "../card/card.sql";
-import { Address } from "../address";
 import { Shippo } from "../shippo/";
+import { VisibleError } from "../error";
+import { Common } from "../common";
+import { Examples } from "../examples";
+import { addressTable } from "../address/address.sql";
+import { Address } from "../address";
 
 export module Cart {
-  export const Item = z.object({
-    id: z.string(),
-    productVariantID: z.string(),
-    quantity: z.number().int().gte(0),
-    subtotal: z.number().int(),
-  });
+  export const Item = z
+    .object({
+      id: z.string().openapi({
+        description: Common.IdDescription,
+        example: Examples.CartItem.id,
+      }),
+      productVariantID: z.string().openapi({
+        description:
+          "ID of the product variant for this item in the current user's cart.",
+        example: Examples.CartItem.productVariantID,
+      }),
+      quantity: z.number().int().min(0).openapi({
+        description: "Quantity of the item in the current user's cart.",
+        example: Examples.CartItem.quantity,
+      }),
+      subtotal: z.number().int().openapi({
+        description:
+          "Subtotal of the item in the current user's cart, in cents (USD).",
+        example: Examples.CartItem.subtotal,
+      }),
+    })
+    .openapi({
+      ref: "CartItem",
+      description: "An item in the current Terminal shop user's cart.",
+      example: Examples.CartItem,
+    });
+
   export type Item = z.infer<typeof Item>;
 
-  export const Info = z.object({
-    items: z.array(Item),
-    subtotal: z.number().int().gte(0),
-    shippingID: z.string().optional(),
-    cardID: z.string().optional(),
-    amount: z.object({
-      subtotal: z.number().int(),
-      shipping: z.number().int().optional(),
-    }),
-    shipping: z
-      .object({
-        service: z.string().optional(),
-        timeframe: z.string().optional(),
-      })
-      .optional(),
-  });
-  type Info = z.infer<typeof Info>;
+  export const Info = z
+    .object({
+      items: z.array(Item).openapi({
+        description: "An array of items in the current user's cart.",
+        example: Examples.Cart.items,
+      }),
+      subtotal: z.number().int().min(0).openapi({
+        description:
+          "The subtotal of all items in the current user's cart, in cents (USD).",
+        example: Examples.Cart.subtotal,
+      }),
+      addressID: z.string().optional().openapi({
+        description:
+          "ID of the shipping address selected on the current user's cart.",
+        example: Examples.Cart.addressID,
+      }),
+      cardID: z.string().optional().openapi({
+        description: "ID of the card selected on the current user's cart.",
+        example: Examples.Cart.cardID,
+      }),
+      amount: z
+        .object({
+          subtotal: z.number().int().openapi({
+            description: "Subtotal of the current user's cart, in cents (USD).",
+            example: Examples.Cart.amount.subtotal,
+          }),
+          shipping: z.number().int().optional().openapi({
+            description:
+              "Shipping amount of the current user's cart, in cents (USD).",
+            example: Examples.Cart.amount.shipping,
+          }),
+        })
+        .openapi({
+          description:
+            "The subtotal and shipping amounts for the current user's cart.",
+          example: Examples.Cart.amount,
+        }),
+      shipping: z
+        .object({
+          service: z.string().optional().openapi({
+            description: "Shipping service name.",
+            example: Examples.Cart.shipping.service,
+          }),
+          timeframe: z.string().optional().openapi({
+            description: "Shipping timeframe provided by the shipping carrier.",
+            example: Examples.Cart.shipping.timeframe,
+          }),
+        })
+        .optional()
+        .openapi({
+          description: "Shipping information for the current user's cart.",
+          example: Examples.Cart.shipping,
+        }),
+    })
+    .openapi({
+      ref: "Cart",
+      description: "The current Terminal shop user's cart.",
+      example: Examples.Cart,
+    });
+
+  export type Info = z.infer<typeof Info>;
 
   export async function get() {
     return createTransaction(async (tx): Promise<Info> => {
       const cart = await tx
         .select({
           cardID: cardTable.id,
-          shippingID: userShippingTable.id,
+          addressID: addressTable.id,
           shippingAmount: cartTable.shippingAmount,
           shippingService: cartTable.shippingService,
           shippingDeliveryEstimate: cartTable.shippingDeliveryEstimate,
         })
         .from(cartTable)
         .leftJoin(cardTable, eq(cartTable.cardID, cardTable.id))
-        .leftJoin(
-          userShippingTable,
-          eq(cartTable.shippingID, userShippingTable.id),
-        )
+        .leftJoin(addressTable, eq(cartTable.addressID, addressTable.id))
         .where(eq(cartTable.userID, useUserID()))
         .then((rows) => rows[0]);
       if (!cart)
@@ -79,7 +140,7 @@ export module Cart {
           shipping: cart.shippingAmount ?? undefined,
         },
         cardID: cart.cardID || undefined,
-        shippingID: cart.shippingID || undefined,
+        addressID: cart.addressID || undefined,
         shipping: {
           service: cart.shippingService || undefined,
           timeframe: cart.shippingDeliveryEstimate || undefined,
@@ -92,7 +153,7 @@ export module Cart {
   export async function calculateShipping(
     subtotal: number,
     ounces: number,
-    address: Address,
+    address: Address.Inner,
   ) {
     const rate = await Shippo.createShipmentRate({ ounces, address, subtotal });
     if (address.country === "US") {
@@ -128,7 +189,7 @@ export module Cart {
         );
     });
 
-  export const setShipping = fn(z.string(), async (userShippingID) => {
+  export const setAddress = fn(z.string(), async (addressID) => {
     const shippingInfo = await useTransaction(async (tx) => {
       const response = await tx
         .select({
@@ -137,14 +198,14 @@ export module Cart {
             sql`sum(${productVariantTable.price} * ${cartItemTable.quantity})`.mapWith(
               Number,
             ),
-          address: userShippingTable.address,
+          address: addressTable.address,
         })
         .from(cartItemTable)
         .innerJoin(
           productVariantTable,
           eq(productVariantTable.id, cartItemTable.productVariantID),
         )
-        .innerJoin(userShippingTable, eq(userShippingTable.id, userShippingID))
+        .innerJoin(addressTable, eq(addressTable.id, addressID))
         .where(eq(cartItemTable.userID, useUserID()))
         .then((rows) => rows[0]!);
 
@@ -154,24 +215,24 @@ export module Cart {
     });
 
     await useTransaction(async (tx) => {
-      const shippingID = await tx
+      const id = await tx
         .select({
-          shippingID: userShippingTable.id,
+          addressID: addressTable.id,
         })
-        .from(userShippingTable)
-        .where(eq(userShippingTable.id, userShippingID))
-        .then((rows) => rows[0]!.shippingID);
+        .from(addressTable)
+        .where(eq(addressTable.id, addressID))
+        .then((rows) => rows[0]!.addressID);
       await tx
         .insert(cartTable)
         .values({
           userID: useUserID(),
-          shippingID,
+          addressID: id,
           ...shippingInfo,
           id: createID("cart"),
         })
         .onDuplicateKeyUpdate({
           set: {
-            shippingID,
+            addressID,
             ...shippingInfo,
           },
         });
@@ -194,7 +255,7 @@ export module Cart {
         .insert(cartTable)
         .values({
           userID: useUserID(),
-          shippingID: cardID,
+          cardID: cardID,
           id: createID("cart"),
         })
         .onDuplicateKeyUpdate({
@@ -213,6 +274,7 @@ export module Cart {
     }),
     async (input) => {
       return useTransaction(async (tx) => {
+        const userID = useUserID();
         const id = input.id || createID("cartItem");
         const variant = await tx
           .select({
@@ -227,7 +289,11 @@ export module Cart {
           .where(eq(productVariantTable.id, input.productVariantID))
           .then((rows) => rows[0]);
         if (!variant) {
-          throw new Error("variant not found");
+          throw new VisibleError(
+            "input",
+            "variant",
+            "Product variant not found",
+          );
         }
         if (input.quantity <= 0) {
           await tx
@@ -235,7 +301,7 @@ export module Cart {
             .where(
               and(
                 eq(cartItemTable.productVariantID, variant.id),
-                eq(cartItemTable.userID, useUserID()),
+                eq(cartItemTable.userID, userID),
               ),
             );
           return;
@@ -251,7 +317,7 @@ export module Cart {
             id,
             quantity: input.quantity,
             productVariantID: variant.id,
-            userID: useUserID(),
+            userID,
           })
           .onDuplicateKeyUpdate({
             set: { quantity: input.quantity },
@@ -260,7 +326,7 @@ export module Cart {
           .insert(cartTable)
           .ignore()
           .values({
-            userID: useUserID(),
+            userID,
             id: createID("cart"),
           });
       });

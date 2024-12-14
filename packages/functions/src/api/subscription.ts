@@ -1,81 +1,51 @@
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
+import { z } from "zod";
 import { Result } from "./common";
 import { Subscription } from "@terminal/core/subscription/subscription";
+import { Hono } from "hono";
+import { describeRoute } from "hono-openapi";
+import { validator } from "hono-openapi/zod";
+import { Examples } from "@terminal/core/examples";
 
 export module SubscriptionApi {
-  export const SubscriptionSchema = z
-    .object(Subscription.Info.shape)
-    .openapi("Subscription");
-
-  export const route = new OpenAPIHono()
-    .openapi(
-      createRoute({
-        security: [{ Bearer: [] }],
-        method: "get",
-        path: "/",
+  export const route = new Hono()
+    .get(
+      "/",
+      describeRoute({
+        tags: ["Subscriptions"],
+        summary: "List subscriptions",
+        description: "List the subscriptions associated with the current user.",
         responses: {
           200: {
             content: {
               "application/json": {
-                schema: Result(SubscriptionSchema.array()),
+                schema: Result(
+                  Subscription.Info.array().openapi({
+                    description: "List of subscriptions.",
+                    example: [Examples.Subscription],
+                  }),
+                ),
               },
             },
-            description: "Returns a list of subscriptions",
+            description: "List of subscriptions.",
           },
         },
       }),
       async (c) => {
-        const result = await Subscription.list();
+        const data = await Subscription.list();
         return c.json(
           {
-            result,
+            data,
           },
           200,
         );
       },
     )
-    .openapi(
-      createRoute({
-        security: [{ Bearer: [] }],
-        method: "put",
-        path: "/",
-        request: {
-          body: {
-            content: {
-              "application/json": {
-                schema: z.object({
-                  productVariantID: SubscriptionSchema.shape.productVariantID,
-                  quantity: SubscriptionSchema.shape.quantity,
-                  frequency: SubscriptionSchema.shape.frequency,
-                  shippingID: SubscriptionSchema.shape.shippingID,
-                  cardID: SubscriptionSchema.shape.cardID,
-                }),
-              },
-            },
-          },
-        },
-        responses: {
-          200: {
-            content: {
-              "application/json": {
-                schema: Result(z.boolean()),
-              },
-            },
-            description: "Returns the cart",
-          },
-        },
-      }),
-      async (c) => {
-        const body = c.req.valid("json");
-        await Subscription.create(body);
-        return c.json({ result: true }, 200);
-      },
-    )
-    .openapi(
-      createRoute({
-        security: [{ Bearer: [] }],
-        method: "delete",
-        path: "/{id}",
+    .put(
+      "/",
+      describeRoute({
+        tags: ["Subscriptions"],
+        summary: "Subscribe",
+        description: "Create a subscription for the current user.",
         responses: {
           200: {
             content: {
@@ -83,13 +53,54 @@ export module SubscriptionApi {
                 schema: Result(z.literal("ok")),
               },
             },
-            description: "Subscription was cancelled successfully",
+            description: "Subscription was created successfully.",
           },
         },
       }),
+      validator(
+        "json",
+        Subscription.Info.omit({ id: true }).openapi({
+          description: "Subscription information.",
+          // @ts-ignore
+          example: { ...Examples.Subscription, id: undefined },
+        }),
+      ),
       async (c) => {
-        await Subscription.remove(c.req.param("id"));
-        return c.json({ result: "ok" as const }, 200);
+        const body = c.req.valid("json");
+        await Subscription.create(body);
+        return c.json({ data: "ok" as const }, 200);
+      },
+    )
+    .delete(
+      "/{id}",
+      describeRoute({
+        tags: ["Subscriptions"],
+        summary: "Cancel",
+        description: "Cancel a subscription for the current user.",
+        responses: {
+          200: {
+            content: {
+              "application/json": {
+                schema: Result(z.literal("ok")),
+              },
+            },
+            description: "Subscription was cancelled successfully.",
+          },
+        },
+      }),
+      validator(
+        "param",
+        z.object({
+          id: Subscription.Info.shape.id.openapi({
+            description: "ID of the subscription to cancel.",
+            example: Examples.Subscription.id,
+          }),
+        }),
+      ),
+      async (c) => {
+        const param = c.req.valid("param");
+        await Subscription.remove(param.id);
+        return c.json({ data: "ok" as const }, 200);
       },
     );
 }

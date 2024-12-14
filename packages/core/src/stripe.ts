@@ -1,10 +1,10 @@
 import { Resource } from "sst";
 import { Stripe as StripeClient } from "stripe";
-import { z } from "zod";
 import { fn } from "./util/fn";
 import { useTransaction } from "./drizzle/transaction";
 import { userTable } from "./user/user.sql";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 
 export const stripe = new StripeClient(Resource.StripeSecret.value, {
   httpClient: StripeClient.createFetchHttpClient(),

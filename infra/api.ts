@@ -1,5 +1,5 @@
 import { secret } from "./secret";
-import { domain } from "./dns";
+import { domain, zone } from "./dns";
 import { database } from "./database";
 import { webhook } from "./stripe";
 import { bus } from "./bus";
@@ -10,6 +10,13 @@ sst.Linkable.wrap(random.RandomString, (resource) => ({
     value: resource.result,
   },
 }));
+
+const urls = new sst.Linkable("Urls", {
+  properties: {
+    api: "https://api." + domain,
+    auth: "https://auth." + domain,
+  },
+});
 
 export const authFingerprintKey = new random.RandomString(
   "AuthFingerprintKey",
@@ -59,6 +66,7 @@ const apiFn = new sst.aws.Function("ApiFn", {
     auth,
     database,
     webhook,
+    urls,
   ],
   url: true,
 });

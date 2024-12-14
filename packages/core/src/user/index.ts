@@ -1,14 +1,6 @@
-import {
-  eq,
-  and,
-  getTableColumns,
-  isNull,
-  desc,
-  asc,
-  inArray,
-} from "drizzle-orm";
+import { eq, and, getTableColumns, isNull, asc, inArray } from "drizzle-orm";
 import { db } from "../drizzle";
-import { userFingerprintTable, userShippingTable, userTable } from "./user.sql";
+import { userFingerprintTable, userTable } from "./user.sql";
 import { z } from "zod";
 import { fn } from "../util/fn";
 import { stripe } from "../stripe";
@@ -18,31 +10,46 @@ import {
   afterTx,
   useTransaction,
 } from "../drizzle/transaction";
-import { Address } from "../address";
-import { useUserID } from "../actor";
 import { defineEvent } from "../event";
 import { bus } from "sst/aws/bus";
 import { Resource } from "sst";
 import { Card } from "../card";
-import { Shippo } from "../shippo/index";
 import { orderTable } from "../order/order.sql";
-import { cardTable } from "../card/card.sql";
 import { subscriptionTable } from "../subscription/subscription.sql";
+import { Common } from "../common";
+import { Examples } from "../examples";
+import { addressTable } from "../address/address.sql";
 
 export module User {
-  export const Info = z.object({
-    id: z.string(),
-    name: z.string().nullable(),
-    email: z.string().nullable(),
-    fingerprint: z.string().nullable(),
-    stripeCustomerID: z.string(),
-  });
-
-  export const Shipping = z.object({
-    id: z.string(),
-    address: Address,
-  });
-  export type Shipping = z.infer<typeof Shipping>;
+  export const Info = z
+    .object({
+      id: z.string().openapi({
+        description: Common.IdDescription,
+        example: Examples.User.id,
+      }),
+      name: z.string().nullable().openapi({
+        description: "Name of the user.",
+        example: Examples.User.name,
+      }),
+      email: z.string().nullable().openapi({
+        description: "Email address of the user.",
+        example: Examples.User.email,
+      }),
+      fingerprint: z.string().nullable().openapi({
+        description:
+          "The user's fingerprint, derived from their public SSH key.",
+        example: Examples.User.fingerprint,
+      }),
+      stripeCustomerID: z.string().openapi({
+        description: "Stripe customer ID of the user.",
+        example: Examples.User.stripeCustomerID,
+      }),
+    })
+    .openapi({
+      ref: "User",
+      description: "A Terminal shop user. (We have users, btw.)",
+      example: Examples.User,
+    });
 
   export const Events = {
     Created: defineEvent(
@@ -112,11 +119,11 @@ export module User {
         .where(inArray(orderTable.userID, ids));
 
       await tx
-        .update(userShippingTable)
+        .update(addressTable)
         .set({
           userID: primary,
         })
-        .where(inArray(userShippingTable.userID, ids));
+        .where(inArray(addressTable.userID, ids));
 
       // do not merge cards for now
       // await tx
@@ -205,47 +212,6 @@ export module User {
         .then((rows) => rows.map(serialize).at(0)),
     ),
   );
-
-  export const addShipping = fn(Shippo.assertValidAddress.schema, (input) =>
-    useTransaction(async (tx) => {
-      const validated = await Shippo.assertValidAddress(input);
-      const id = createID("userShipping");
-      await tx.insert(userShippingTable).values({
-        id,
-        userID: useUserID(),
-        address: validated,
-      });
-      return id;
-    }),
-  );
-
-  export const removeShipping = fn(z.string(), (input) =>
-    useTransaction(async (tx) => {
-      await tx
-        .delete(userShippingTable)
-        .where(
-          and(
-            eq(userShippingTable.id, input),
-            eq(userShippingTable.userID, useUserID()),
-          ),
-        );
-    }),
-  );
-
-  export async function shipping() {
-    return useTransaction(async (tx) =>
-      tx
-        .select()
-        .from(userShippingTable)
-        .where(eq(userShippingTable.userID, useUserID()))
-        .then((rows): Shipping[] =>
-          rows.map((row) => ({
-            id: row.id,
-            address: row.address,
-          })),
-        ),
-    );
-  }
 
   function serialize(
     input: typeof userTable.$inferSelect,

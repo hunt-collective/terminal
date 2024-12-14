@@ -22,7 +22,11 @@ export const ActorContext = createContext<Actor>();
 export function useUserID() {
   const actor = ActorContext.use();
   if (actor.type === "user") return actor.properties.userID;
-  throw new Error(`Actor is "${actor.type}" not UserActor`);
+  throw new VisibleError(
+    "auth",
+    "unauthorized",
+    `You don't have permission to access this resource`,
+  );
 }
 
 export async function assertFlag(flag: keyof UserFlags) {

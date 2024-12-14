@@ -9,7 +9,7 @@ import {
 } from "../drizzle/types";
 import { userTable } from "../user/user.sql";
 import { productVariantTable } from "../product/product.sql";
-import { Card } from "../card/index";
+import { Card } from "../card";
 
 export const orderTable = mysqlTable("order", {
   ...id,

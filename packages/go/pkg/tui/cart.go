@@ -122,7 +122,7 @@ func (m model) UpdateCart(productVariantID string, offset int64) (model, tea.Cmd
 		}
 		return CartUpdatedMsg{
 			updateID: updateID,
-			updated:  response.Result,
+			updated:  response.Data,
 		}
 	}
 }

@@ -30,7 +30,7 @@ const id = Astro.props.id
     esc
   </button>
 </div>
-<script define:vars={{ id }}>
+<script is:inline define:vars={{ id }}>
   const banner = document.getElementById(id)
   const closeButton = document.getElementById('close-button')
 

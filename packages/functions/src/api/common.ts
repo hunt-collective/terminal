@@ -1,7 +1,10 @@
-import { z } from "@hono/zod-openapi";
+import { z } from "zod";
+import { resolver } from "hono-openapi/zod";
 
 export function Result<T extends z.ZodTypeAny>(schema: T) {
-  return z.object({
-    result: schema,
-  });
+  return resolver(
+    z.object({
+      data: schema,
+    }),
+  );
 }

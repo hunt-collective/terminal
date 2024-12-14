@@ -35,7 +35,7 @@ func (m model) LoadCmds() []tea.Cmd {
 		response, err := m.client.User.Init(m.context)
 		if err != nil {
 		}
-		return response.Result
+		return response.Data
 	})
 
 	return cmds
@@ -76,7 +76,7 @@ func (m model) SplashUpdate(msg tea.Msg) (model, tea.Cmd) {
 		return m, tea.Batch(m.LoadCmds()...)
 	case DelayCompleteMsg:
 		m.state.splash.delay = true
-	case terminal.UserInitResponseResult:
+	case terminal.UserInitResponseData:
 		m.state.splash.data = true
 	}
 

@@ -265,7 +265,7 @@ func (m model) paymentListUpdate(msg tea.Msg) (model, tea.Cmd) {
 					cards, err := m.client.Card.List(m.context)
 					if err != nil {
 					}
-					return cards.Result
+					return cards.Data
 				}
 			}
 			return m, nil
@@ -314,10 +314,10 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		cards, _ := m.client.Card.List(m.context)
 
-		m.cards = cards.Result
+		m.cards = cards.Data
 		return m, func() tea.Msg {
-			m.SetCard(response.Result)
-			return SelectedCardUpdatedMsg{cardID: response.Result}
+			m.SetCard(response.Data)
+			return SelectedCardUpdatedMsg{cardID: response.Data}
 		}
 
 	case VisibleError:
@@ -362,14 +362,13 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 			return result
 		}, func() tea.Msg {
 			params := terminal.UserUpdateParams{
-				ID:    terminal.String(m.user.ID),
 				Name:  terminal.String(m.user.Name),
 				Email: terminal.String(m.user.Email),
 			}
 			response, err := m.client.User.Update(m.context, params)
 			if err != nil {
 			}
-			return response.Result
+			return response.Data
 		})
 	}
 

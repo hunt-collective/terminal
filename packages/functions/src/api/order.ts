@@ -1,84 +1,116 @@
-import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
+import { z } from "zod";
 import { Result } from "./common";
 import { Order } from "@terminal/core/order/order";
+import { Hono } from "hono";
+import { describeRoute } from "hono-openapi";
+import { validator, resolver } from "hono-openapi/zod";
+import { Examples } from "@terminal/core/examples";
 
 export module OrderApi {
-  export const OrderSchema = z.object(Order.Info.shape).openapi("Order");
-
-  export const route = new OpenAPIHono()
-    .openapi(
-      createRoute({
-        method: "get",
-        path: "/",
+  export const route = new Hono()
+    .get(
+      "/",
+      describeRoute({
+        tags: ["Orders"],
+        summary: "List orders",
+        description: "List the orders associated with the current user.",
         responses: {
           200: {
             content: {
               "application/json": {
-                schema: Result(OrderSchema.array()),
+                schema: Result(
+                  Order.Info.array().openapi({
+                    description: "List of orders.",
+                    example: [Examples.Order],
+                  }),
+                ),
               },
             },
-            description: "Returns a list of orders",
+            description: "List of orders.",
           },
         },
       }),
       async (c) => {
-        const result = await Order.list();
+        const data = await Order.list();
         return c.json(
           {
-            result,
+            data,
           },
           200,
         );
       },
     )
-    .openapi(
-      createRoute({
-        method: "get",
-        path: "/{id}",
+    .get(
+      "/{id}",
+      describeRoute({
+        tags: ["Orders"],
+        summary: "Get order",
+        description: "Get the order with the given ID.",
         responses: {
           404: {
             content: {
               "application/json": {
-                schema: z.object({ error: z.string() }),
+                schema: resolver(z.object({ error: z.string() })),
               },
             },
-            description: "Order not found",
+            description: "Order not found.",
           },
           200: {
             content: {
               "application/json": {
-                schema: Result(OrderSchema),
+                schema: Result(
+                  Order.Info.openapi({
+                    description: "Order information.",
+                    example: Examples.Order,
+                  }),
+                ),
               },
             },
-            description: "Returns order",
+            description: "Order information.",
           },
         },
       }),
+      validator(
+        "param",
+        z.object({
+          id: z.string().openapi({
+            description: "ID of the order to get.",
+            example: Examples.Order.id,
+          }),
+        }),
+      ),
       async (c) => {
-        const order = await Order.fromID(c.req.param("id"));
+        const param = c.req.valid("param");
+        const order = await Order.fromID(param.id);
         if (!order) return c.json({ error: "Order not found" }, 404);
-        return c.json({ result: order }, 200);
+        return c.json({ data: order }, 200);
       },
     )
-    .openapi(
-      createRoute({
-        security: [{ Bearer: [] }],
-        method: "post",
-        path: "/",
+    .post(
+      "/",
+      describeRoute({
+        tags: ["Orders"],
+        summary: "Create order",
+        description: "Create an order from the current user's cart.",
         responses: {
           200: {
             content: {
               "application/json": {
-                schema: Result(OrderSchema),
+                schema: Result(
+                  Order.Info.openapi({
+                    description: "Order information.",
+                    example: Examples.Order,
+                  }),
+                ),
               },
             },
-            description: "Returns the order",
+            description: "Order information.",
           },
         },
       }),
       async (c) => {
         const orderID = await Order.convertCart();
-        return c.json({ result: await Order.fromID(orderID) }, 200);
+        return c.json({ data: await Order.fromID(orderID) }, 200);
       },
     );
 }

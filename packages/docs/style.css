@@ -1,0 +1,28 @@
+* {
+  --gray-400: #e5f2ff78;
+
+  letter-spacing: -0.32px;
+  border-color: hsla(203, 6%, 24%, 1);
+  color: #e5f2ff78;
+}
+
+.cursor-pointer {
+  color: #ffffff;
+}
+
+#sidebar {
+  /* background-color: #151719; */
+}
+
+#topbar-cta-button > a > span {
+  background-color: #ff5e00;
+  color: #ffffff;
+}
+
+#topbar-cta-button > a > div > * {
+  color: #ffffff;
+}
+
+#footer > :last-child {
+  display: none;
+}

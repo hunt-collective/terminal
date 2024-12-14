@@ -1,8 +1,9 @@
 import { mysqlTable, int, unique, text } from "drizzle-orm/mysql-core";
 import { dollar, id, timestamps, ulid } from "../drizzle/types";
-import { userShippingTable, userTable } from "../user/user.sql";
+import { userTable } from "../user/user.sql";
 import { productVariantTable } from "../product/product.sql";
 import { cardTable } from "../card/card.sql";
+import { addressTable } from "../address/address.sql";
 
 export const cartItemTable = mysqlTable(
   "cart_item",
@@ -35,7 +36,7 @@ export const cartTable = mysqlTable("cart", {
     })
     .notNull()
     .unique(),
-  shippingID: ulid("shipping_id").references(() => userShippingTable.id, {
+  addressID: ulid("shipping_id").references(() => addressTable.id, {
     onDelete: "set null",
   }),
   cardID: ulid("card_id").references(() => cardTable.id, {

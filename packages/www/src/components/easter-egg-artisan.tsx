@@ -52,14 +52,6 @@ const R: Component<SpanProps> = (props) => {
   )
 }
 
-const P: Component<SpanProps> = (props) => {
-  return (
-    <span class="text-purple" {...props}>
-      {props.children}
-    </span>
-  )
-}
-
 const Expand = () => {
   return (
     <svg

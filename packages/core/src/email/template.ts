@@ -4,6 +4,7 @@ import { orderTable, orderItemTable } from "../order/order.sql";
 import { and, count, eq, lt, sql } from "drizzle-orm";
 import { Email } from "./index";
 import { productTable, productVariantTable } from "../product/product.sql";
+
 export module Template {
   export async function sendOrderConfirmation(orderID: string) {
     const items = await useTransaction((tx) =>

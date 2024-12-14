@@ -1,4 +1,4 @@
-import { int, mysqlTable, text, unique, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlTable, text, varchar } from "drizzle-orm/mysql-core";
 import { id, ulid, timestamps } from "../drizzle/types";
 
 export const inventoryTable = mysqlTable("inventory", {

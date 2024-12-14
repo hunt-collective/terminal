@@ -117,6 +117,11 @@ declare module "sst" {
       "type": "sst.sst.Secret"
       "value": string
     }
+    "Urls": {
+      "api": string
+      "auth": string
+      "type": "sst.sst.Linkable"
+    }
     "Vpc": {
       "type": "sst.aws.Vpc"
     }

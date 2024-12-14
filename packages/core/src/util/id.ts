@@ -1,6 +1,6 @@
 import { ulid } from "ulid";
 
-const prefixes = {
+export const prefixes = {
   user: "usr",
   inventory: "inv",
   inventoryRecord: "irc",

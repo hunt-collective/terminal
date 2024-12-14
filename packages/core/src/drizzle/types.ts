@@ -29,4 +29,4 @@ export const timestamps = {
   timeDeleted: timestamp("time_deleted"),
 };
 
-export const address = (name: string) => json(name).$type<Address>();
+export const address = (name: string) => json(name).$type<Address.Inner>();
