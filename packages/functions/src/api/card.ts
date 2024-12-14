@@ -82,7 +82,7 @@ export module CardApi {
       },
     )
     .delete(
-      "/{id}",
+      "/:id",
       describeRoute({
         tags: ["Cards"],
         summary: "Delete card",

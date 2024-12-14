@@ -71,7 +71,7 @@ export module AddressApi {
       },
     )
     .delete(
-      "/{id}",
+      "/:id",
       describeRoute({
         tags: ["Addresses"],
         summary: "Delete address",

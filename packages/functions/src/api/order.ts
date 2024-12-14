@@ -41,7 +41,7 @@ export module OrderApi {
       },
     )
     .get(
-      "/{id}",
+      "/:id",
       describeRoute({
         tags: ["Orders"],
         summary: "Get order",

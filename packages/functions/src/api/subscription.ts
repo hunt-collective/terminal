@@ -72,7 +72,7 @@ export module SubscriptionApi {
       },
     )
     .delete(
-      "/{id}",
+      "/:id",
       describeRoute({
         tags: ["Subscriptions"],
         summary: "Cancel",
