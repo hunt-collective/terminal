@@ -27,7 +27,6 @@ export const authFingerprintKey = new random.RandomString(
 
 export const auth = new sst.aws.Auth("Auth", {
   authorizer: {
-    url: true,
     link: [
       bus,
       secret.StripeSecret,

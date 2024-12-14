@@ -106,6 +106,7 @@ declare module "sst" {
     }
     "StripeWebhook": {
       "id": string
+      "secret": string
       "type": "stripe.index/webhookEndpoint.WebhookEndpoint"
     }
     "TwitchClientID": {

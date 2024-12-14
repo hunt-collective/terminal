@@ -10,12 +10,12 @@
   "dependencies": {
     "@apiture/openapi-down-convert": "^0.14.0",
     "@aws-sdk/client-sesv2": "3.606.0",
-    "@openauthjs/openauth": "^0.1.0",
+    "@openauthjs/openauth": "^0.1.2",
     "@terminal/core": "workspace:",
     "airtable": "0.12.2",
     "hono": "*",
-    "sst": "3.4.2",
     "hono-openapi": "0.2.1",
+    "sst": "3.4.3",
     "zod": "*",
     "zod-openapi": "4.1.0"
   }
