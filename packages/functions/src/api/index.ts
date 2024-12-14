@@ -47,7 +47,6 @@ const auth: MiddlewareHandler = async (c, next) => {
         {
           type: "user",
           properties: {
-            // @ts-expect-error
             userID: result.subject.properties.userID,
           },
         },
