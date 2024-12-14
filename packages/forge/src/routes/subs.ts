@@ -2,7 +2,8 @@ import { Layout, Page, io } from "@forgeapp/sdk";
 import { useTransaction } from "@terminal/core/drizzle/transaction";
 import { and, count, desc, eq, isNull } from "@terminal/core/drizzle/index";
 import { subscriptionTable } from "@terminal/core/subscription/subscription.sql";
-import { userShippingTable, userTable } from "@terminal/core/user/user.sql";
+import { userTable } from "@terminal/core/user/user.sql";
+import { addressTable } from "@terminal/core/address/address.sql";
 
 export const Subs = new Page({
   name: "Subs",
@@ -30,7 +31,7 @@ export const Subs = new Page({
       menuItems: [],
       children: [
         io.display.heading(
-          "Active Subscriptions: " + totals[0]?.count?.toString() ?? "0",
+          "Active Subscriptions: " + totals[0]?.count?.toString(),
           {
             level: 3,
           },
@@ -49,7 +50,7 @@ export const Subs = new Page({
                   id: subscriptionTable.id,
                   name: userTable.name,
                   email: userTable.email,
-                  address: userShippingTable.address,
+                  address: addressTable.address,
                   created: subscriptionTable.timeCreated,
                   next: subscriptionTable.timeNext,
                 })
@@ -59,8 +60,8 @@ export const Subs = new Page({
                   eq(subscriptionTable.userID, userTable.id),
                 )
                 .innerJoin(
-                  userShippingTable,
-                  eq(subscriptionTable.shippingID, userShippingTable.id),
+                  addressTable,
+                  eq(subscriptionTable.addressID, addressTable.id),
                 )
                 .orderBy(desc(subscriptionTable.id))
                 .offset(input.offset)
