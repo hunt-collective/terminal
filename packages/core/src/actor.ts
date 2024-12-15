@@ -8,6 +8,15 @@ export interface UserActor {
   type: "user";
   properties: {
     userID: string;
+    auth?:
+      | {
+          type: "personal";
+          token: string;
+        }
+      | {
+          type: "oauth";
+          clientID: string;
+        };
   };
 }
 

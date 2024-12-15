@@ -14,6 +14,7 @@ export const prefixes = {
   subscription: "sub",
   apiClient: "cli",
   apiSecret: "sec",
+  apiPersonal: "pat",
 } as const;
 
 export function createID(prefix: keyof typeof prefixes): string {

@@ -29,6 +29,7 @@ const app = authorizer({
     password: PasswordAdapter(
       PasswordUI({
         sendCode: async (email, code) => {
+          console.log(email, code);
           await Email.send(
             "auth",
             email,

@@ -21,6 +21,7 @@ import { ZodError } from "zod";
 import { Converter } from "@apiture/openapi-down-convert";
 import { HTTPException } from "hono/http-exception";
 import { AddressApi } from "./address";
+import { Api } from "@terminal/core/api/api";
 
 const client = createClient({
   clientID: "api",
@@ -31,7 +32,7 @@ const auth: MiddlewareHandler = async (c, next) => {
     c.req.query("authorization") ?? c.req.header("authorization");
   if (authHeader) {
     const match = authHeader.match(/^Bearer (.+)$/);
-    if (!match) {
+    if (!match || !match[1]) {
       throw new VisibleError(
         "input",
         "auth.token",
@@ -39,6 +40,26 @@ const auth: MiddlewareHandler = async (c, next) => {
       );
     }
     const bearerToken = match[1];
+
+    if (bearerToken?.startsWith("terminal_")) {
+      const token = await Api.Personal.fromToken(bearerToken);
+      if (!token)
+        throw new VisibleError("input", "auth.invalid", "Invalid bearer token");
+      return ActorContext.with(
+        {
+          type: "user",
+          properties: {
+            userID: token.userID,
+            auth: {
+              type: "personal",
+              token: token.id,
+            },
+          },
+        },
+        next,
+      );
+    }
+
     const result = await client.verify(subjects, bearerToken!);
     if (result.err)
       throw new VisibleError("input", "auth.invalid", "Invalid bearer token");
@@ -48,6 +69,10 @@ const auth: MiddlewareHandler = async (c, next) => {
           type: "user",
           properties: {
             userID: result.subject.properties.userID,
+            auth: {
+              type: "oauth",
+              clientID: result.aud,
+            },
           },
         },
         next,

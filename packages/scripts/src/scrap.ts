@@ -18,7 +18,7 @@ ActorContext.with(
   },
   async () => {
     console.log(
-      await Api.create({
+      await Api.Client.create({
         name: "Raycast",
         redirectURI: "https://raycast.com/redirect",
       }),
