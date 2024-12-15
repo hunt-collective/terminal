@@ -3,7 +3,7 @@ import { domain, zone } from "./dns";
 import { database } from "./database";
 import { webhook } from "./stripe";
 import { bus } from "./bus";
-import { email } from "./email";
+import { email, shortDomainEmail } from "./email";
 
 sst.Linkable.wrap(random.RandomString, (resource) => ({
   properties: {
@@ -30,6 +30,7 @@ export const auth = new sst.aws.Auth("Auth", {
     link: [
       bus,
       secret.StripeSecret,
+      shortDomainEmail,
       database,
       email,
       secret.GithubClientID,

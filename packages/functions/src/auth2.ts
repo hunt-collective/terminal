@@ -13,6 +13,7 @@ import { Resource } from "sst";
 import { handle } from "hono/aws-lambda";
 import { User } from "@terminal/core/user/index";
 import { Api } from "@terminal/core/api/api";
+import { Email } from "@terminal/core/email/index";
 
 const app = authorizer({
   subjects,
@@ -28,14 +29,25 @@ const app = authorizer({
     password: PasswordAdapter(
       PasswordUI({
         sendCode: async (email, code) => {
-          console.log(email, code);
+          await Email.send(
+            "auth",
+            email,
+            `Terminal code: ${code}`,
+            `Your terminal login code is ${code}`,
+          );
         },
       }),
     ),
     code: CodeAdapter<{ email: string }>(
       CodeUI({
-        sendCode: async (code, claims) => {
-          console.log(code, claims);
+        sendCode: async (claims, code) => {
+          console.log(code, claims.email);
+          await Email.send(
+            "auth",
+            claims.email!,
+            `Terminal code: ${code}`,
+            `Your terminal login code is ${code}`,
+          );
         },
       }),
     ),

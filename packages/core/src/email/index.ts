@@ -1,8 +1,8 @@
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 import { Resource } from "sst";
 
-export module Email {
-  const ses = new SESv2Client({});
+export namespace Email {
+  export const Client = new SESv2Client({});
 
   export async function send(
     from: string,
@@ -12,7 +12,7 @@ export module Email {
   ) {
     from = from + "@" + Resource.ShortDomainEmail.sender;
     console.log("sending email", subject, from, to);
-    await ses.send(
+    await Client.send(
       new SendEmailCommand({
         Destination: {
           ToAddresses: [to],
