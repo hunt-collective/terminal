@@ -7,53 +7,58 @@ organization:
 openapi:
   code_samples: mintlify
 resources:
-  $shared:
+  products:
     models:
-      address: Address
-      card: Card
-      cart: Cart
-      order: Order
       product: Product
       productVariant: ProductVariant
-      subscription: Subscription
+    methods:
+      list: get /products
+  users:
+    models:
       user: User
-  product:
     methods:
-      list: get /product
-  user:
+      me: get /users/me
+      init: get /users/init
+      update: put /users/me
+  addresses:
+    models:
+      address: Address
     methods:
-      me: get /user/me
-      init: get /user/init
-      update: put /user/me
-  address:
+      list: get /addresses
+      create: post /addresses
+      delete: delete /addresses/{id}
+  cards:
+    models:
+      card: Card
     methods:
-      list: get /address
-      create: post /address
-      delete: delete /address/{id}
-  card:
-    methods:
-      list: get /card
-      create: post /card
-      delete: delete /card/{id}
+      list: get /cards
+      create: post /cards
+      delete: delete /cards/{id}
   cart:
+    models:
+      cart: Cart
     methods:
       list: get /cart
       setItem: put /cart/item
       setAddress: put /cart/address
       setCard: put /cart/card
-  order:
+  orders:
+    models:
+      order: Order
     methods:
-      list: get /order
-      get: get /order/{id}
-      create: post /order
-  subscription:
+      list: get /orders
+      get: get /orders/{id}
+      create: post /orders
+  subscriptions:
+    models:
+      subscription: Subscription
     methods:
-      list: get /subscription
-      create: put /subscription
-      delete: delete /subscription/{id}
-  email:
+      list: get /subscriptions
+      create: put /subscriptions
+      delete: delete /subscriptions/{id}
+  emails:
     methods:
-      create: post /email/subscription
+      create: post /emails
 settings:
   license: Apache-2.0
 client_settings:
@@ -65,7 +70,7 @@ client_settings:
       read_env: TERMINAL_BEARER_TOKEN
 environments:
   production: https://api.terminal.shop/
-  dev: https://api.dev.terminal.shop/
+  sandbox: https://sandbox.terminal.shop/
 query_settings:
   nested_format: brackets
   array_format: comma
@@ -89,4 +94,10 @@ targets:
   go:
     package_name: terminal
     production_repo: terminaldotshop/terminal-sdk-go
+    skip: false
+  python:
+    package_name: terminal
+    production_repo: terminaldotshop/terminal-sdk-python
+    publish:
+      pypi: true
     skip: false

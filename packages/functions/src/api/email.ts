@@ -8,7 +8,7 @@ import { Examples } from "@terminal/core/examples";
 
 export module EmailApi {
   export const route = new Hono().post(
-    "/subscription",
+    "/",
     describeRoute({
       tags: ["Marketing"],
       summary: "Subscribe",

@@ -6,7 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/terminaldotshop/terminal-sdk-go/shared"
+	"github.com/terminaldotshop/terminal-sdk-go"
 	"github.com/terminaldotshop/terminal/go/pkg/tui/theme"
 )
 
@@ -43,19 +43,19 @@ func (m model) ShopUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "shift+tab", "up", "k":
 			return m.UpdateSelected(true)
 		case "+", "=", "right", "l":
-			if product.Subscription == shared.ProductSubscriptionRequired {
+			if product.Subscription == terminal.ProductSubscriptionRequired {
 				return m, nil
 			}
 			productVariantID := m.products[m.state.shop.selected].Variants[0].ID
 			return m.UpdateCart(productVariantID, 1)
 		case "-", "left", "h":
-			if product.Subscription == shared.ProductSubscriptionRequired {
+			if product.Subscription == terminal.ProductSubscriptionRequired {
 				return m, nil
 			}
 			productVariantID := m.products[m.state.shop.selected].Variants[0].ID
 			return m.UpdateCart(productVariantID, -1)
 		case "enter":
-			if product.Subscription == shared.ProductSubscriptionRequired {
+			if product.Subscription == terminal.ProductSubscriptionRequired {
 				m.state.subscribe.product = &product
 				return m.SubscribeSwitch()
 			}
@@ -88,7 +88,7 @@ func (m model) UpdateSelected(previous bool) (model, tea.Cmd) {
 }
 
 func (m model) reorderProducts() model {
-	var featured, staples []shared.Product
+	var featured, staples []terminal.Product
 
 	// Split into featured and staples while maintaining relative order within each category
 	for _, p := range m.products {
@@ -189,7 +189,7 @@ func (m model) ShopView() string {
 			Foreground(m.theme.Accent())
 	}
 
-	if product.Subscription == shared.ProductSubscriptionRequired {
+	if product.Subscription == terminal.ProductSubscriptionRequired {
 		quantity = button("subscribe") + " enter"
 	}
 

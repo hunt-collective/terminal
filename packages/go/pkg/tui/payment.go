@@ -257,12 +257,12 @@ func (m model) paymentListUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "y":
 			if m.state.payment.deleting != nil {
 				m.state.payment.deleting = nil
-				m.client.Card.Delete(m.context, m.cards[m.state.payment.selected].ID)
+				m.client.Cards.Delete(m.context, m.cards[m.state.payment.selected].ID)
 				if len(m.cards)-1 == 0 && m.page == accountPage {
 					m.state.account.focused = false
 				}
 				return m, func() tea.Msg {
-					cards, err := m.client.Card.List(m.context)
+					cards, err := m.client.Cards.List(m.context)
 					if err != nil {
 					}
 					return cards.Data
@@ -303,7 +303,7 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 		}
 	case *stripe.Token:
 		params := terminal.CardNewParams{Token: terminal.F(msg.ID)}
-		response, err := m.client.Card.New(m.context, params)
+		response, err := m.client.Cards.New(m.context, params)
 
 		if err != nil {
 			m, cmd := m.PaymentSwitch()
@@ -312,7 +312,7 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 			return m, cmd
 		}
 
-		cards, _ := m.client.Card.List(m.context)
+		cards, _ := m.client.Cards.List(m.context)
 
 		m.cards = cards.Data
 		return m, func() tea.Msg {
@@ -365,7 +365,7 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 				Name:  terminal.String(m.user.Name),
 				Email: terminal.String(m.user.Email),
 			}
-			response, err := m.client.User.Update(m.context, params)
+			response, err := m.client.Users.Update(m.context, params)
 			if err != nil {
 			}
 			return response.Data
@@ -462,11 +462,11 @@ func (m model) paymentCostsView() string {
 	if m.IsSubscribing() {
 		price := m.state.subscribe.product.Variants[m.state.subscribe.selected].Price
 		view := strings.Builder{}
-		view.WriteString(fmt.Sprintf("Subtotal: %s", formatUSD(int(price))) + "\n")
-		view.WriteString(fmt.Sprintf("Shipping: %s", formatUSD(int(0))) + "\n")
+		view.WriteString(fmt.Sprintf("Subtotal: %s", formatUSD(int(price))) + ", ")
+		view.WriteString(fmt.Sprintf("Shipping: %s", formatUSD(int(0))) + ", ")
 		view.WriteString(
 			m.theme.TextAccent().
-				Render(fmt.Sprintf("Total:    %s", formatUSD(int(price)))),
+				Render(fmt.Sprintf("Total: %s", formatUSD(int(price)))),
 		)
 
 		return view.String()

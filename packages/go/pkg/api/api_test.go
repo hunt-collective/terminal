@@ -14,5 +14,5 @@ func TestGetProduct(t *testing.T) {
 		option.WithBaseURL(resource.Resource.Api.Url),
 	)
 	ctx := context.Background()
-	client.Product.List(ctx)
+	client.Products.List(ctx)
 }

@@ -32,7 +32,7 @@ func (m model) LoadCmds() []tea.Cmd {
 	}))
 
 	cmds = append(cmds, func() tea.Msg {
-		response, err := m.client.User.Init(m.context)
+		response, err := m.client.Users.Init(m.context)
 		if err != nil {
 		}
 		return response.Data

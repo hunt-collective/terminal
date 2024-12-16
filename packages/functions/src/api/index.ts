@@ -92,16 +92,16 @@ app
   .use(auth);
 
 const routes = app
-  .route("/product", ProductApi.route)
-  .route("/user", UserApi.route)
-  .route("/card", CardApi.route)
-  .route("/address", AddressApi.route)
+  .route("/products", ProductApi.route)
+  .route("/users", UserApi.route)
+  .route("/addresses", AddressApi.route)
+  .route("/cards", CardApi.route)
   .route("/cart", CartApi.route)
-  .route("/order", OrderApi.route)
+  .route("/orders", OrderApi.route)
+  .route("/subscriptions", SubscriptionApi.route)
+  .route("/emails", EmailApi.route)
   .route("/hook", Hook.route)
   .route("/print", Print.route)
-  .route("/email", EmailApi.route)
-  .route("/subscription", SubscriptionApi.route)
   .onError((error, c) => {
     // console.error(error);
     if (error instanceof VisibleError) {
@@ -169,7 +169,11 @@ app.get(
         },
       },
       security: [{ Bearer: [] }],
-      servers: [{ url: Resource.Urls.api }],
+      // servers: [{ url: Resource.Urls.api }],
+      servers: [
+        { description: "Production", url: "https://api.terminal.dev" },
+        { description: "Sandbox", url: "https://sandbox.terminal.dev" },
+      ],
     },
   }),
 );
