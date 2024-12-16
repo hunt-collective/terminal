@@ -11,7 +11,7 @@ export module SubscriptionApi {
     .get(
       "/",
       describeRoute({
-        tags: ["Subscriptions"],
+        tags: ["Subscription"],
         summary: "List subscriptions",
         description: "List the subscriptions associated with the current user.",
         responses: {
@@ -43,7 +43,7 @@ export module SubscriptionApi {
     .put(
       "/",
       describeRoute({
-        tags: ["Subscriptions"],
+        tags: ["Subscription"],
         summary: "Subscribe",
         description: "Create a subscription for the current user.",
         responses: {
@@ -74,7 +74,7 @@ export module SubscriptionApi {
     .delete(
       "/:id",
       describeRoute({
-        tags: ["Subscriptions"],
+        tags: ["Subscription"],
         summary: "Cancel",
         description: "Cancel a subscription for the current user.",
         responses: {

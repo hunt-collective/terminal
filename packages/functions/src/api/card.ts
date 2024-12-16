@@ -11,7 +11,7 @@ export module CardApi {
     .get(
       "/",
       describeRoute({
-        tags: ["Cards"],
+        tags: ["Card"],
         summary: "List cards",
         description: "List the credit cards associated with the current user.",
         responses: {
@@ -42,7 +42,7 @@ export module CardApi {
     .post(
       "/",
       describeRoute({
-        tags: ["Cards"],
+        tags: ["Card"],
         summary: "Create card",
         description:
           "Attach a credit card (tokenized via Stripe) to the current user.",
@@ -84,7 +84,7 @@ export module CardApi {
     .delete(
       "/:id",
       describeRoute({
-        tags: ["Cards"],
+        tags: ["Card"],
         summary: "Delete card",
         description: "Delete a credit card associated with the current user.",
         responses: {

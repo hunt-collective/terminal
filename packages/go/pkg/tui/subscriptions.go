@@ -62,12 +62,12 @@ func (m model) SubscriptionsUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "y":
 			if m.state.subscriptions.deleting != nil {
 				m.state.subscriptions.deleting = nil
-				m.client.Subscriptions.Delete(m.context, m.subscriptions[m.state.subscriptions.selected].ID)
+				m.client.Subscription.Delete(m.context, m.subscriptions[m.state.subscriptions.selected].ID)
 				if len(m.subscriptions)-1 == 0 {
 					m.state.account.focused = false
 				}
 				return m, func() tea.Msg {
-					subscriptions, err := m.client.Subscriptions.List(m.context)
+					subscriptions, err := m.client.Subscription.List(m.context)
 					if err != nil {
 					}
 					return subscriptions.Data

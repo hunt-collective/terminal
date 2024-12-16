@@ -9,7 +9,7 @@ export module ProductApi {
   export const route = new Hono().get(
     "/",
     describeRoute({
-      tags: ["Products"],
+      tags: ["Product"],
       summary: "List products",
       description: "List all products for sale in the Terminal shop.",
       security: [],

@@ -3,7 +3,6 @@ import { Hono, MiddlewareHandler } from "hono";
 import { logger } from "hono/logger";
 import { VisibleError } from "@terminal/core/error";
 import { ProductApi } from "./product";
-import { UserApi } from "./user";
 import { handle, streamHandle } from "hono/aws-lambda";
 import { CartApi } from "./cart";
 import { ActorContext } from "@terminal/core/actor";
@@ -22,6 +21,8 @@ import { Converter } from "@apiture/openapi-down-convert";
 import { HTTPException } from "hono/http-exception";
 import { AddressApi } from "./address";
 import { Api } from "@terminal/core/api/api";
+import { ProfileApi } from "./profile";
+import { ViewApi } from "./view";
 
 const client = createClient({
   clientID: "api",
@@ -71,6 +72,7 @@ const auth: MiddlewareHandler = async (c, next) => {
             userID: result.subject.properties.userID,
             auth: {
               type: "oauth",
+              // @ts-expect-error
               clientID: result.aud,
             },
           },
@@ -92,15 +94,16 @@ app
   .use(auth);
 
 const routes = app
-  .route("/products", ProductApi.route)
-  .route("/users", UserApi.route)
-  .route("/addresses", AddressApi.route)
-  .route("/cards", CardApi.route)
+  .route("/product", ProductApi.route)
+  .route("/profile", ProfileApi.route)
+  .route("/view", ViewApi.route)
+  .route("/address", AddressApi.route)
+  .route("/card", CardApi.route)
   .route("/cart", CartApi.route)
-  .route("/orders", OrderApi.route)
-  .route("/subscriptions", SubscriptionApi.route)
-  .route("/emails", EmailApi.route)
+  .route("/order", OrderApi.route)
+  .route("/subscription", SubscriptionApi.route)
   .route("/hook", Hook.route)
+  .route("/email", EmailApi.route)
   .route("/print", Print.route)
   .onError((error, c) => {
     // console.error(error);
@@ -169,10 +172,9 @@ app.get(
         },
       },
       security: [{ Bearer: [] }],
-      // servers: [{ url: Resource.Urls.api }],
       servers: [
         { description: "Production", url: "https://api.terminal.dev" },
-        { description: "Sandbox", url: "https://sandbox.terminal.dev" },
+        { description: "Sandbox", url: "https://api.sandbox.terminal.dev" },
       ],
     },
   }),

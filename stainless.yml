@@ -7,58 +7,60 @@ organization:
 openapi:
   code_samples: mintlify
 resources:
-  products:
+  product:
     models:
       product: Product
       productVariant: ProductVariant
     methods:
-      list: get /products
-  users:
+      list: get /product
+  profile:
     models:
-      user: User
+      profile: Profile
     methods:
-      me: get /users/me
-      init: get /users/init
-      update: put /users/me
-  addresses:
+      me: get /profile
+      update: put /profile
+  address:
     models:
       address: Address
     methods:
-      list: get /addresses
-      create: post /addresses
-      delete: delete /addresses/{id}
-  cards:
+      list: get /address
+      create: post /address
+      delete: delete /address/{id}
+  card:
     models:
       card: Card
     methods:
-      list: get /cards
-      create: post /cards
-      delete: delete /cards/{id}
+      list: get /card
+      create: post /card
+      delete: delete /card/{id}
   cart:
     models:
       cart: Cart
     methods:
-      list: get /cart
+      get: get /cart
       setItem: put /cart/item
       setAddress: put /cart/address
       setCard: put /cart/card
-  orders:
+      convert: post /cart/convert
+  order:
     models:
       order: Order
     methods:
-      list: get /orders
-      get: get /orders/{id}
-      create: post /orders
-  subscriptions:
+      get: get /order/{id}
+      list: get /order
+  subscription:
     models:
       subscription: Subscription
     methods:
-      list: get /subscriptions
-      create: put /subscriptions
-      delete: delete /subscriptions/{id}
-  emails:
+      list: get /subscription
+      create: put /subscription
+      delete: delete /subscription/{id}
+  email:
     methods:
-      create: post /emails
+      create: post /email
+  view:
+    methods:
+      init: get /view/init
 settings:
   license: Apache-2.0
 client_settings:
@@ -78,15 +80,15 @@ readme:
   example_requests:
     default:
       type: request
-      endpoint: get /products
+      endpoint: get /product
       params: &ref_0 {}
     headline:
       type: request
-      endpoint: get /products
+      endpoint: get /product
       params: *ref_0
 targets:
   node:
-    package_name: '@terminal/sdk'
+    package_name: '@terminaldotshop/sdk'
     production_repo: terminaldotshop/terminal-sdk-js
     publish:
       npm: true
@@ -96,8 +98,20 @@ targets:
     production_repo: terminaldotshop/terminal-sdk-go
     skip: false
   python:
-    package_name: terminal
+    package_name: terminal-sdk
     production_repo: terminaldotshop/terminal-sdk-python
     publish:
       pypi: true
+    skip: false
+  java:
+    reverse_domain: shop.terminal
+    production_repo: terminaldotshop/terminal-sdk-java
+    publish:
+      maven: false
+    skip: false
+  kotlin:
+    reverse_domain: shop.terminal
+    production_repo: terminaldotshop/terminal-sdk-kotlin
+    publish:
+      maven: false
     skip: false

@@ -7,6 +7,7 @@ import { Hono } from "hono";
 import { Card } from "@terminal/core/card/index";
 import { Examples } from "@terminal/core/examples";
 import { Address } from "@terminal/core/address/index";
+import { Order } from "@terminal/core/order/order";
 
 export module CartApi {
   export const route = new Hono()
@@ -146,6 +147,33 @@ export module CartApi {
         const body = c.req.valid("json");
         await Cart.setCard(body.cardID);
         return c.json({ data: "ok" as const }, 200);
+      },
+    )
+    .post(
+      "/convert",
+      describeRoute({
+        tags: ["Cart"],
+        summary: "Convert to order",
+        description: "Convert the current user's cart to an order.",
+        responses: {
+          200: {
+            content: {
+              "application/json": {
+                schema: Result(
+                  Order.Info.openapi({
+                    description: "New order information.",
+                    example: Examples.Order,
+                  }),
+                ),
+              },
+            },
+            description: "Cart was converted successfully.",
+          },
+        },
+      }),
+      async (c) => {
+        const orderID = await Order.convertCart();
+        return c.json({ data: await Order.fromID(orderID) }, 200);
       },
     );
 }

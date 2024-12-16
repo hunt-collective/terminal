@@ -5,7 +5,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	terminal "github.com/terminaldotshop/terminal-sdk-go"
+	"github.com/terminaldotshop/terminal-sdk-go"
 	"github.com/terminaldotshop/terminal-sdk-go/option"
 	"github.com/terminaldotshop/terminal/go/pkg/api"
 	"github.com/terminaldotshop/terminal/go/pkg/resource"
@@ -32,7 +32,7 @@ func (m model) LoadCmds() []tea.Cmd {
 	}))
 
 	cmds = append(cmds, func() tea.Msg {
-		response, err := m.client.Users.Init(m.context)
+		response, err := m.client.View.Init(m.context)
 		if err != nil {
 		}
 		return response.Data
@@ -76,7 +76,7 @@ func (m model) SplashUpdate(msg tea.Msg) (model, tea.Cmd) {
 		return m, tea.Batch(m.LoadCmds()...)
 	case DelayCompleteMsg:
 		m.state.splash.delay = true
-	case terminal.UserInitResponseData:
+	case terminal.ViewInitResponseData:
 		m.state.splash.data = true
 	}
 

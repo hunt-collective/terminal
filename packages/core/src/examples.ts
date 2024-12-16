@@ -94,6 +94,10 @@ export module Examples {
     stripeCustomerID: "cus_XXXXXXXXXXXXXXXXX",
   };
 
+  export const Profile = {
+    user: User,
+  };
+
   export const Subscription = {
     id: Id("subscription"),
     productVariantID: ProductVariant.id,

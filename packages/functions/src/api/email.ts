@@ -10,8 +10,8 @@ export module EmailApi {
   export const route = new Hono().post(
     "/",
     describeRoute({
-      tags: ["Marketing"],
-      summary: "Subscribe",
+      tags: ["Miscellaneous"],
+      summary: "Subscribe email",
       description: "Subscribe to email updates from Terminal.",
       security: [],
       responses: {

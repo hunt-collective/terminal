@@ -61,7 +61,7 @@ func (m model) ShippingSwitch() (model, tea.Cmd) {
 			huh.NewInput().
 				Title("name").
 				Key("name").
-				Value(&m.user.Name).
+				Value(&m.user.User.Name).
 				Validate(validate.NotEmpty("name")),
 			huh.NewInput().
 				Title("street 1").
@@ -225,12 +225,12 @@ func (m model) shippingListUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "y":
 			if m.state.shipping.deleting != nil {
 				m.state.shipping.deleting = nil
-				m.client.Addresses.Delete(m.context, m.addresses[m.state.shipping.selected].ID)
+				m.client.Address.Delete(m.context, m.addresses[m.state.shipping.selected].ID)
 				if len(m.addresses)-1 == 0 && m.page == accountPage {
 					m.state.account.focused = false
 				}
 				return m, func() tea.Msg {
-					shipping, err := m.client.Addresses.List(m.context)
+					shipping, err := m.client.Address.List(m.context)
 					if err != nil {
 					}
 					return shipping.Data
@@ -332,12 +332,12 @@ func (m model) shippingFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 				Zip:      terminal.String(m.state.shipping.input.zip),
 				Phone:    terminal.String(m.state.shipping.input.phone),
 			}
-			response, err := m.client.Addresses.New(m.context, params)
+			response, err := m.client.Address.New(m.context, params)
 			if err != nil {
 				log.Error(err)
 				return VisibleError{message: api.GetErrorMessage(err)}
 			}
-			addresses, _ := m.client.Addresses.List(m.context)
+			addresses, _ := m.client.Address.List(m.context)
 			return ShippingAddressAddedMsg{
 				shippingID: response.Data,
 				addresses:  addresses.Data,
@@ -355,7 +355,7 @@ func (m model) ShippingUpdate(msg tea.Msg) (model, tea.Cmd) {
 			m.subscription.AddressID = terminal.String(msg.shippingID)
 		} else {
 			m.cart.AddressID = msg.shippingID
-			cart, _ := m.client.Cart.List(m.context)
+			cart, _ := m.client.Cart.Get(m.context)
 			m.cart = cart.Data
 		}
 		return m.PaymentSwitch()

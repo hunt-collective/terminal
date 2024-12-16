@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/stripe/stripe-go/v78"
-	terminal "github.com/terminaldotshop/terminal-sdk-go"
+	"github.com/terminaldotshop/terminal-sdk-go"
 	"github.com/terminaldotshop/terminal/go/pkg/api"
 	"github.com/terminaldotshop/terminal/go/pkg/tui/validate"
 )
@@ -77,12 +77,12 @@ func (m model) PaymentSwitch() (model, tea.Cmd) {
 			huh.NewInput().
 				Title("name").
 				Key("name").
-				Value(&m.user.Name).
+				Value(&m.user.User.Name).
 				Validate(validate.NotEmpty("name")),
 			huh.NewInput().
 				Title("email address").
 				Key("email").
-				Value(&m.user.Email).
+				Value(&m.user.User.Email).
 				Validate(
 					validate.Compose(
 						validate.NotEmpty("email address"),
@@ -257,12 +257,12 @@ func (m model) paymentListUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "y":
 			if m.state.payment.deleting != nil {
 				m.state.payment.deleting = nil
-				m.client.Cards.Delete(m.context, m.cards[m.state.payment.selected].ID)
+				m.client.Card.Delete(m.context, m.cards[m.state.payment.selected].ID)
 				if len(m.cards)-1 == 0 && m.page == accountPage {
 					m.state.account.focused = false
 				}
 				return m, func() tea.Msg {
-					cards, err := m.client.Cards.List(m.context)
+					cards, err := m.client.Card.List(m.context)
 					if err != nil {
 					}
 					return cards.Data
@@ -303,7 +303,7 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 		}
 	case *stripe.Token:
 		params := terminal.CardNewParams{Token: terminal.F(msg.ID)}
-		response, err := m.client.Cards.New(m.context, params)
+		response, err := m.client.Card.New(m.context, params)
 
 		if err != nil {
 			m, cmd := m.PaymentSwitch()
@@ -312,7 +312,7 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 			return m, cmd
 		}
 
-		cards, _ := m.client.Cards.List(m.context)
+		cards, _ := m.client.Card.List(m.context)
 
 		m.cards = cards.Data
 		return m, func() tea.Msg {
@@ -337,8 +337,8 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 		m.state.payment.submitting = true
 
 		form := m.state.payment.form
-		m.user.Name = form.GetString("name")
-		m.user.Email = form.GetString("email")
+		m.user.User.Name = form.GetString("name")
+		m.user.User.Email = form.GetString("email")
 		m.state.payment.input = paymentInput{
 			number: form.GetString("number"),
 			month:  form.GetString("month"),
@@ -348,7 +348,7 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 
 		return m, tea.Batch(func() tea.Msg {
 			result, err := api.StripeCreditCard(&stripe.CardParams{
-				Name:       stripe.String(m.user.Name),
+				Name:       stripe.String(m.user.User.Name),
 				Number:     stripe.String(getCleanCardNumber(m.state.payment.input.number)),
 				ExpMonth:   stripe.String(m.state.payment.input.month),
 				ExpYear:    stripe.String(m.state.payment.input.year),
@@ -361,11 +361,11 @@ func (m model) paymentFormUpdate(msg tea.Msg) (model, tea.Cmd) {
 			}
 			return result
 		}, func() tea.Msg {
-			params := terminal.UserUpdateParams{
-				Name:  terminal.String(m.user.Name),
-				Email: terminal.String(m.user.Email),
+			params := terminal.ProfileUpdateParams{
+				Name:  terminal.String(m.user.User.Name),
+				Email: terminal.String(m.user.User.Email),
 			}
-			response, err := m.client.Users.Update(m.context, params)
+			response, err := m.client.Profile.Update(m.context, params)
 			if err != nil {
 			}
 			return response.Data

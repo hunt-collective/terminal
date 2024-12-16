@@ -68,7 +68,7 @@ const SshComponent: Component<SshProps> = (props) => {
     setEmailState('busy')
 
     try {
-      await client.emails.$post({ json: { email } })
+      await client.email.$post({ json: { email } })
       setEmailState('success')
       setEmailMessage('# signed up')
       setLines([{ state: 'normal' }])

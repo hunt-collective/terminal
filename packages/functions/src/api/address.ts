@@ -11,7 +11,7 @@ export module AddressApi {
     .get(
       "/",
       describeRoute({
-        tags: ["Addresses"],
+        tags: ["Address"],
         summary: "Get addresses",
         description:
           "Get the shipping addresses associated with the current user.",
@@ -39,7 +39,7 @@ export module AddressApi {
     .post(
       "/",
       describeRoute({
-        tags: ["Addresses"],
+        tags: ["Address"],
         summary: "Create address",
         description: "Create and add a shipping address to the current user.",
         responses: {
@@ -73,7 +73,7 @@ export module AddressApi {
     .delete(
       "/:id",
       describeRoute({
-        tags: ["Addresses"],
+        tags: ["Address"],
         summary: "Delete address",
         description: "Delete a shipping address from the current user.",
         responses: {

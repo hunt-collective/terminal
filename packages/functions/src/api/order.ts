@@ -11,7 +11,7 @@ export module OrderApi {
     .get(
       "/",
       describeRoute({
-        tags: ["Orders"],
+        tags: ["Order"],
         summary: "List orders",
         description: "List the orders associated with the current user.",
         responses: {
@@ -43,7 +43,7 @@ export module OrderApi {
     .get(
       "/:id",
       describeRoute({
-        tags: ["Orders"],
+        tags: ["Order"],
         summary: "Get order",
         description: "Get the order with the given ID.",
         responses: {
@@ -84,33 +84,6 @@ export module OrderApi {
         const order = await Order.fromID(param.id);
         if (!order) return c.json({ error: "Order not found" }, 404);
         return c.json({ data: order }, 200);
-      },
-    )
-    .post(
-      "/",
-      describeRoute({
-        tags: ["Orders"],
-        summary: "Create order",
-        description: "Create an order from the current user's cart.",
-        responses: {
-          200: {
-            content: {
-              "application/json": {
-                schema: Result(
-                  Order.Info.openapi({
-                    description: "Order information.",
-                    example: Examples.Order,
-                  }),
-                ),
-              },
-            },
-            description: "Order information.",
-          },
-        },
-      }),
-      async (c) => {
-        const orderID = await Order.convertCart();
-        return c.json({ data: await Order.fromID(orderID) }, 200);
       },
     );
 }

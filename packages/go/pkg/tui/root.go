@@ -8,7 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	terminal "github.com/terminaldotshop/terminal-sdk-go"
+	"github.com/terminaldotshop/terminal-sdk-go"
 	"github.com/terminaldotshop/terminal/go/pkg/api"
 	"github.com/terminaldotshop/terminal/go/pkg/tui/theme"
 )
@@ -49,7 +49,7 @@ type model struct {
 	state           state
 	context         context.Context
 	client          *terminal.Client
-	user            terminal.User
+	user            terminal.Profile
 	accountPages    []page
 	products        []terminal.Product
 	addresses       []terminal.Address
@@ -218,8 +218,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.state.cart.lastUpdateID == msg.updateID {
 			m.cart = msg.updated
 		}
-	case terminal.UserInitResponseData:
-		m.user = msg.User
+	case terminal.ViewInitResponseData:
+		m.user = msg.Profile
 		m.products = msg.Products
 		m.cart = msg.Cart
 		m.cards = msg.Cards
@@ -227,7 +227,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.subscriptions = msg.Subscriptions
 		m.orders = msg.Orders
 		m = m.reorderProducts()
-	case terminal.User:
+	case terminal.Profile:
 		m.user = msg
 	case []terminal.Product:
 		m.products = msg
