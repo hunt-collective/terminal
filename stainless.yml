@@ -78,11 +78,11 @@ readme:
   example_requests:
     default:
       type: request
-      endpoint: get /product
+      endpoint: get /products
       params: &ref_0 {}
     headline:
       type: request
-      endpoint: get /product
+      endpoint: get /products
       params: *ref_0
 targets:
   node:
