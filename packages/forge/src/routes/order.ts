@@ -190,9 +190,10 @@ export const Order = new Page({
           map(async ([count, group]) => {
             const mergedPdf = await PDFDocument.create();
             for (const order of group) {
-              console.log("printing", order.label);
+              console.log(order.id, "label", order.label);
               if (!order.label) continue;
               const response = await fetch(order.label!);
+              console.log(order.id, "fetched", response.status);
               if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
               }
@@ -203,6 +204,7 @@ export const Order = new Page({
                 pdf.getPageIndices(),
               );
               copiedPages.forEach((page) => mergedPdf.addPage(page));
+              console.log(order.id, "merged");
             }
             const bytes = await mergedPdf.save();
             const s3 = new S3Client({
