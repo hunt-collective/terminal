@@ -87,7 +87,7 @@ const app = authorizer({
     if (hostname.endsWith("terminal.shop")) return true;
     if (hostname === "localhost") return true;
     if (
-      await Api.verifyRedirect({
+      await Api.Client.verifyRedirect({
         id: input.clientID,
         redirectURI: url.origin + url.pathname,
       })
