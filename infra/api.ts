@@ -59,7 +59,6 @@ const apiFn = new sst.aws.Function("ApiFn", {
   streaming: !$dev,
   link: [
     bus,
-    secret.AirtableSecret,
     secret.StripeSecret,
     secret.ShippoSecret,
     secret.EmailOctopusSecret,
