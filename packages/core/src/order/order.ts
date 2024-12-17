@@ -39,6 +39,8 @@ import { Common } from "../common";
 import { Examples } from "../examples";
 import { Address } from "../address";
 import { addressTable } from "../address/address.sql";
+import { Product } from "../product";
+import { Cart } from "../cart";
 
 export module Order {
   export const Item = z
@@ -328,6 +330,130 @@ export module Order {
       throw ex;
     }
   }
+
+  export const create = fn(
+    z.object({
+      variants: z.record(z.number().int()),
+      cardID: z.string(),
+      addressID: z.string(),
+    }),
+    async (input) => {
+      const userID = useUserID();
+      const match = await useTransaction(async (tx) =>
+        tx
+          .select({
+            shipping: addressTable.address,
+            card: getTableColumns(cardTable),
+            stripeCustomerID: userTable.stripeCustomerID,
+            email: userTable.email,
+          })
+          .from(userTable)
+          .innerJoin(addressTable, eq(cartTable.addressID, addressTable.id))
+          .innerJoin(cardTable, eq(cartTable.cardID, cardTable.id))
+          .where(eq(cartTable.userID, userID))
+          .then((rows) => rows[0]),
+      );
+      if (!match) throw new Error("Card or address not found");
+      const items = await useTransaction(async (tx) =>
+        tx
+          .select({
+            id: productVariantTable.id,
+            price: productVariantTable.price,
+          })
+          .from(productVariantTable)
+          .where(inArray(productVariantTable.id, Object.keys(input.variants)))
+          .then((rows) =>
+            rows.map((row) => ({
+              id: row.id,
+              price: row.price * (input.variants[row.id] ?? 0),
+              quantity: input.variants[row.id] ?? 0,
+              weight:
+                Product.TEMPORARY_FIXED_WEIGHT_OZ *
+                (input.variants[row.id] ?? 0),
+            })),
+          ),
+      );
+
+      const subtotal = items.reduce((acc, item) => acc + item.price, 0);
+      const weight = items.reduce((acc, item) => acc + item.weight, 0);
+      const shipping = await Cart.calculateShipping(
+        subtotal,
+        weight,
+        match.shipping,
+      );
+      const orderID = createID("order");
+      const result = await stripe.paymentIntents
+        .create({
+          amount: subtotal + shipping.shippingAmount,
+          automatic_payment_methods: {
+            enabled: true,
+            allow_redirects: "never",
+          },
+          confirm: true,
+          currency: "usd",
+          shipping: {
+            name: match.shipping.name,
+            address: {
+              city: match.shipping.city,
+              line1: match.shipping.street1,
+              line2: match.shipping.street2,
+              postal_code: match.shipping.zip,
+              state: match.shipping.province,
+              country: match.shipping.country,
+            },
+          },
+          customer: match.stripeCustomerID,
+          metadata: {
+            orderID,
+          },
+          payment_method: match.card.stripePaymentMethodID,
+        })
+        .catch((ex) => ({ err: ex }));
+
+      if ("err" in result) {
+        if (result.err instanceof Stripe.errors.StripeCardError)
+          throw new VisibleError(
+            "input",
+            "payment.invalid",
+            result.err.message,
+          );
+        throw new Error("Payment failed");
+      }
+
+      await useTransaction(async (tx) => {
+        await tx.insert(orderTable).values({
+          id: orderID,
+          email: match.email,
+          shippingAmount: shipping.shippingAmount,
+          shippingAddress: match.shipping,
+          shippoRateID: shipping.shippoRateID,
+          card: {
+            brand: match.card.brand,
+            last4: match.card.last4,
+            expiration: {
+              month: match.card.expirationMonth,
+              year: match.card.expirationYear,
+            },
+          },
+          userID,
+        });
+        for (const item of items) {
+          await tx.insert(orderItemTable).values({
+            id: createID("cartItem"),
+            amount: item.price,
+            productVariantID: item.id,
+            quantity: item.weight,
+            orderID,
+          });
+        }
+        await afterTx(() =>
+          bus.publish(Resource.Bus, Event.Created, { orderID }),
+        );
+      });
+
+      return orderID;
+    },
+  );
 
   export const createInternal = fn(
     z.object({

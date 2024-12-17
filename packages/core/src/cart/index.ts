@@ -13,6 +13,7 @@ import { Common } from "../common";
 import { Examples } from "../examples";
 import { addressTable } from "../address/address.sql";
 import { Address } from "../address";
+import { Product } from "../product";
 
 export module Cart {
   export const Item = z
@@ -209,7 +210,7 @@ export module Cart {
         .where(eq(cartItemTable.userID, useUserID()))
         .then((rows) => rows[0]!);
 
-      const weight = response.count * 12;
+      const weight = response.count * Product.TEMPORARY_FIXED_WEIGHT_OZ;
       const address = response.address;
       return await calculateShipping(response.subtotal, weight, address);
     });

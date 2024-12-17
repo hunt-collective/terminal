@@ -1,6 +1,7 @@
 import { expect, describe } from "bun:test";
 import { withTestUser } from "./util";
 import { Shippo } from "../src/shippo";
+import { Product } from "../src/product";
 
 describe("shippo", async () => {
   const quantity = 2;
@@ -16,7 +17,7 @@ describe("shippo", async () => {
   withTestUser("estimateShippingRate", async () => {
     const rate = await Shippo.createShipmentRate({
       subtotal: 100,
-      ounces: quantity * 12,
+      ounces: quantity * Product.TEMPORARY_FIXED_WEIGHT_OZ,
       address,
     });
 

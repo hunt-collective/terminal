@@ -258,4 +258,6 @@ export module Product {
         .then((result) => result.rowsAffected);
     }),
   );
+
+  export const TEMPORARY_FIXED_WEIGHT_OZ = 12;
 }
