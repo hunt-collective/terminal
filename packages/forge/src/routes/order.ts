@@ -190,6 +190,7 @@ export const Order = new Page({
           map(async ([count, group]) => {
             const mergedPdf = await PDFDocument.create();
             for (const order of group) {
+              console.log("printing", order.label);
               if (!order.label) continue;
               const response = await fetch(order.label!);
               if (!response.ok) {
