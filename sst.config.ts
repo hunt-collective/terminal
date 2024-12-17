@@ -8,7 +8,6 @@ export default $config({
       home: "aws",
       providers: {
         aws: {
-          version: "6.61.0",
           region: "us-east-2",
           profile: process.env.GITHUB_ACTIONS
             ? undefined
