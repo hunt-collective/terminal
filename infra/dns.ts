@@ -2,7 +2,9 @@ export const domain =
   {
     production: "terminal.shop",
     dev: "dev.terminal.shop",
+    sandbox: "sandbox.terminal.shop",
   }[$app.stage] || $app.stage + ".dev.terminal.shop";
+
 export const zone = cloudflare.getZoneOutput({
   name: "terminal.shop",
 });

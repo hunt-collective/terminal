@@ -46,6 +46,12 @@ export default $config({
       runner: {
         engine: "codebuild",
       },
+      target: (input) => {
+        if (input.type === "branch") {
+          if (input.branch === "dev") return { stage: "dev" };
+          if (input.branch === "production") return { stage: "production" };
+        }
+      },
     },
   },
 });
