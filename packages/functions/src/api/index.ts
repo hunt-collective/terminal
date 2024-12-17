@@ -96,14 +96,14 @@ app
 const routes = app
   .route("/product", ProductApi.route)
   .route("/profile", ProfileApi.route)
-  .route("/view", ViewApi.route)
   .route("/address", AddressApi.route)
   .route("/card", CardApi.route)
   .route("/cart", CartApi.route)
   .route("/order", OrderApi.route)
   .route("/subscription", SubscriptionApi.route)
-  .route("/hook", Hook.route)
+  .route("/view", ViewApi.route)
   .route("/email", EmailApi.route)
+  .route("/hook", Hook.route)
   .route("/print", Print.route)
   .onError((error, c) => {
     // console.error(error);
