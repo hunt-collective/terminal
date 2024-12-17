@@ -12,7 +12,7 @@ export module TokenApi {
       "/",
       describeRoute({
         tags: ["Token"],
-        summary: "List personal tokens",
+        summary: "List tokens",
         description: "List the current user's personal access tokens.",
         responses: {
           200: {
@@ -39,8 +39,8 @@ export module TokenApi {
       "/:id",
       describeRoute({
         tags: ["Token"],
-        summary: "Get personal token",
-        description: "Get the personal token with the given ID.",
+        summary: "Get token",
+        description: "Get the personal access token with the given ID.",
         responses: {
           404: {
             content: {
@@ -85,7 +85,7 @@ export module TokenApi {
       "/",
       describeRoute({
         tags: ["Token"],
-        summary: "Create personal token",
+        summary: "Create token",
         description: "Create a personal access token.",
         responses: {
           200: {
@@ -119,7 +119,7 @@ export module TokenApi {
       "/:id",
       describeRoute({
         tags: ["Token"],
-        summary: "Delete personal token",
+        summary: "Delete token",
         description: "Delete the personal access token with the given ID.",
         responses: {
           200: {

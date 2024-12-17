@@ -110,7 +110,7 @@ const routes = app
   .route("/hook", Hook.route)
   .route("/print", Print.route)
   .onError((error, c) => {
-    // console.error(error);
+    console.error(error);
     if (error instanceof VisibleError) {
       return c.json(
         {
