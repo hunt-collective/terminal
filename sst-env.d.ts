@@ -6,10 +6,6 @@ import "sst"
 export {}
 declare module "sst" {
   export interface Resource {
-    "AirtableSecret": {
-      "type": "sst.sst.Secret"
-      "value": string
-    }
     "Api": {
       "type": "sst.aws.Router"
       "url": string
