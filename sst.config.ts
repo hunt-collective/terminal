@@ -48,7 +48,7 @@ export default $config({
       },
       target: (input) => {
         if (input.type === "branch") {
-          if (input.branch === "dev") return { stage: "dev" };
+          if (input.branch === "dev") return { stage: "sandbox" };
           if (input.branch === "production") return { stage: "production" };
         }
       },
