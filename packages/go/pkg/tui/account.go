@@ -16,6 +16,9 @@ func (m model) AccountSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(accountPage)
 	m.state.account.selected = 0
 	m.state.account.focused = false
+	m.state.tokens = tokensState{
+		selected: 0,
+	}
 	m.state.footer.commands = []footerCommand{
 		{key: "↑/↓", value: "navigate"},
 		{key: "enter", value: "select"},
@@ -32,13 +35,18 @@ func (m model) AccountUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case tea.KeyMsg:
 			switch msg.String() {
 			case "esc", "left", "h":
-				return m.AccountSwitch()
+				s := m.state.account.selected
+				m, c := m.AccountSwitch()
+				m.state.account.selected = s
+				return m, c
 			}
 		}
 
 		switch accountPage {
 		case subscriptionsPage:
 			return m.SubscriptionsUpdate(msg)
+		case tokensPage:
+			return m.TokensUpdate(msg)
 		case ordersPage:
 			return m.OrdersUpdate(msg)
 		case shippingPage:
@@ -57,17 +65,17 @@ func (m model) AccountUpdate(msg tea.Msg) (model, tea.Cmd) {
 		case "shift+tab", "up", "k":
 			return m.UpdateSelectedAccountPage(true)
 		case "enter", "right", "l":
-			if accountPage == subscriptionsPage || accountPage == ordersPage || accountPage == shippingPage || accountPage == paymentPage {
+			if accountPage == subscriptionsPage ||
+				accountPage == ordersPage ||
+				accountPage == tokensPage {
 				m.state.account.focused = true
 				switch accountPage {
 				case subscriptionsPage:
 					return m.SubscriptionsUpdate(msg)
+				case tokensPage:
+					return m.TokensUpdate(msg)
 				case ordersPage:
 					return m.OrdersUpdate(msg)
-				case shippingPage:
-					return m.ShippingUpdate(msg)
-				case paymentPage:
-					return m.PaymentUpdate(msg)
 				}
 
 			}
@@ -84,6 +92,8 @@ func getAccountPageName(accountPage page) string {
 		return "Order History"
 	case subscriptionsPage:
 		return "Subscriptions"
+	case tokensPage:
+		return "Access Tokens"
 	case shippingPage:
 		return "Addresses"
 	case paymentPage:
@@ -94,7 +104,7 @@ func getAccountPageName(accountPage page) string {
 		return "About"
 	}
 
-	return "Test"
+	return ""
 }
 
 func (m model) GetAccountPageContent(accountPage page, totalWidth int) string {
@@ -103,6 +113,8 @@ func (m model) GetAccountPageContent(accountPage page, totalWidth int) string {
 		return m.OrdersView(totalWidth, m.state.account.focused)
 	case subscriptionsPage:
 		return m.SubscriptionsView(totalWidth, m.state.account.focused)
+	case tokensPage:
+		return m.TokensView(totalWidth, m.state.account.focused)
 	case shippingPage:
 		return m.ShippingView(totalWidth, m.state.account.focused)
 	case faqPage:

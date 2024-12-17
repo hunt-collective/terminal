@@ -23,6 +23,8 @@ import { AddressApi } from "./address";
 import { Api } from "@terminal/core/api/api";
 import { ProfileApi } from "./profile";
 import { ViewApi } from "./view";
+import { AppApi } from "./app";
+import { TokenApi } from "./token";
 
 const client = createClient({
   clientID: "api",
@@ -42,7 +44,7 @@ const auth: MiddlewareHandler = async (c, next) => {
     }
     const bearerToken = match[1];
 
-    if (bearerToken?.startsWith("terminal_")) {
+    if (bearerToken?.startsWith("trm_")) {
       const token = await Api.Personal.fromToken(bearerToken);
       if (!token)
         throw new VisibleError("input", "auth.invalid", "Invalid bearer token");
@@ -101,6 +103,8 @@ const routes = app
   .route("/cart", CartApi.route)
   .route("/order", OrderApi.route)
   .route("/subscription", SubscriptionApi.route)
+  .route("/token", TokenApi.route)
+  .route("/app", AppApi.route)
   .route("/view", ViewApi.route)
   .route("/email", EmailApi.route)
   .route("/hook", Hook.route)
@@ -173,8 +177,8 @@ app.get(
       },
       security: [{ Bearer: [] }],
       servers: [
-        { description: "Production", url: "https://api.terminal.dev" },
-        { description: "Sandbox", url: "https://api.sandbox.terminal.dev" },
+        { description: "Sandbox", url: "https://api.sandbox.terminal.shop" },
+        { description: "Production", url: "https://api.terminal.shop" },
       ],
     },
   }),

@@ -40,7 +40,7 @@ export module SubscriptionApi {
         );
       },
     )
-    .put(
+    .post(
       "/",
       describeRoute({
         tags: ["Subscription"],

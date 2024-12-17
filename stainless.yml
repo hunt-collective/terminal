@@ -53,8 +53,24 @@ resources:
       subscription: Subscription
     methods:
       list: get /subscription
-      create: put /subscription
+      create: post /subscription
       delete: delete /subscription/{id}
+  token:
+    models:
+      token: Token
+    methods:
+      list: get /token
+      create: post /token
+      get: get /token/{id}
+      delete: delete /token/{id}
+  app:
+    models:
+      app: App
+    methods:
+      list: get /app
+      create: post /app
+      get: get /app/{id}
+      delete: delete /app/{id}
   email:
     methods:
       create: post /email
@@ -92,26 +108,24 @@ targets:
     production_repo: terminaldotshop/terminal-sdk-js
     publish:
       npm: true
-    skip: false
   go:
     package_name: terminal
     production_repo: terminaldotshop/terminal-sdk-go
-    skip: false
   python:
-    package_name: terminal-sdk
+    project_name: terminal-shop
+    package_name: terminal_shop
     production_repo: terminaldotshop/terminal-sdk-python
     publish:
       pypi: true
-    skip: false
   java:
-    reverse_domain: shop.terminal
+    reverse_domain: shop.terminal.api
     production_repo: terminaldotshop/terminal-sdk-java
     publish:
-      maven: false
-    skip: false
+      maven:
+        sonatype_platform: portal
   kotlin:
-    reverse_domain: shop.terminal
+    reverse_domain: shop.terminal.api
     production_repo: terminaldotshop/terminal-sdk-kotlin
     publish:
-      maven: false
-    skip: false
+      maven:
+        sonatype_platform: portal

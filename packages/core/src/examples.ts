@@ -1,4 +1,5 @@
 import { prefixes } from "./util/id";
+import { randomBytes } from "crypto";
 
 export module Examples {
   export const Id = (prefix: keyof typeof prefixes) =>
@@ -105,5 +106,20 @@ export module Examples {
     addressID: Shipping.id,
     cardID: Card.id,
     frequency: "monthly" as const,
+  };
+
+  export const Token = {
+    id: Id("apiPersonal"),
+    token: "trm_test_******XXXX",
+    time: {
+      created: new Date("2024-06-29 19:36:19.000"),
+    },
+  };
+
+  export const App = {
+    id: Id("apiClient"),
+    secret: Id("apiSecret"),
+    name: "Example App",
+    redirectURI: "https://example.com/callback",
   };
 }

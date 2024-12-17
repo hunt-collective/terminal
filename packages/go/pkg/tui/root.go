@@ -28,6 +28,7 @@ const (
 	confirmPage
 	finalPage
 	subscriptionsPage
+	tokensPage
 	ordersPage
 	aboutPage
 	faqPage
@@ -41,24 +42,27 @@ const (
 )
 
 type model struct {
-	ready           bool
-	switched        bool
-	page            page
-	hasMenu         bool
-	checkout        bool
-	state           state
-	context         context.Context
-	client          *terminal.Client
-	user            terminal.Profile
-	accountPages    []page
-	products        []terminal.Product
-	addresses       []terminal.Address
-	cards           []terminal.Card
-	subscriptions   []terminal.Subscription
-	orders          []terminal.Order
-	cart            terminal.Cart
-	subscription    terminal.SubscriptionParam
-	renderer        *lipgloss.Renderer
+	ready         bool
+	switched      bool
+	page          page
+	hasMenu       bool
+	checkout      bool
+	state         state
+	context       context.Context
+	client        *terminal.Client
+	user          terminal.Profile
+	accountPages  []page
+	products      []terminal.Product
+	addresses     []terminal.Address
+	cards         []terminal.Card
+	subscriptions []terminal.Subscription
+	tokens        []terminal.Token
+	apps          []terminal.App
+	orders        []terminal.Order
+	cart          terminal.Cart
+	subscription  terminal.SubscriptionParam
+	renderer      *lipgloss.Renderer
+	// output          *termenv.Output
 	theme           theme.Theme
 	fingerprint     string
 	viewportWidth   int
@@ -80,6 +84,7 @@ type state struct {
 	cursor        cursorState
 	shipping      shippingState
 	subscriptions subscriptionsState
+	tokens        tokensState
 	orders        ordersState
 	shop          shopState
 	account       accountState
@@ -104,15 +109,17 @@ func NewModel(
 	ctx := context.Background()
 
 	result := model{
-		context:     ctx,
-		page:        splashPage,
-		renderer:    renderer,
+		context:  ctx,
+		page:     splashPage,
+		renderer: renderer,
+		// output:      renderer.Output(),
 		fingerprint: fingerprint,
 		theme:       theme.BasicTheme(renderer, nil),
 		faqs:        LoadFaqs(),
 		accountPages: []page{
 			ordersPage,
 			subscriptionsPage,
+			tokensPage,
 			// shippingPage,
 			// paymentPage,
 			faqPage,
@@ -134,6 +141,9 @@ func NewModel(
 				selected: 0,
 			},
 			subscriptions: subscriptionsState{
+				selected: 0,
+			},
+			tokens: tokensState{
 				selected: 0,
 			},
 			orders: ordersState{
@@ -225,6 +235,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.cards = msg.Cards
 		m.addresses = msg.Addresses
 		m.subscriptions = msg.Subscriptions
+		m.tokens = msg.Tokens
 		m.orders = msg.Orders
 		m = m.reorderProducts()
 	case terminal.Profile:
@@ -240,6 +251,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.addresses = msg
 	case []terminal.Subscription:
 		m.subscriptions = msg
+	case []terminal.Token:
+		m.tokens = msg
 	case []terminal.Order:
 		m.orders = msg
 	}

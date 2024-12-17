@@ -17,6 +17,7 @@ export module ProfileApi {
       description: "A Terminal shop user's profile. (We have users, btw.)",
       example: Examples.Profile,
     });
+
   export const route = new Hono()
     .get(
       "/",

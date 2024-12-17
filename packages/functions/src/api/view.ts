@@ -12,6 +12,7 @@ import { describeRoute } from "hono-openapi";
 import { Examples } from "@terminal/core/examples";
 import { Address } from "@terminal/core/address/index";
 import { ProfileApi } from "./profile";
+import { Api } from "@terminal/core/api/api";
 
 export module ViewApi {
   export const route = new Hono().get(
@@ -35,6 +36,8 @@ export module ViewApi {
                     cards: Card.Info.array(),
                     subscriptions: Subscription.Info.array(),
                     orders: Order.Info.array(),
+                    tokens: Api.Personal.Info.array(),
+                    apps: Api.Client.Info.array(),
                   })
                   .openapi({
                     description: "Initial app data.",
@@ -47,6 +50,8 @@ export module ViewApi {
                         cards: [Examples.Card],
                         subscriptions: [Examples.Subscription],
                         orders: [Examples.Order],
+                        tokens: [Examples.Token],
+                        apps: [Examples.App],
                       },
                     ],
                   }),
@@ -58,16 +63,27 @@ export module ViewApi {
       },
     }),
     async (c) => {
-      const [user, products, cart, addresses, cards, subscriptions, orders] =
-        await Promise.all([
-          User.fromID(useUserID()),
-          Product.list(),
-          Cart.get(),
-          Address.list(),
-          Card.list(),
-          Subscription.list(),
-          Order.list(),
-        ]);
+      const [
+        user,
+        products,
+        cart,
+        addresses,
+        cards,
+        subscriptions,
+        orders,
+        tokens,
+        apps,
+      ] = await Promise.all([
+        User.fromID(useUserID()),
+        Product.list(),
+        Cart.get(),
+        Address.list(),
+        Card.list(),
+        Subscription.list(),
+        Order.list(),
+        Api.Personal.list(),
+        Api.Client.list(),
+      ]);
       return c.json(
         {
           data: {
@@ -78,6 +94,8 @@ export module ViewApi {
             cards,
             subscriptions,
             orders,
+            tokens,
+            apps,
           },
         },
         200,
