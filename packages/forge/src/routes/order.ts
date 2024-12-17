@@ -206,11 +206,14 @@ export const Order = new Page({
               copiedPages.forEach((page) => mergedPdf.addPage(page));
               console.log(order.id, "merged");
             }
+            console.log("done merging");
             const bytes = await mergedPdf.save();
+            console.log("saved pdf");
             const s3 = new S3Client({
               region: "us-east-2",
             });
             const key = `labels/${new Date().toISOString()}-${count}.pdf`;
+            console.log("sending to s3", key);
             await s3.send(
               new PutObjectCommand({
                 Bucket: Resource.IntervalBucket.name,
