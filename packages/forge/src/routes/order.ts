@@ -31,6 +31,8 @@ import {
 } from "@terminal/core/product/product.sql";
 import { Shippo } from "@terminal/core/shippo/index";
 
+const s3 = new S3Client();
+
 export const Order = new Page({
   name: "Order",
   handler: async () => {
@@ -209,9 +211,6 @@ export const Order = new Page({
             console.log("done merging");
             const bytes = await mergedPdf.save();
             console.log("saved pdf");
-            const s3 = new S3Client({
-              region: "us-east-2",
-            });
             const key = `labels/${new Date().toISOString()}-${count}.pdf`;
             console.log("sending to s3", key);
             await s3
