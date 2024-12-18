@@ -212,7 +212,7 @@ export const Order = new Page({
             const bytes = await mergedPdf.save();
             console.log("saved pdf");
             const key = `labels/${new Date().toISOString()}-${count}.pdf`;
-            console.log("sending to s3", key);
+            console.log("sending to s3", key, "length", bytes.length);
             await s3
               .send(
                 new PutObjectCommand({
