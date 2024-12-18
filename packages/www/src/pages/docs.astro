@@ -113,8 +113,10 @@ const openapiUrl = 'https://app.stainlessapi.com/api/spec/documented/terminal'
         .operation-details .markdown p {
           color: var(--scalar-color-2) !important;
         }
-        .section {
-          padding: 40px 0 !important;
+        @container (min-width: 900px) {
+          .section {
+            padding: 40px 0 !important;
+          }
         }
         .parameter-item-content-type {
           color: var(--scalar-color-accent) !important;
