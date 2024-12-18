@@ -5,7 +5,7 @@ organization:
   docs: https://terminal.shop/docs
   contact: dev@terminal.com
 openapi:
-  code_samples: mintlify
+  code_samples: x-codeSamples 
 resources:
   product:
     models:

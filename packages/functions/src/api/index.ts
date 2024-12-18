@@ -151,18 +151,20 @@ const routes = app
 
 app.get(
   "/doc",
-  async (c, next) => {
-    await next();
-    const original = c.res.clone();
-    const body = await original.json();
-    const converted = new Converter(body as object, {}).convert();
-    c.res = undefined;
-    c.res = c.json(converted);
-  },
+  // async (c, next) => {
+  //   await next();
+  //   const original = c.res.clone();
+  //   const body = await original.json();
+  //   const converted = new Converter(body as object, {}).convert();
+  //   c.res = undefined;
+  //   c.res = c.json(converted);
+  // },
   openAPISpecs(routes, {
     documentation: {
       info: {
         title: "Terminal API",
+        description:
+          "The Terminal API gives you access to the same API that powers the award winning Terminal SSH shop (`ssh terminal.shop`).",
         version: "0.1.0",
       },
       components: {

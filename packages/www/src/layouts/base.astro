@@ -17,7 +17,8 @@ interface Props {
 const links = [
   { href: '/about', text: 'readme', active: false },
   { href: '/faq', text: 'faq', active: false },
-  { href: '/cron', text: 'cron.md', active: false },
+  // { href: '/cron', text: 'cron.md', active: false },
+  { href: '/docs', text: 'docs', active: false },
 ]
 
 const current = links.find(
@@ -102,11 +103,11 @@ if (current) current.active = true
       }
 
       toggle(document, 'producthunt')
-      toggle(document, '')
+      toggle(document, 'terminalhq')
 
       document.addEventListener('astro:before-swap', (ev) => {
         toggle(ev.newDocument, 'producthunt')
-        toggle(ev.newDocument, '')
+        toggle(ev.newDocument, 'terminalhq')
       })
     </script>
   </head>
@@ -145,22 +146,22 @@ if (current) current.active = true
     <!--     </a> -->
     <!--   </span> -->
     <!-- </Banner> -->
-    <Banner
-      id="terminalhq"
-      class:list={{ 'group-data-[terminalhq=closed]:hidden': true }}
-    >
-      follow us
-      <a
-        href="https://x.com/terminaldotshop"
-        target="_blank"
-        class="focus:underline focus:outline-none"
-      >
-        @terminaldotshop
-      </a>
-    </Banner>
+    <!-- <Banner -->
+    <!--   id="terminalhq" -->
+    <!--   class:list={{ 'group-data-[terminalhq=closed]:hidden': true }} -->
+    <!-- > -->
+    <!--   follow us -->
+    <!--   <a -->
+    <!--     href="https://x.com/terminaldotshop" -->
+    <!--     target="_blank" -->
+    <!--     class="focus:underline focus:outline-none" -->
+    <!--   > -->
+    <!--     @terminaldotshop -->
+    <!--   </a> -->
+    <!-- </Banner> -->
     <header
       class:list={{
-        'h-10 border-b flex items-stretch': true,
+        'h-10 border-b flex items-stretch sticky top-0 z-50': true,
         'bg-gray-1': Astro.props.light !== true,
         'bg-gray-11': Astro.props.light === true,
       }}
@@ -216,8 +217,13 @@ if (current) current.active = true
       </nav>
       <!-- <Button disabled class="ml-auto border-l">share</Button> -->
     </header>
-    <main class="relative my-20 grow max-w-xl">
-      <slot />
-    </main>
+    <slot name="docs" />
+    {
+      Astro.slots.has('docs') ? null : (
+        <main class="relative my-20 grow max-w-xl">
+          <slot />
+        </main>
+      )
+    }
   </body>
 </html>
