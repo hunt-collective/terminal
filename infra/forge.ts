@@ -4,6 +4,7 @@ import { database } from "./database";
 import { allSecrets } from "./secret";
 
 const bucket = new sst.aws.Bucket("IntervalBucket");
+
 cluster.addService("Forge", {
   link: [...allSecrets, database, bucket, bus],
   cpu: "0.25 vCPU",

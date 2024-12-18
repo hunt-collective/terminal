@@ -214,14 +214,20 @@ export const Order = new Page({
             });
             const key = `labels/${new Date().toISOString()}-${count}.pdf`;
             console.log("sending to s3", key);
-            await s3.send(
-              new PutObjectCommand({
-                Bucket: Resource.IntervalBucket.name,
-                Key: key,
-                Body: bytes,
-                ContentType: "application/pdf",
-              }),
-            );
+            await s3
+              .send(
+                new PutObjectCommand({
+                  Bucket: Resource.IntervalBucket.name,
+                  Key: key,
+                  Body: bytes,
+                  ContentType: "application/pdf",
+                }),
+              )
+              .catch((ex) => {
+                console.error(ex);
+                throw ex;
+              });
+            console.log("done sending", key);
             const command = new GetObjectCommand({
               Bucket: Resource.IntervalBucket.name,
               Key: key,
@@ -229,6 +235,7 @@ export const Order = new Page({
             const presigned = await getSignedUrl(s3, command, {
               expiresIn: 3600,
             });
+            console.log(presigned);
             return {
               count,
               label: presigned,
@@ -236,6 +243,7 @@ export const Order = new Page({
           }),
         );
         const labels = await Promise.all(grouped);
+        console.log("labels", labels);
         await io.display.metadata("Order", {
           layout: "list",
           data: [
