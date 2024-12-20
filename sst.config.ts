@@ -41,17 +41,4 @@ export default $config({
     }
     return outputs;
   },
-  console: {
-    autodeploy: {
-      runner: {
-        engine: "codebuild",
-      },
-      target: (input) => {
-        if (input.type === "branch") {
-          if (input.branch === "dev") return { stage: "sandbox" };
-          if (input.branch === "production") return { stage: "production" };
-        }
-      },
-    },
-  },
 });
