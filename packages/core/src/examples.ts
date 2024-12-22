@@ -106,6 +106,7 @@ export module Examples {
     addressID: Shipping.id,
     cardID: Card.id,
     frequency: "monthly" as const,
+    next: new Date("2025-02-01 19:36:19.000"),
   };
 
   export const Token = {

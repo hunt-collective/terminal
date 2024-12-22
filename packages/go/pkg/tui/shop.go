@@ -16,6 +16,8 @@ type shopState struct {
 
 func (m model) ShopSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(shopPage)
+	m.state.subscribe.product = nil
+
 	m.state.footer.commands = []footerCommand{
 		{key: "+/-", value: "qty"},
 		{key: "c", value: "cart"},
@@ -56,8 +58,20 @@ func (m model) ShopUpdate(msg tea.Msg) (model, tea.Cmd) {
 			return m.UpdateCart(productVariantID, -1)
 		case "enter":
 			if product.Subscription == terminal.ProductSubscriptionRequired {
-				m.state.subscribe.product = &product
-				return m.SubscribeSwitch()
+				subscribed := false
+				for _, s := range m.subscriptions {
+					for _, v := range product.Variants {
+						if v.ID == s.ProductVariantID {
+							subscribed = true
+						}
+					}
+				}
+				if subscribed {
+					return m.SubscriptionManageSwitch(product.ID)
+				} else {
+					m.state.subscribe.product = &product
+					return m.SubscribeSwitch()
+				}
 			}
 			return m.CartSwitch()
 		}
@@ -190,7 +204,20 @@ func (m model) ShopView() string {
 	}
 
 	if product.Subscription == terminal.ProductSubscriptionRequired {
-		quantity = button("subscribe") + " enter"
+		subscribed := false
+		for _, s := range m.subscriptions {
+			for _, v := range product.Variants {
+				if v.ID == s.ProductVariantID {
+					subscribed = true
+				}
+			}
+		}
+
+		if subscribed {
+			quantity = button("manage sub") + " enter"
+		} else {
+			quantity = button("subscribe") + " enter"
+		}
 	}
 
 	var products strings.Builder

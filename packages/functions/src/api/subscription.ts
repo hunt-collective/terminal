@@ -62,7 +62,7 @@ export module SubscriptionApi {
         Subscription.Info.omit({ id: true }).openapi({
           description: "Subscription information.",
           // @ts-ignore
-          example: { ...Examples.Subscription, id: undefined },
+          example: { ...Examples.Subscription, id: undefined, next: undefined },
         }),
       ),
       async (c) => {

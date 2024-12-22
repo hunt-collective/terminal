@@ -36,6 +36,10 @@ export module Subscription {
         description: "Frequency of the subscription.",
         example: Examples.Subscription.frequency,
       }),
+      next: z.date().optional().openapi({
+        description: "Next shipment and billing date for the subscription.",
+        example: Examples.Subscription.next,
+      }),
     })
     .openapi({
       ref: "Subscription",

@@ -13,6 +13,32 @@ type subscriptionsState struct {
 	deleting *int
 }
 
+func (m model) SubscriptionManageSwitch(id string) (model, tea.Cmd) {
+	m = m.SwitchPage(accountPage)
+	m.state.footer.commands = []footerCommand{
+		{key: "↑/↓", value: "navigate"},
+		{key: "x/del", value: "cancel"},
+		{key: "esc", value: "back"},
+	}
+	for i, page := range m.accountPages {
+		if page == subscriptionsPage {
+			m.state.account.selected = i
+			break
+		}
+	}
+	m.state.account.focused = true
+
+	for i, sub := range m.subscriptions {
+		if sub.ID == id {
+			m.state.subscriptions.selected = i
+			break
+		}
+	}
+
+	m.state.subscriptions.deleting = nil
+	return m, nil
+}
+
 func (m model) nextSubscription() (model, tea.Cmd) {
 	next := m.state.subscriptions.selected + 1
 	max := len(m.subscriptions) - 1

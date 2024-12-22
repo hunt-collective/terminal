@@ -154,6 +154,7 @@ func (m model) UpdateSelectedCartItem(previous bool) (model, tea.Cmd) {
 
 func (m model) CartSwitch() (model, tea.Cmd) {
 	m = m.SwitchPage(cartPage)
+	m.state.subscribe.product = nil
 	m.state.footer.commands = []footerCommand{
 		{key: "esc", value: "back"},
 		{key: "↑/↓", value: "items"},
