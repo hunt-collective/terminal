@@ -127,6 +127,10 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
+    "VhsRouter": {
+      "type": "sst.aws.Router"
+      "url": string
+    }
     "Vpc": {
       "type": "sst.aws.Vpc"
     }
