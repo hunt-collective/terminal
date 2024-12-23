@@ -19,10 +19,9 @@ RUN bun build \
 
 FROM golang:alpine AS terminal
 WORKDIR /app
-COPY packages/go/go.mod packages/go/go.sum ./
+COPY packages/go/. .
 RUN go mod download
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o terminal ./packages/go/cmd/cli/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o terminal ./cmd/cli/main.go
 
 FROM ghcr.io/charmbracelet/vhs
 WORKDIR /app
