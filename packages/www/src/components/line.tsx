@@ -2,11 +2,13 @@ import { type Component, type JSX } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 import { getLineNumber } from './editor'
 
-export type State = 'normal' | 'success' | 'error' | 'busy'
+export type State = 'normal' | 'active' | 'success' | 'error' | 'busy'
 
 type LineProps = {
   href?: string
   state?: State
+  inactive?: boolean
+  internalLink?: boolean
 } & JSX.HTMLAttributes<HTMLDivElement>
 
 const LineComponent: Component<LineProps> = (props) => {
@@ -17,24 +19,25 @@ const LineComponent: Component<LineProps> = (props) => {
       component={props.href ? 'a' : 'div'}
       tabindex="0"
       href={props.href}
-      target={props.href ? '_blank' : undefined}
+      target={props.href && !props.internalLink ? '_blank' : undefined}
       {...props}
       classList={{
         ...props.classList,
-        'group flex items-center text-gray-10 hover:bg-gray-5 px-6': true,
-        'active:border-orange active:border-l-2 active:pl-[22px] active:text-gray-11 active:bg-gray-6':
+        'group flex items-center text-gray-10 hover:bg-gray-5 px-6 border-transparent border-l-2':
           true,
-        '[&>svg]:hover:block [&>svg]:active:text-gray-11': !!props.href,
-        '!border-green-11 !bg-green-5 border-l-2 pl-[22px]':
-          props.state === 'success',
-        '!border-red-11 !bg-red-5 border-l-2 pl-[22px]':
-          props.state === 'error',
-        '!border-blue-11 !bg-blue-5 border-l-2 pl-[22px]':
-          props.state === 'busy',
-        'focus:border-orange focus:border-l-2 focus:pl-[22px] focus:text-gray-11 focus:bg-gray-6 focus:outline-none':
-          true,
-        'has-[:focus]:border-orange has-[:focus]:border-l-2 has-[:focus]:pl-[22px] has-[:focus]:text-gray-11 has-[:focus]:bg-gray-6 has-[:focus]:outline-none':
-          true,
+        '!border-orange text-gray-11 bg-gray-6':
+          !props.inactive && props.state === 'active',
+        'active:border-orange active:text-gray-11 active:bg-gray-6':
+          !props.inactive,
+        '[&>svg]:hover:block [&>svg]:active:text-gray-11':
+          !!props.href && !props.internalLink,
+        '!border-green-11 !bg-green-5': props.state === 'success',
+        '!border-red-11 !bg-red-5': props.state === 'error',
+        '!border-blue-11 !bg-blue-5': props.state === 'busy',
+        'focus:border-orange focus:text-gray-11 focus:bg-gray-6 focus:outline-none':
+          !props.inactive,
+        'has-[:focus]:border-orange has-[:focus]:text-gray-11 has-[:focus]:bg-gray-6 has-[:focus]:outline-none':
+          !props.inactive,
         'pointer-events-none': props.state && props.state !== 'normal',
         [props.class ?? '']: !!props.class,
       }}

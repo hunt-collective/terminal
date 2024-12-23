@@ -5,19 +5,23 @@ import {
   type ParentProps,
   useContext,
   createSignal,
+  splitProps,
 } from 'solid-js'
 
-type EditorProps = ParentProps & JSX.HTMLAttributes<HTMLDivElement>
+type EditorProps = { numberless?: boolean } & ParentProps &
+  JSX.HTMLAttributes<HTMLDivElement>
 
-const LineNumberContext = createContext<() => number>()
+const LineNumberContext = createContext<() => number | undefined>()
 export function getLineNumber() {
   return useContext(LineNumberContext)?.()
 }
 
 const EditorComponent: Component<EditorProps> = (props) => {
+  const [local, others] = splitProps(props, ['class', 'classList'])
   const [getLineNumber, setLatestLineNumber] = createSignal(1)
 
   function getNextLineNumber() {
+    if (props.numberless) return undefined
     const latest = getLineNumber()
     setLatestLineNumber(latest + 1)
     return latest
@@ -26,10 +30,11 @@ const EditorComponent: Component<EditorProps> = (props) => {
   return (
     <LineNumberContext.Provider value={getNextLineNumber}>
       <div
-        {...props}
+        {...others}
         classList={{
+          ...local.classList,
           'leading-10': true,
-          [props.class ?? '']: !!props.class,
+          [local.class ?? '']: !!local.class,
         }}
       >
         {props.children}

@@ -1,0 +1,46 @@
+---
+import { getCollection } from 'astro:content'
+import DocsLayout from '../../layouts/docs.astro'
+import H1 from '@components/markdown/h1'
+import Heading from '@components/markdown/heading'
+import P from '@components/markdown/p'
+import Blockquote from '@components/markdown/blockquote'
+import Pre from '@components/markdown/pre'
+import Code from '@components/markdown/code'
+import UL from '@components/markdown/ul'
+import LI from '@components/markdown/li'
+import A from '@components/markdown/a'
+
+export const prerender = true
+
+export async function getStaticPaths() {
+  const docsEntries = await getCollection('docs')
+  return docsEntries.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }))
+}
+
+const { entry } = Astro.props
+const { Content, components } = await entry.render()
+---
+
+<DocsLayout frontmatter={entry.data}>
+  <Content
+    components={{
+      ...components,
+      h1: H1,
+      h2: Heading,
+      h3: Heading,
+      h4: Heading,
+      h5: Heading,
+      p: P,
+      a: A,
+      blockquote: Blockquote,
+      ul: UL,
+      li: LI,
+      pre: Pre,
+      code: Code,
+    }}
+  />
+</DocsLayout>

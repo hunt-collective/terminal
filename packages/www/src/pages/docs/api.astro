@@ -1,4 +1,5 @@
 ---
+import Line from '@components/line'
 import Layout from '@layouts/base.astro'
 const openapiUrl = 'https://app.stainlessapi.com/api/spec/documented/terminal'
 ---
@@ -7,6 +8,7 @@ const openapiUrl = 'https://app.stainlessapi.com/api/spec/documented/terminal'
   <div slot="docs">
     <style>
       :root {
+        /* --scalar-header-height: 40px; */
         --scalar-custom-header-height: 40px;
         --scalar-border-width: 1px;
         --scalar-radius: 0px;
@@ -45,6 +47,12 @@ const openapiUrl = 'https://app.stainlessapi.com/api/spec/documented/terminal'
         --scalar-text-decoration: none;
         --scalar-text-decoration-hover: underline;
         --scalar-link-font-weight: inherit;
+
+        @media (max-width: 1000px) {
+          .scalar-api-references-standalone-mobile {
+            --scalar-header-height: 40px;
+          }
+        }
       }
       @media (max-width: 460px) {
         :root {
@@ -97,7 +105,8 @@ const openapiUrl = 'https://app.stainlessapi.com/api/spec/documented/terminal'
           height: 40px !important;
         }
         .sidebar-indent-nested .sidebar-heading:has(.sidebar-heading-link) {
-          padding-left: 12px !important;
+          padding-left: 24px !important;
+          padding-right: 12px !important;
         }
         .sidebar-pages {
           padding: 0px !important;
@@ -132,6 +141,30 @@ const openapiUrl = 'https://app.stainlessapi.com/api/spec/documented/terminal'
         .badge {
           border-radius: var(--scalar-radius) !important;
         }
+        .introduction-card {
+          padding-top: unset !important;
+          background: unset !important;
+          border: unset !important;
+        }
+        .introduction-card-item {
+          padding: unset !important;
+          border: unset !important;
+          border-bottom: unset !important;
+        }
+        .scalar-client {
+          margin-top: 20px;
+          padding: unset !important;
+          border-top-width: unset !important;
+          border-bottom-width: unset !important;
+          border: none !important;
+        }
+        /* .scalar-api-references-standalone-search { */
+        /*   opacity: 0; */
+        /*   pointer-events: none; */
+        /* } */
+        /* .scalar-button { */
+        /*   background-color: theme('colors.orange'); */
+        /* } */
         .dark-mode {
           --scalar-color-1: theme('colors.white');
           --scalar-color-2: theme('colors.gray.11');
@@ -145,6 +178,7 @@ const openapiUrl = 'https://app.stainlessapi.com/api/spec/documented/terminal'
           --scalar-background-2: theme('colors.gray.1');
           --scalar-background-3: theme('colors.gray.5');
           --scalar-border-color: theme('borderColor.DEFAULT');
+          --scalar-scrollbar-color: theme('borderColor.DEFAULT');
           /* --scalar-background-accent:   */
         }
         .dark-mode .t-doc__sidebar {
@@ -209,5 +243,10 @@ const openapiUrl = 'https://app.stainlessapi.com/api/spec/documented/terminal'
     >
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+    <!-- <Line -->
+    <!--   class="fixed top-10 left-0 w-[280px] h-10 border-b" -->
+    <!--   href="/docs" -->
+    <!--   internalLink>{`< Back to docs`}</Line -->
+    <!-- > -->
   </div>
 </Layout>

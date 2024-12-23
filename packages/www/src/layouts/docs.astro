@@ -1,0 +1,158 @@
+---
+import BaseLayout from './base.astro'
+import Nav from '@components/docs-nav'
+import Content from '@components/content'
+import Line from '@components/line'
+
+const links = [
+  {
+    group: 'Getting Started',
+    pages: [
+      { href: '/docs/quickstart', text: 'Quickstart', active: false },
+      { href: '/docs/api', text: 'API Reference', active: false },
+      { href: '/docs/cron', text: 'Cron', active: false },
+    ],
+  },
+  {
+    group: 'Products',
+    pages: [
+      { href: '/docs/cron', text: 'Cron', active: false },
+      { href: '/docs/segfault', text: 'Segfault', active: false },
+      { href: '/docs/object-object', text: '[object Object]', active: false },
+      { href: '/docs/404', text: '404', active: false },
+    ],
+  },
+  {
+    group: 'API',
+    pages: [
+      { href: '/docs/sdks', text: 'Client SDKs', active: false },
+      { href: '/docs/api', text: 'API Reference', active: false },
+    ],
+  },
+  {
+    group: 'Products',
+    pages: [
+      { href: '/docs/cron', text: 'Cron', active: false },
+      { href: '/docs/segfault', text: 'Segfault', active: false },
+      { href: '/docs/object-object', text: '[object Object]', active: false },
+      { href: '/docs/404', text: '404', active: false },
+    ],
+  },
+  {
+    group: 'Products',
+    pages: [
+      { href: '/docs/cron', text: 'Cron', active: false },
+      { href: '/docs/segfault', text: 'Segfault', active: false },
+      { href: '/docs/object-object', text: '[object Object]', active: false },
+      { href: '/docs/404', text: '404', active: false },
+    ],
+  },
+]
+
+const current = links
+  .flatMap((l) => l.pages)
+  .find(
+    ({ href }) =>
+      Astro.url.pathname === href || Astro.url.pathname === href + '/',
+  )
+
+if (current) current.active = true
+---
+
+<BaseLayout>
+  <div slot="docs" class="relative">
+    <div class="lg:hidden h-10 w-full sticky top-10 bg-black z-10">
+      <div
+        class="flex items-center align-middle lowercase h-full px-2 border-b"
+      >
+        <button
+          data-menu-open-button
+          class="grid px-unset !p-3 text-gray-10 size-10 hover:text-white"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            class="stroke-2 size-full block align-middle rendering-legibility"
+            aria-hidden="true"
+            role="presentation"
+          >
+            <path
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M22 6.8H2m20 10.4H2"
+            >
+            </path>
+          </svg>
+          <span class="sr-only">Open Menu</span>
+        </button>
+        <button
+          data-menu-close-button
+          class="hidden px-unset !p-3 text-gray-10 size-10 hover:text-white"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            class="stroke-2 size-full block align-middle rendering-legibility"
+            aria-hidden="true"
+            role="presentation"
+          >
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M18 6 6 18M6 6l12 12"
+            >
+            </path>
+          </svg>
+          <span class="sr-only">Close Menu</span>
+        </button>
+        {
+          Astro.props.frontmatter?.title && (
+            <h1>{Astro.props.frontmatter?.title}</h1>
+          )
+        }
+      </div>
+    </div>
+    <div data-content class="lg:grid grid-cols-[280px_1fr]">
+      <aside class="hidden lg:block">
+        <div
+          class="h-[calc(100dvh-40px)] flex flex-col sticky top-10 overflow-y-auto overflow-x-hidden border-r"
+        >
+          <Nav {links} />
+        </div>
+      </aside>
+      <div class="">
+        <Content client:load>
+          <Line class="h-10" />
+          <slot />
+          <Line class="h-10" />
+        </Content>
+      </div>
+    </div>
+    <div data-menu class="hidden sticky top-10 inset-x-0 size-full bg-black">
+      <Nav {links} />
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  const menuOpenButton = document.querySelectorAll('[data-menu-open-button]')[0]
+  const menuCloseButton = document.querySelectorAll(
+    '[data-menu-close-button]',
+  )[0]
+  const menu = document.querySelectorAll('[data-menu]')[0]
+  const content = document.querySelectorAll('[data-content]')[0]
+
+  const toggleMenu = () => {
+    menuOpenButton.classList.toggle('hidden')
+    menuCloseButton.classList.toggle('hidden')
+    menu.classList.toggle('hidden')
+    content.classList.toggle('hidden')
+  }
+
+  menuOpenButton.addEventListener('click', toggleMenu)
+  menuCloseButton.addEventListener('click', toggleMenu)
+</script>

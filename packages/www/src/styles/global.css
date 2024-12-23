@@ -12,4 +12,15 @@
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
+
+  .rendering-legibility {
+    text-rendering: optimizeLegibility;
+  }
+}
+
+:root {
+  body {
+    scrollbar-color: theme('borderColor.DEFAULT') transparent;
+    scrollbar-width: thin;
+  }
 }

@@ -1,6 +1,6 @@
 ---
 import '@styles/global.css'
-import Banner from '@components/banner.astro'
+// import Banner from '@components/banner.astro'
 import Button from '@components/button.astro'
 
 const title = 'wip: terminal (initial commit)'
@@ -16,16 +16,18 @@ interface Props {
 
 const links = [
   { href: '/about', text: 'readme', active: false },
-  { href: '/faq', text: 'faq', active: false },
   // { href: '/cron', text: 'cron.md', active: false },
-  { href: '/docs', text: 'docs', active: false },
+  // { href: '/docs', text: 'docs', active: false },
+  // { href: '/docs/api', text: 'api', active: false },
+  { href: '/faq', text: 'faq', active: false },
 ]
 
-const current = links.find(
+let current = links.find(
   ({ href }) =>
     Astro.url.pathname === href || Astro.url.pathname === href + '/',
 )
-
+if (!current)
+  current = links.find(({ href }) => Astro.url.pathname.startsWith(href))
 if (current) current.active = true
 ---
 
@@ -55,6 +57,7 @@ if (current) current.active = true
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="stylesheet" href="/css/prism.css" />
     <style>
       @font-face {
         font-family: 'geist';
@@ -113,7 +116,7 @@ if (current) current.active = true
   </head>
   <body
     class:list={{
-      'font-mono min-h-screen leading-normal tracking-normal': true,
+      'font-mono min-h-screen leading-normal tracking-normal text-pretty': true,
       'bg-black text-white selection:bg-gray-7': Astro.props.light !== true,
       'bg-white text-black selection:bg-gray-9': Astro.props.light === true,
       'flex flex-1 flex-col': true,
@@ -161,12 +164,21 @@ if (current) current.active = true
     <!-- </Banner> -->
     <header
       class:list={{
-        'h-10 border-b flex items-stretch sticky top-0 z-50': true,
+        'h-10 border-b flex items-stretch sticky top-0 z-50 ': true,
         'bg-gray-1': Astro.props.light !== true,
         'bg-gray-11': Astro.props.light === true,
       }}
     >
-      <a href="/" id="logo" class="px-6 border-r flex items-center">
+      <a
+        href="/"
+        id="logo"
+        class:list={{
+          'px-6 border-r flex items-center': true,
+          'text-white': !Astro.props.light && !current,
+          'text-black': Astro.props.light && !current,
+          'text-gray-11': !!current,
+        }}
+      >
         <svg
           class="h-3.5"
           viewBox="0 0 85 16"
@@ -198,7 +210,9 @@ if (current) current.active = true
           </defs>
         </svg>
       </a>
-      <nav class="flex w-full divide-x">
+      <nav
+        class="flex divide-x w-full overflow-x-auto overflow-y-hidden no-scrollbar"
+      >
         {
           links.map(({ href, text, active }) => (
             <Button
@@ -207,7 +221,9 @@ if (current) current.active = true
               class:list={{
                 'last:!border-r': true,
                 '!text-white': active && Astro.props.light !== true,
-                '!text-black': Astro.props.light === true,
+                '!text-black': active && Astro.props.light === true,
+                '!text-gray-11': !active && Astro.props.light !== true,
+                '!text-gray-1': !active && Astro.props.light === true,
               }}
             >
               {text}
