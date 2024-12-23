@@ -1,0 +1,24 @@
+{
+  "name": "@terminal/vhs",
+  "version": "0.0.0",
+  "type": "module",
+  "module": "src/index.js",
+  "sideEffects": false,
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "dev": "bun --watch ./src/index.ts"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.145",
+    "bun-types": "latest"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.606.0",
+    "@aws-sdk/lib-storage": "3.606.0",
+    "@aws-sdk/s3-request-presigner": "3.606.0",
+    "@terminal/go": "workspace:",
+    "lz-string": "1.5.0",
+    "remeda": "*",
+    "sst": "3.4.21"
+  }
+}
