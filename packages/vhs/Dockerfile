@@ -19,16 +19,15 @@ RUN bun build \
 
 FROM golang:alpine AS terminal
 WORKDIR /app
-RUN cd packages/go
-COPY go.mod go.sum ./
+COPY packages/go/go.mod packages/go/go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o terminal ./cmd/cli/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o terminal ./packages/go/cmd/cli/main.go
 
 FROM ghcr.io/charmbracelet/vhs
 WORKDIR /app
 COPY --from=terminal /app/terminal terminal
-COPY --from=server /app/server server
+COPY --from=server /app/packages/vhs/server server
 ENV NODE_ENV=production
 
 CMD ["./server"]
