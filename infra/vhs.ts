@@ -22,42 +22,42 @@ const service = cluster.addService("VHS", {
 export const router = new sst.aws.Router("VhsRouter", {
   routes: {
     "/*": {
-      bucket,
+      url: service.url,
     },
   },
-  transform:
-    $app.stage === "production" || $app.stage === "dev"
-      ? {
-          cdn: (args) => {
-            args.origins = [
-              {
-                domainName: bucket.nodes.bucket.bucketRegionalDomainName,
-                originId: "bucket",
-              },
-              {
-                domainName: service.nodes.loadBalancer.dnsName,
-                originId: "service",
-              },
-            ];
-            args.originGroups = [
-              {
-                originId: "default",
-                failoverCriteria: {
-                  statusCodes: [403, 404],
-                },
-                members: [
-                  {
-                    originId: "bucket",
-                  },
-                  {
-                    originId: "service",
-                  },
-                ],
-              },
-            ];
-          },
-        }
-      : undefined,
+  // transform:
+  //   $app.stage === "production" || $app.stage === "dev"
+  //     ? {
+  //         cdn: (args) => {
+  //           args.origins = [
+  //             {
+  //               domainName: bucket.nodes.bucket.bucketRegionalDomainName,
+  //               originId: "bucket",
+  //             },
+  //             {
+  //               domainName: service.nodes.loadBalancer.dnsName,
+  //               originId: "service",
+  //             },
+  //           ];
+  //           args.originGroups = [
+  //             {
+  //               originId: "default",
+  //               failoverCriteria: {
+  //                 statusCodes: [403, 404],
+  //               },
+  //               members: [
+  //                 {
+  //                   originId: "bucket",
+  //                 },
+  //                 {
+  //                   originId: "service",
+  //                 },
+  //               ],
+  //             },
+  //           ];
+  //         },
+  //       }
+  //     : undefined,
   domain: {
     name: "vhs." + domain,
     dns: sst.cloudflare.dns(),
