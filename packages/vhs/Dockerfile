@@ -19,7 +19,7 @@ RUN bun build \
 
 FROM golang:alpine AS terminal
 WORKDIR /app
-RUN pushd packages/go
+RUN cd packages/go
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
