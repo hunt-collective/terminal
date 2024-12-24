@@ -15,14 +15,15 @@ COPY packages ./packages
 COPY patches ./patches
 RUN bun install
 
+ENV VHS_NO_SANDBOX="true"
 COPY --from=ttyd /usr/bin/ttyd /usr/bin/ttyd
 RUN apt update && apt -y install curl gpg
 RUN mkdir -p /etc/apt/keyrings
 RUN curl -fsSL https://repo.charm.sh/apt/gpg.key | gpg --dearmor -o /etc/apt/keyrings/charm.gpg
 RUN echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | tee /etc/apt/sources.list.d/charm.list
-RUN apt update && apt -y install vhs ffmpeg
+RUN apt update && apt -y install vhs ffmpeg chromium
 
 WORKDIR /app/packages/vhs
-COPY --from=terminal /app/terminal terminal
+COPY --from=terminal /app/terminal /usr/bin/terminal
 CMD bun run ./src/index.ts
 EXPOSE 3001
