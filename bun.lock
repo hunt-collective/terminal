@@ -88,14 +88,10 @@
       "dependencies": {
         "@aws-sdk/client-s3": "3.606.0",
         "@aws-sdk/lib-storage": "3.606.0",
-        "@aws-sdk/s3-request-presigner": "3.606.0",
-        "@terminal/go": "packages/go",
         "lz-string": "1.5.0",
-        "remeda": "*",
         "sst": "3.4.21",
       },
       "devDependencies": {
-        "@types/aws-lambda": "8.10.145",
         "bun-types": "latest",
       },
     },
@@ -628,7 +624,7 @@
 
     "@terminal/scripts": ["@terminal/scripts@workspace:packages/scripts", { "dependencies": { "@terminal/core": "packages/core", "remeda": "*", "sst": "3.4.21" } }],
 
-    "@terminal/vhs": ["@terminal/vhs@workspace:packages/vhs", { "dependencies": { "@aws-sdk/client-s3": "3.606.0", "@aws-sdk/lib-storage": "3.606.0", "@aws-sdk/s3-request-presigner": "3.606.0", "@terminal/go": "packages/go", "lz-string": "1.5.0", "remeda": "*", "sst": "3.4.21" }, "devDependencies": { "@types/aws-lambda": "8.10.145", "bun-types": "latest" } }],
+    "@terminal/vhs": ["@terminal/vhs@workspace:packages/vhs", { "dependencies": { "@aws-sdk/client-s3": "3.606.0", "@aws-sdk/lib-storage": "3.606.0", "lz-string": "1.5.0", "sst": "3.4.21" }, "devDependencies": { "bun-types": "latest" } }],
 
     "@terminal/workers": ["@terminal/workers@workspace:packages/workers", { "dependencies": { "cloudflare": "^3.1.0", "sst": "3.4.21", "zod": "*" }, "devDependencies": { "@cloudflare/workers-types": "4.20240512.0" } }],
 
@@ -637,8 +633,6 @@
     "@tsconfig/node20": ["@tsconfig/node20@20.1.4", "", {}, "sha512-sqgsT69YFeLWf5NtJ4Xq/xAF8p4ZQHlmGW74Nu2tD4+g5fAsposc4ZfaaPixVu4y01BEiDCWLRDCvDM5JOsRxg=="],
 
     "@types/acorn": ["@types/acorn@4.0.6", "", { "dependencies": { "@types/estree": "*" } }, "sha512-veQTnWP+1D/xbxVrPC3zHnCZRjSrKfhbMUlEA43iMZLu7EsnTtkJklIuwrCPbOi8YkvDQAiW05VQQFvvz9oieQ=="],
-
-    "@types/aws-lambda": ["@types/aws-lambda@8.10.145", "", {}, "sha512-dtByW6WiFk5W5Jfgz1VM+YPA21xMXTuSFoLYIDY0L44jDLLflVPtZkYuu3/YxpGcvjzKFBZLU+GyKjR0HOYtyw=="],
 
     "@types/babel__core": ["@types/babel__core@7.20.5", "", { "dependencies": { "@babel/parser": "^7.20.7", "@babel/types": "^7.20.7", "@types/babel__generator": "*", "@types/babel__template": "*", "@types/babel__traverse": "*" } }, "sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA=="],
 
