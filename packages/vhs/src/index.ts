@@ -22,12 +22,21 @@ const server = Bun.serve({
     const tape = `
       Output output.gif
 
-      # Set up a 1200x600 terminal with 46px font.
-      Set FontSize 16
-      Set Width 1200
+      Set Framerate 24 
+      Set Width 600
       Set Height 600
       Set Padding 0
       Set Margin 0
+
+      Set FontSize 16
+      Set FontFamily "Geist Mono"
+      # Set Theme { "name": "Whimsy", "black": "#535178", "red": "#ef6487", "green": "#5eca89", "yellow": "#fdd877", "blue": "#65aef7", "magenta": "#aa7ff0", "cyan": "#43c1be", "white": "#ffffff", "brightBlack": "#535178", "brightRed": "#ef6487", "brightGreen": "#5eca89", "brightYellow": "#fdd877", "brightBlue": "#65aef7", "brightMagenta": "#aa7ff0", "brightCyan": "#43c1be", "brightWhite": "#ffffff", "background": "#29283b", "foreground": "#b3b0d6", "selection": "#3d3c58", "cursor": "#b3b0d6" }
+
+      Hide
+      Type "terminal"
+      Enter
+      Sleep 3s
+      Show
 
       ${instructions}
     `;
@@ -39,7 +48,7 @@ const server = Bun.serve({
 
     const gif = Bun.file("output.gif");
 
-    if (Resource.App.stage === "production") {
+    if (Resource.App.stage === "production" || Resource.App.stage === "dev") {
       const params = {
         Bucket: Resource.VhsBucket.name,
         Key: `${version}/${payload}`,

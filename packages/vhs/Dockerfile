@@ -15,6 +15,7 @@ COPY packages ./packages
 COPY patches ./patches
 RUN bun install
 
+COPY packages/vhs/src/GeistMonoVF.ttf /usr/share/fonts/GeistMonoVF.ttf
 ENV VHS_NO_SANDBOX="true"
 COPY --from=ttyd /usr/bin/ttyd /usr/bin/ttyd
 RUN apt update && apt -y install curl gpg
