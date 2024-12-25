@@ -2,6 +2,7 @@ import { api, auth, authFingerprintKey } from "./api";
 import { cluster } from "./cluster";
 import { domain } from "./dns";
 import { secret } from "./secret";
+import { key } from "./ssh";
 
 const bucket = new sst.aws.Bucket("VhsBucket", {
   access: "cloudfront",
@@ -18,7 +19,7 @@ const service = cluster.addService("VHS", {
     directory: "packages/vhs",
     command: "bun dev",
   },
-  link: [bucket, api, auth, secret.StripePublic, authFingerprintKey],
+  link: [bucket, api, auth, secret.StripePublic, authFingerprintKey, key],
 });
 
 export const router = new sst.aws.Router("VhsRouter", {

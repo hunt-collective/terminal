@@ -11,7 +11,7 @@ sst.Linkable.wrap(tls.PrivateKey, (resource) => ({
   },
 }));
 
-const key = new tls.PrivateKey("SSHKey", {
+export const key = new tls.PrivateKey("SSHKey", {
   algorithm: "ED25519",
 });
 

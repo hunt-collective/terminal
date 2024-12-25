@@ -1,5 +1,5 @@
 # Change these variables as necessary.
-MAIN_PACKAGE_PATH := ./cmd/main.go
+MAIN_PACKAGE_PATH := ./cmd/cli/main.go
 BINARY_NAME := terminal
 
 # ==================================================================================== #
