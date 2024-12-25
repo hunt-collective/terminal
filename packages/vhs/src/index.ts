@@ -23,7 +23,7 @@ const server = Bun.serve({
       Output output.gif
 
       Set Framerate 24 
-      Set Width 600
+      Set Width 750
       Set Height 600
       Set Padding 0
       Set Margin 0

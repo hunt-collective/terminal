@@ -9,6 +9,8 @@ const bucket = new sst.aws.Bucket("VhsBucket", {
 });
 
 const service = cluster.addService("VHS", {
+  cpu: "2 vCPU",
+  memory: "4 GB",
   image: {
     dockerfile: "./packages/vhs/Dockerfile",
   },
