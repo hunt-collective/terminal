@@ -41,7 +41,7 @@ export const cdn = new sst.aws.Cdn("VhsCdn", {
         httpPort: 80,
         originProtocolPolicy: "http-only",
         httpsPort: 443,
-        originSslProtocols: [],
+        originSslProtocols: ["TLSv1.2"],
       },
     },
   ],
@@ -64,7 +64,7 @@ export const cdn = new sst.aws.Cdn("VhsCdn", {
     originRequestPolicyId: "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf", // CORS-S3Origin policy
   },
   domain: {
-    name: "vhs." + domain,
+    name: "vhs2." + domain,
     dns: sst.cloudflare.dns(),
   },
 });
