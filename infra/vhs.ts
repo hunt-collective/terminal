@@ -24,45 +24,45 @@ const service = cluster.addService("VHS", {
   link: [bucket, api, auth, secret.StripePublic, authFingerprintKey, key],
 });
 
-export const router = new sst.aws.Router("VhsRouter", {
-  routes: {
-    "/*": {
-      url: service.url,
+export const cdn = new sst.aws.Cdn("VhsCdn", {
+  origins: [
+    {
+      originId: "s3Origin",
+      domainName: bucket.nodes.bucket.bucketRegionalDomainName,
+      // s3OriginConfig: {
+      //   originAccessIdentity: "", // CloudFront will use IAM role credentials
+      // },
     },
+    {
+      originId: "serviceOrigin",
+      domainName: service.url.apply((url) => new URL(url).host),
+      customHeaders: [],
+      customOriginConfig: {
+        httpPort: 80,
+        originProtocolPolicy: "http-only",
+        httpsPort: 443,
+        originSslProtocols: [],
+      },
+    },
+  ],
+  originGroups: [
+    {
+      originId: "mediaGroup",
+      failoverCriteria: { statusCodes: [404] },
+      members: [{ originId: "s3Origin" }, { originId: "serviceOrigin" }],
+    },
+  ],
+  // Configure default cache behavior
+  defaultCacheBehavior: {
+    targetOriginId: "mediaGroup", // Use the origin group
+    allowedMethods: ["GET", "HEAD"],
+    cachedMethods: ["GET", "HEAD"],
+    viewerProtocolPolicy: "redirect-to-https",
+    compress: true,
+    // Configure caching
+    cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6", // CachingOptimized policy
+    originRequestPolicyId: "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf", // CORS-S3Origin policy
   },
-  // transform:
-  //   $app.stage === "production" || $app.stage === "dev"
-  //     ? {
-  //         cdn: (args) => {
-  //           args.origins = [
-  //             {
-  //               domainName: bucket.nodes.bucket.bucketRegionalDomainName,
-  //               originId: "bucket",
-  //             },
-  //             {
-  //               domainName: service.nodes.loadBalancer.dnsName,
-  //               originId: "service",
-  //             },
-  //           ];
-  //           args.originGroups = [
-  //             {
-  //               originId: "default",
-  //               failoverCriteria: {
-  //                 statusCodes: [403, 404],
-  //               },
-  //               members: [
-  //                 {
-  //                   originId: "bucket",
-  //                 },
-  //                 {
-  //                   originId: "service",
-  //                 },
-  //               ],
-  //             },
-  //           ];
-  //         },
-  //       }
-  //     : undefined,
   domain: {
     name: "vhs." + domain,
     dns: sst.cloudflare.dns(),
