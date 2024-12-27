@@ -5,7 +5,7 @@ import { secret } from "./secret";
 import { key } from "./ssh";
 
 const bucket = new sst.aws.Bucket("VhsBucket", {
-  access: "cloudfront",
+  access: "public",
 });
 
 const service = cluster.addService("VHS", {
@@ -52,9 +52,8 @@ export const cdn = new sst.aws.Cdn("VhsCdn", {
       members: [{ originId: "s3Origin" }, { originId: "serviceOrigin" }],
     },
   ],
-  // Configure default cache behavior
   defaultCacheBehavior: {
-    targetOriginId: "mediaGroup", // Use the origin group
+    targetOriginId: "mediaGroup",
     allowedMethods: ["GET", "HEAD"],
     cachedMethods: ["GET", "HEAD"],
     viewerProtocolPolicy: "redirect-to-https",
