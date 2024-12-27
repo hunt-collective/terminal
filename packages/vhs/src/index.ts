@@ -17,8 +17,6 @@ const server = Bun.serve({
       return new Response("Not found", { status: 404 });
 
     const instructions = LZString.decompressFromEncodedURIComponent(payload);
-    console.log("instructions", instructions);
-
     const tape = `
       Output output.gif
 
@@ -38,20 +36,19 @@ const server = Bun.serve({
       Sleep 3s
       Show
 
+      Sleep 1s
       ${instructions}
     `;
     console.log("tape", tape);
 
     await Bun.write("input.tape", tape);
-    const output = await $`vhs input.tape`.text();
-    console.log("output", output);
-
+    await $`vhs input.tape`.text();
     const gif = Bun.file("output.gif");
 
     if (Resource.App.stage === "production" || Resource.App.stage === "dev") {
       const params = {
         Bucket: Resource.VhsBucket.name,
-        Key: `${version}/${payload}`,
+        Key: `generate/${version}/${payload}`,
         Body: gif,
       };
       const upload = new Upload({ params, client: s3 });
