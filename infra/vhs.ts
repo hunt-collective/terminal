@@ -48,7 +48,7 @@ export const cdn = new sst.aws.Cdn("VhsCdn", {
   originGroups: [
     {
       originId: "mediaGroup",
-      failoverCriteria: { statusCodes: [404] },
+      failoverCriteria: { statusCodes: [403, 404] },
       members: [{ originId: "s3Origin" }, { originId: "serviceOrigin" }],
     },
   ],
