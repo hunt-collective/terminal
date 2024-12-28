@@ -128,8 +128,8 @@ declare module "sst" {
       "name": string
       "type": "sst.aws.Bucket"
     }
-    "VhsRouter": {
-      "type": "sst.aws.Router"
+    "VhsCdn": {
+      "type": "sst.aws.CDN"
       "url": string
     }
     "Vpc": {

@@ -24,14 +24,21 @@ const service = cluster.addService("VHS", {
   link: [bucket, api, auth, secret.StripePublic, authFingerprintKey, key],
 });
 
-export const cdn = new sst.aws.Cdn("VhsCdn", {
+sst.Linkable.wrap(sst.aws.Cdn, (cdn) => {
+  return {
+    properties: {
+      url: $resolve([cdn.domainUrl, cdn.url]).apply(
+        ([domainUrl, url]) => domainUrl ?? url,
+      ),
+    },
+  };
+});
+
+export const vhs = new sst.aws.Cdn("VhsCdn", {
   origins: [
     {
       originId: "s3Origin",
       domainName: bucket.nodes.bucket.bucketRegionalDomainName,
-      // s3OriginConfig: {
-      //   originAccessIdentity: "", // CloudFront will use IAM role credentials
-      // },
     },
     {
       originId: "serviceOrigin",
@@ -58,7 +65,6 @@ export const cdn = new sst.aws.Cdn("VhsCdn", {
     cachedMethods: ["GET", "HEAD"],
     viewerProtocolPolicy: "redirect-to-https",
     compress: true,
-    // Configure caching
     cachePolicyId: "658327ea-f89d-4fab-a63d-7e88639e58f6", // CachingOptimized policy
     originRequestPolicyId: "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf", // CORS-S3Origin policy
   },

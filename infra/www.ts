@@ -1,5 +1,6 @@
 import { api } from "./api";
 import { domain } from "./dns";
+import { vhs } from "./vhs";
 
 export const www = new sst.aws.Astro("Site", {
   domain: {
@@ -8,7 +9,7 @@ export const www = new sst.aws.Astro("Site", {
   },
   path: "./packages/www",
   buildCommand: "bun run build",
-  link: [api],
+  link: [api, vhs],
 });
 
 export const outputs = {

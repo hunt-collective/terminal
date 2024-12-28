@@ -6,7 +6,7 @@ const Code: Component<ParentProps> = (props) => {
     .replace('<astro-static-slot>', '')
     .replace('</astro-static-slot>', '')
     .split('\n')
-  console.log({ lines })
+  // console.log({ lines })
 
   return (
     <code {...props} class="text-white italic">
