@@ -3,7 +3,8 @@ import Line from './line'
 import EmptyLine from './empty-line'
 
 const Code: Component<ParentProps> = (props) => {
-  const lines = props.children?.t
+  // @ts-expect-error
+  const lines: string[] = props.children?.t
     .replace('<astro-static-slot>', '')
     .replace('</astro-static-slot>', '')
     .split('\n')
@@ -15,12 +16,14 @@ const Code: Component<ParentProps> = (props) => {
     <>
       <EmptyLine />
       <code {...props}>
+        {/* @ts-ignore  */}
         <astro-static-slot>
           {lines.map((line) => (
             <Line>
               <span innerHTML={line} />
             </Line>
           ))}
+          {/* @ts-ignore  */}
         </astro-static-slot>
       </code>
       <EmptyLine />
