@@ -42,7 +42,9 @@ const server = Bun.serve({
     console.log("tape", tape);
 
     await Bun.write("input.tape", tape);
-    await $`vhs input.tape`.text();
+    const output = await $`vhs input.tape`.text();
+    console.log("output", output);
+
     const gif = Bun.file("output.gif");
 
     if (Resource.App.stage === "production" || Resource.App.stage === "dev") {
