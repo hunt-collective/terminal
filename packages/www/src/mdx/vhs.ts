@@ -20,9 +20,22 @@ export function remarkVhs(): ReturnType<Plugin<[], Root>> {
         if (!index || !parent) return
         if (node.name !== 'vhs') return
 
+        const [alt] = node.children
+          .filter(
+            (c) =>
+              c.data && 'directiveLabel' in c.data && c.data?.directiveLabel,
+          )
+          .map((v) => toString(v))
+
         const data = node.data || (node.data = {})
         const uncompressed = node.children
-          .map(toString)
+          .filter(
+            (c) =>
+              !c.data ||
+              !('directiveLabel' in c.data) ||
+              !c.data.directiveLabel,
+          )
+          .map((v) => toString(v))
           .join('\n')
           .replaceAll('“', '"')
           .replaceAll('”', '"')
@@ -36,6 +49,7 @@ export function remarkVhs(): ReturnType<Plugin<[], Root>> {
             gopackage.version +
             '/' +
             LZString.compressToEncodedURIComponent(uncompressed),
+          alt,
           width: 500,
         }
         data.hChildren = undefined

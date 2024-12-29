@@ -11,6 +11,7 @@ const H1: Component<ParentProps> = (props) => {
         </h1>
       </Line>
       <EmptyLine />
+      <EmptyLine />
     </>
   )
 }

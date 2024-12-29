@@ -2,7 +2,13 @@ import { type Component, type JSX } from 'solid-js'
 import { Dynamic } from 'solid-js/web'
 import { getLineNumber } from './editor'
 
-export type State = 'normal' | 'active' | 'success' | 'error' | 'busy'
+export type State =
+  | 'normal'
+  | 'active'
+  | 'success'
+  | 'error'
+  | 'busy'
+  | 'warning'
 
 type LineProps = {
   href?: string
@@ -34,6 +40,7 @@ const LineComponent: Component<LineProps> = (props) => {
         '!border-green-11 !bg-green-5': props.state === 'success',
         '!border-red-11 !bg-red-5': props.state === 'error',
         '!border-blue-11 !bg-blue-5': props.state === 'busy',
+        '!border-yellow-11 !bg-yellow-5': props.state === 'warning',
         'focus:border-orange focus:text-gray-11 focus:bg-gray-6 focus:outline-none':
           !props.inactive,
         'has-[:focus]:border-orange has-[:focus]:text-gray-11 has-[:focus]:bg-gray-6 has-[:focus]:outline-none':

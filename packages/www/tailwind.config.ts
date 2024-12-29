@@ -50,6 +50,10 @@ export default {
           5: 'hsla(225, 98%, 62%, 0.42)',
           11: 'hsla(202, 67%, 51%, 1)',
         },
+        yellow: {
+          5: '#FEBB0036',
+          11: '#FEE949F5',
+        },
       },
       animation: {
         blink: 'blink 1.45s infinite step-start',

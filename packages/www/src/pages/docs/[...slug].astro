@@ -11,6 +11,7 @@ import UL from '@components/markdown/ul'
 import LI from '@components/markdown/li'
 import A from '@components/markdown/a'
 import Img from '@components/markdown/img'
+import Aside from '@components/markdown/aside'
 
 export const prerender = true
 
@@ -35,6 +36,7 @@ const { Content, components } = await entry.render()
       h3: Heading,
       h4: Heading,
       h5: Heading,
+      h6: Heading,
       p: P,
       a: A,
       blockquote: Blockquote,
@@ -43,6 +45,7 @@ const { Content, components } = await entry.render()
       pre: Pre,
       code: Code,
       img: Img,
+      aside: Aside,
     }}
   />
 </DocsLayout>
