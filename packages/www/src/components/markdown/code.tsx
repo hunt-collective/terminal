@@ -13,21 +13,17 @@ const Code: Component<ParentProps> = (props) => {
   }
 
   return (
-    <>
-      <EmptyLine />
-      <code {...props}>
+    <code {...props}>
+      {/* @ts-ignore  */}
+      <astro-static-slot>
+        {lines.map((line) => (
+          <Line>
+            <span innerHTML={line} />
+          </Line>
+        ))}
         {/* @ts-ignore  */}
-        <astro-static-slot>
-          {lines.map((line) => (
-            <Line>
-              <span innerHTML={line} />
-            </Line>
-          ))}
-          {/* @ts-ignore  */}
-        </astro-static-slot>
-      </code>
-      <EmptyLine />
-    </>
+      </astro-static-slot>
+    </code>
   )
 }
 

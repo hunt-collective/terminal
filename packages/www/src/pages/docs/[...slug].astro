@@ -8,6 +8,7 @@ import Blockquote from '@components/markdown/blockquote'
 import Pre from '@components/markdown/pre'
 import Code from '@components/markdown/code'
 import UL from '@components/markdown/ul'
+import HR from '@components/markdown/hr'
 import LI from '@components/markdown/li'
 import A from '@components/markdown/a'
 import Img from '@components/markdown/img'
@@ -46,6 +47,7 @@ const { Content, components } = await entry.render()
       code: Code,
       img: Img,
       aside: Aside,
+      hr: HR,
     }}
   />
 </DocsLayout>
