@@ -12,8 +12,9 @@ const server = Bun.serve({
   idleTimeout: 60,
   async fetch(req) {
     const url = new URL(req.url);
-    const [, generate, version, payload] = url.pathname.split("/");
-    if (generate !== "generate" || !payload)
+    const [, format, version, payload] = url.pathname.split("/");
+    const validFormats = ["gif", "png"];
+    if (!format || !validFormats.includes(format) || !payload)
       return new Response("Not found", { status: 404 });
 
     const instructions = LZString.decompressFromEncodedURIComponent(payload);
@@ -38,28 +39,32 @@ const server = Bun.serve({
 
       Sleep 1s
       ${instructions}
+
+      ${format === "png" ? `Screenshot output.png` : ""}
     `;
     console.log("tape", tape);
 
     await Bun.write("input.tape", tape);
     const output = await $`vhs input.tape`.text();
-    console.log("output", output);
+    console.debug("output", output);
 
-    const gif = Bun.file("output.gif");
+    const file =
+      format === "png" ? Bun.file("output.png") : Bun.file("output.gif");
 
     if (Resource.App.stage === "production" || Resource.App.stage === "dev") {
       const params = {
         Bucket: Resource.VhsBucket.name,
-        Key: `generate/${version}/${payload}`,
-        Body: gif,
+        Key: `${format}/${version}/${payload}`,
+        Body: file,
+        ContentType: `image/${format}`,
       };
       const upload = new Upload({ params, client: s3 });
       await upload.done();
     }
 
-    return new Response(gif, {
+    return new Response(file, {
       headers: {
-        "Content-Type": "image/gif",
+        "Content-Type": `image/${format}`,
         "Cache-Control": "public, max-age=604800, immutable",
       },
     });

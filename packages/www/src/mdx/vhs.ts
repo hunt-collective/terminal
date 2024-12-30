@@ -18,7 +18,9 @@ export function remarkVhs(): ReturnType<Plugin<[], Root>> {
         node.type === 'textDirective'
       ) {
         if (!index || !parent) return
-        if (node.name !== 'vhs') return
+        if (!node.name.startsWith('vhs')) return
+        let [, format] = node.name.split('-')
+        format = format || 'gif'
 
         const [alt] = node.children
           .filter(
@@ -45,7 +47,7 @@ export function remarkVhs(): ReturnType<Plugin<[], Root>> {
           src:
             // Resource.VhsCdn.url +
             'https://vhs2.dev.terminal.shop' +
-            '/generate/' +
+            `/${format}/` +
             gopackage.version +
             '/' +
             LZString.compressToEncodedURIComponent(uncompressed),
