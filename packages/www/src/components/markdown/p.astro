@@ -1,0 +1,39 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+import Line from '@components/line.astro'
+import { parseHTML } from 'linkedom'
+
+interface Props extends HTMLAttributes<'p'> {
+  'data-inner'?: boolean
+}
+const { class: _, ...props } = Astro.props
+
+const html = await Astro.slots.render('default')
+const { document } = parseHTML(html)
+const lines = document.toString().split('\n')
+
+const inner =
+  props['data-inner'] ||
+  [...document.children].find((c) => c.localName === 'figure')
+---
+
+{
+  inner ? (
+    <p
+      {...props}
+      class="whitespace-pre-wrap [&>code]:text-gray-11 [&>code]:inline-block [&>code]:bg-gray-1 [&>code]:italic [&>code]:before:content-['`'] [&>code]:after:content-['`']"
+    >
+      <slot />
+    </p>
+  ) : (
+    lines?.map((line) => (
+      <Line>
+        <p
+          {...props}
+          class="whitespace-pre-wrap [&>code]:text-gray-11 [&>code]:inline-block [&>code]:bg-gray-1 [&>code]:italic [&>code]:before:content-['`'] [&>code]:after:content-['`']"
+          set:html={line}
+        />
+      </Line>
+    ))
+  )
+}

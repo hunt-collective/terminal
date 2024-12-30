@@ -1,18 +1,22 @@
 ---
 import { getCollection } from 'astro:content'
 import DocsLayout from '../../layouts/docs.astro'
-import H1 from '@components/markdown/h1'
-import Heading from '@components/markdown/heading'
-import P from '@components/markdown/p'
-import Blockquote from '@components/markdown/blockquote'
-import Pre from '@components/markdown/pre'
-import Code from '@components/markdown/code'
-import UL from '@components/markdown/ul'
-import HR from '@components/markdown/hr'
-import LI from '@components/markdown/li'
-import A from '@components/markdown/a'
-import Img from '@components/markdown/img'
-import Aside from '@components/markdown/aside'
+import P from '@components/markdown/p.astro'
+import Aside from '@components/markdown/aside.astro'
+import H1 from '@components/markdown/h1.astro'
+import H2 from '@components/markdown/h2.astro'
+import H3 from '@components/markdown/h3.astro'
+import H4 from '@components/markdown/h4.astro'
+import H5 from '@components/markdown/h5.astro'
+import H6 from '@components/markdown/h6.astro'
+import HR from '@components/markdown/hr.astro'
+import UL from '@components/markdown/ul.astro'
+import LI from '@components/markdown/li.astro'
+import A from '@components/markdown/a.astro'
+import Blockquote from '@components/markdown/blockquote.astro'
+import Img from '@components/markdown/img.astro'
+import Code from '@components/markdown/code.astro'
+import Pre from '@components/markdown/pre.astro'
 
 export const prerender = true
 
@@ -32,22 +36,22 @@ const { Content, components } = await entry.render()
   <Content
     components={{
       ...components,
-      h1: H1,
-      h2: Heading,
-      h3: Heading,
-      h4: Heading,
-      h5: Heading,
-      h6: Heading,
       p: P,
-      a: A,
-      blockquote: Blockquote,
+      aside: Aside,
+      h1: H1,
+      h2: H2,
+      h3: H3,
+      h4: H4,
+      h5: H5,
+      h6: H6,
+      hr: HR,
       ul: UL,
       li: LI,
-      pre: Pre,
-      code: Code,
+      a: A,
+      blockquote: Blockquote,
       img: Img,
-      aside: Aside,
-      hr: HR,
+      code: Code,
+      pre: Pre,
     }}
   />
 </DocsLayout>

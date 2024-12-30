@@ -19,7 +19,6 @@ export function remarkAsides(): ReturnType<Plugin<[], Root>> {
         type Variant = 'note' | 'tip' | 'caution' | 'danger'
         const variants = new Set(['note', 'tip', 'caution', 'danger'])
         const isAsideVariant = (s: string): s is Variant => variants.has(s)
-
         if (!isAsideVariant(node.name)) return
 
         const data = node.data || (node.data = {})

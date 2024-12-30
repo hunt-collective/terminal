@@ -1,0 +1,46 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+import Editor from '@components/editor.astro'
+import Line from '@components/line.astro'
+
+type NavPage = { href: string; text: string; active: boolean }
+type NavLink = { group: string; pages: NavPage[] }
+
+interface Props extends HTMLAttributes<'nav'> {
+  links: NavLink[]
+}
+const { class: _, ...props } = Astro.props
+---
+
+<nav
+  {...props}
+  class:list={{
+    'flex flex-col gap-y-0': true,
+    [Astro.props.class ?? '']: !!Astro.props.class,
+  }}
+>
+  <Editor class="lowercase" numberless>
+    <Line inactive class="h-10" />
+    {
+      props.links.map(({ group, pages }) => (
+        <>
+          <Line inactive class="text-white">
+            {group}
+          </Line>
+          <Fragment>
+            {pages.map(({ href, text, active }) => (
+              <Line
+                internalLink
+                href={href}
+                state={active ? 'active' : 'normal'}
+              >
+                {text}
+              </Line>
+            ))}
+          </Fragment>
+        </>
+      ))
+    }
+  </Editor>
+  <Line inactive class="h-10" />
+</nav>

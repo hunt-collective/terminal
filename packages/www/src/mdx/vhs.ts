@@ -52,7 +52,6 @@ export function remarkVhs(): ReturnType<Plugin<[], Root>> {
             '/' +
             LZString.compressToEncodedURIComponent(uncompressed),
           alt,
-          width: 500,
         }
         data.hChildren = undefined
         node.children = []

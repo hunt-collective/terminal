@@ -1,8 +1,8 @@
 ---
 import BaseLayout from './base.astro'
-import Nav from '@components/docs-nav'
-import Content from '@components/content'
-import Line from '@components/line'
+import Nav from '@components/docs-nav.astro'
+import Line from '@components/line.astro'
+import Editor from '@components/editor.astro'
 
 const links = [
   {
@@ -124,13 +124,11 @@ if (current) current.active = true
           <Nav {links} />
         </div>
       </aside>
-      <div class="">
-        <Content client:load>
-          <Line class="h-10" />
-          <slot />
-          <Line class="h-10" />
-        </Content>
-      </div>
+      <Editor>
+        <Line class="h-10" />
+        <slot />
+        <Line class="h-10" />
+      </Editor>
     </div>
     <div data-menu class="hidden sticky top-10 inset-x-0 size-full bg-black">
       <Nav {links} />

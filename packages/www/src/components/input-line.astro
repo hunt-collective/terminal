@@ -1,0 +1,32 @@
+---
+import type { HTMLAttributes, ComponentProps } from 'astro/types'
+import Line from './line.astro'
+import Input from './input'
+import { randomUUID } from 'crypto'
+
+interface Props extends ComponentProps<typeof Line>, HTMLAttributes<'input'> {}
+const { class: _, ...props } = Astro.props
+const id = Astro.props.id || randomUUID()
+---
+
+<Line
+  {...props}
+  id={`${id}-line`}
+  tabindex="-1"
+  class:list={{
+    [Astro.props.class ?? '']: !!Astro.props.class,
+  }}
+>
+  <!-- @ts-expect-error -->
+  <Input id={`${id}-input`} {...props} />
+  {props.state === 'normal' && <slot />}
+</Line>
+
+<script is:inline define:vars={{ id }}>
+  const line = document.getElementById(`${id}-line`)
+  const input = document.getElementById(`${id}-input`)
+
+  line.onclick = () => {
+    input?.focus()
+  }
+</script>

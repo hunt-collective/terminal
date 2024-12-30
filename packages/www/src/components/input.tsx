@@ -9,13 +9,12 @@ import {
 } from 'solid-js'
 import Caret from '@components/caret'
 import { autofocus } from '@solid-primitives/autofocus'
-import type { State } from '@components/line'
+import type { State } from 'src/types'
 
 // ensures it doesn't get tree shaken
 autofocus
 
 type InputProps = {
-  ref?: HTMLElement
   autofocus?: boolean
   labelledby?: string
   state?: State

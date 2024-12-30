@@ -6,12 +6,14 @@ import mdx from '@astrojs/mdx'
 import remarkDirective from 'remark-directive'
 import { remarkAsides } from './src/mdx/asides'
 import { remarkVhs } from './src/mdx/vhs'
+import { remarkCode } from './src/mdx/code'
 
 export default defineConfig({
   integrations: [
     mdx({
       syntaxHighlight: 'prism',
       remarkPlugins: [remarkDirective, remarkAsides, remarkVhs],
+      rehypePlugins: [remarkCode],
     }),
     tailwind({ applyBaseStyles: false }),
     solid(),

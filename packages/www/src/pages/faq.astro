@@ -1,10 +1,21 @@
 ---
 import Layout from '@layouts/base.astro'
-import FaqComponent from '@components/faq'
 
 import faqs from '../../../go/pkg/tui/faq.json'
+import Editor from '@components/editor.astro'
+import Line from '@components/line.astro'
 ---
 
 <Layout>
-  <FaqComponent {faqs} client:load />
+  <Editor class="max-w-xl">
+    {
+      faqs.map((faq) => (
+        <Line>
+          <p>
+            <span class="text-white mr-2">{faq.question}</span># {faq.answer}
+          </p>
+        </Line>
+      ))
+    }
+  </Editor>
 </Layout>

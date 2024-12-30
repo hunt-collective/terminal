@@ -1,0 +1,13 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+import Line from '@components/line.astro'
+
+interface Props extends HTMLAttributes<'h6'> {}
+const { class: _, ...props } = Astro.props
+---
+
+<Line>
+  <h6 {...props} class="text-gray-11">
+    <slot />
+  </h6>
+</Line>

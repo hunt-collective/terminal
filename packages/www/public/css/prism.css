@@ -80,12 +80,12 @@ pre[class*='language-'] {
 .token.tag,
 .token.operator,
 .token.number {
-  color: #dd672c;
+  color: hsla(22, 100%, 50%, 1);
 }
 
 .token.property,
 .token.function {
-  color: #767693;
+  color: hsla(202, 67%, 51%, 1);
 }
 
 .token.tag-id,
@@ -116,12 +116,12 @@ code.language-scss,
 .token.statement,
 .token.regex,
 .token.atrule {
-  color: #fe8c52;
+  color: hsla(22, 100%, 50%, 1);
 }
 
 .token.placeholder,
 .token.variable {
-  color: #fe8c52;
+  color: hsla(210, 100%, 95%, 0.47);
 }
 
 .token.deleted {
