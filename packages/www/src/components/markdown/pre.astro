@@ -1,6 +1,7 @@
 ---
 import type { HTMLAttributes } from 'astro/types'
 import { parseHTML } from 'linkedom'
+import Line from '@components/line.astro'
 
 interface Props extends HTMLAttributes<'pre'> {}
 const { class: _, ...props } = Astro.props
@@ -17,7 +18,7 @@ const code = child?.getAttribute('data-code')
     class="bg-gray-1 flex flex-col overflow-x-auto">
     <slot />
   </pre>
-  <div class="absolute top-1 right-5">
+  <div class="absolute top-2.5 right-5">
     <button
       data-copy-button
       data-code={code}
@@ -26,6 +27,7 @@ const code = child?.getAttribute('data-code')
     </button>
   </div>
 </figure>
+<Line />
 
 <script>
   class CodeCopyButton {

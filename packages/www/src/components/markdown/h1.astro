@@ -1,17 +1,13 @@
 ---
 import type { HTMLAttributes } from 'astro/types'
 import Line from '@components/line.astro'
-import EmptyLine from '@components/markdown/empty-line.astro'
 
 interface Props extends HTMLAttributes<'h1'> {}
 const { class: _, ...props } = Astro.props
 ---
 
-<Fragment>
-  <Line class="bg-gray-1">
-    <h1 {...props} class="text-white scroll-m-20 lg:scroll-m-10">
-      <slot />
-    </h1>
-  </Line>
-  <EmptyLine />
-</Fragment>
+<Line class="bg-gray-1/60">
+  <h1 {...props} class="text-white uppercase scroll-m-20 lg:scroll-m-10">
+    <slot />
+  </h1>
+</Line>

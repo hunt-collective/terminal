@@ -2,9 +2,7 @@
 import type { HTMLAttributes } from 'astro/types'
 import Editor from '@components/editor.astro'
 import Line from '@components/line.astro'
-
-type NavPage = { href: string; text: string; active: boolean }
-type NavLink = { group: string; pages: NavPage[] }
+import type { NavLink } from 'src/types'
 
 interface Props extends HTMLAttributes<'nav'> {
   links: NavLink[]
@@ -40,6 +38,6 @@ const { class: _, ...props } = Astro.props
         </>
       ))
     }
-    <Line class="h-10" />
+    <Line />
   </Editor>
 </nav>

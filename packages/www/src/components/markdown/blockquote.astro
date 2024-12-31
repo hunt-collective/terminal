@@ -1,15 +1,13 @@
 ---
 import type { HTMLAttributes } from 'astro/types'
-import EmptyLine from '@components/markdown/empty-line.astro'
+import Line from '@components/line.astro'
 
 interface Props extends HTMLAttributes<'blockquote'> {}
 const { class: _, ...props } = Astro.props
 ---
 
-<Fragment>
-  <EmptyLine />
-  <blockquote {...props} class="px-0 m-0 border-l-2 border-orange bg-gray-1">
-    <slot />
-  </blockquote>
-  <EmptyLine />
-</Fragment>
+<Line />
+<blockquote {...props} class="px-0 m-0 border-l-2 border-orange bg-gray-1">
+  <slot />
+</blockquote>
+<Line />

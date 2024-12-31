@@ -1,13 +1,11 @@
 ---
+import Line from '@components/line.astro'
 import type { HTMLAttributes } from 'astro/types'
-import EmptyLine from '@components/markdown/empty-line.astro'
 
 interface Props extends HTMLAttributes<'hr'> {}
 const { class: _, ...props } = Astro.props
 ---
 
-<Fragment>
-  <EmptyLine />
-  <hr {...props} />
-  <EmptyLine />
-</Fragment>
+<Line />
+<hr {...props} />
+<Line />

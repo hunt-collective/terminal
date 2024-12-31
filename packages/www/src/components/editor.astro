@@ -10,7 +10,6 @@ const { class: _, ...props } = Astro.props
 <div
   {...props}
   class:list={{
-    'leading-10': true,
     editor: !props.numberless,
     [Astro.props.class ?? '']: !!Astro.props.class,
   }}

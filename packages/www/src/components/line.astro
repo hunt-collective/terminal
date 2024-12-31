@@ -20,7 +20,7 @@ const Dynamic = props.href ? 'a' : 'div'
   {...props}
   class:list={{
     line: true,
-    'group flex items-center text-gray-10 hover:bg-gray-5 px-6 border-transparent border-l-2': true,
+    'group flex leading-10 items-center text-gray-10 hover:bg-gray-5 px-6 border-transparent border-l-2': true,
     '!border-orange text-gray-11 bg-gray-6':
       !props.inactive && props.state === 'active',
     'active:border-orange active:text-gray-11 active:bg-gray-6':

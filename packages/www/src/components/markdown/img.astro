@@ -1,6 +1,5 @@
 ---
 import type { HTMLAttributes } from 'astro/types'
-import EmptyLine from '@components/markdown/empty-line.astro'
 import Line from '@components/line.astro'
 import { Image } from 'astro:assets'
 
@@ -8,27 +7,24 @@ interface Props extends HTMLAttributes<'img'> {}
 const { class: _, ...props } = Astro.props
 ---
 
-<Fragment>
-  <EmptyLine />
-  <figure class="">
-    <div class="bg-gray-1 border-y">
-      <!-- @ts-expect-error -->
-      <Image {...props} width={500} height={400} class="mx-auto" />
-    </div>
-  </figure>
-  {
-    props.alt && (
-      <figcaption class="">
-        <Line>
-          <span
-            slot="content"
-            class="w-full sm:text-center italic lowercase sm:ml-[-60px]"
-          >
-            {props.alt}
-          </span>
-        </Line>
-      </figcaption>
-    )
-  }
-</Fragment>
-<EmptyLine />
+<Line />
+<figure class="">
+  <div class="bg-gray-1 border-y">
+    <!-- @ts-expect-error -->
+    <Image {...props} width={500} height={400} class="mx-auto" />
+  </div>
+</figure>
+{
+  props.alt && (
+    <figcaption class="">
+      <Line>
+        <span
+          slot="content"
+          class="w-full sm:text-center italic lowercase sm:ml-[-60px]"
+        >
+          {props.alt}
+        </span>
+      </Line>
+    </figcaption>
+  )
+}

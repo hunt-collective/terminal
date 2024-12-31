@@ -21,19 +21,22 @@ const inner =
   inner ? (
     <p
       {...props}
-      class="whitespace-pre-wrap [&>code]:text-gray-11 [&>code]:inline-block [&>code]:bg-gray-1 [&>code]:italic [&>code]:before:content-['`'] [&>code]:after:content-['`']"
+      class="font-light whitespace-pre-wrap [&>code]:text-gray-11 [&>code]:inline-block [&>code]:bg-gray-1 [&>code]:italic [&>code]:before:content-['`'] [&>code]:after:content-['`']"
     >
       <slot />
     </p>
   ) : (
-    lines?.map((line) => (
-      <Line>
-        <p
-          {...props}
-          class="whitespace-pre-wrap [&>code]:text-gray-11 [&>code]:inline-block [&>code]:bg-gray-1 [&>code]:italic [&>code]:before:content-['`'] [&>code]:after:content-['`']"
-          set:html={line}
-        />
-      </Line>
-    ))
+    <Fragment>
+      <Line />
+      {lines?.map((line) => (
+        <Line>
+          <p
+            {...props}
+            class="font-light whitespace-pre-wrap [&>code]:text-gray-11 [&>code]:inline-block [&>code]:bg-gray-1 [&>code]:italic [&>code]:before:content-['`'] [&>code]:after:content-['`']"
+            set:html={line}
+          />
+        </Line>
+      ))}
+    </Fragment>
   )
 }

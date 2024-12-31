@@ -6,53 +6,35 @@ import Editor from '@components/editor.astro'
 import type { MarkdownHeading } from 'astro'
 import DocsToc from '@components/docs-toc.astro'
 import MobileToc from '@components/docs-mobile-toc.astro'
+import type { NavLink } from 'src/types'
 
 interface Props {
   headings: MarkdownHeading[]
 }
 
 const headings = Astro.props.headings
-const links = [
+const links: NavLink[] = [
   {
     group: 'Getting Started',
     pages: [
-      { href: '/docs/quickstart', text: 'Quickstart', active: false },
-      { href: '/docs/api', text: 'API Reference', active: false },
-      { href: '/docs/cron', text: 'Cron', active: false },
+      { href: '/docs/quickstart', text: 'Quickstart' },
+      { href: '/docs/cron', text: 'Cron' },
     ],
   },
   {
     group: 'Products',
     pages: [
-      { href: '/docs/cron', text: 'Cron', active: false },
-      { href: '/docs/segfault', text: 'Segfault', active: false },
-      { href: '/docs/object-object', text: '[object Object]', active: false },
-      { href: '/docs/404', text: '404', active: false },
+      { href: '/docs/cron', text: 'Cron' },
+      { href: '/docs/segfault', text: 'Segfault' },
+      { href: '/docs/object-object', text: '[object Object]' },
+      { href: '/docs/404', text: '404' },
     ],
   },
   {
     group: 'API',
     pages: [
-      { href: '/docs/sdks', text: 'Client SDKs', active: false },
-      { href: '/docs/api', text: 'API Reference', active: false },
-    ],
-  },
-  {
-    group: 'Products',
-    pages: [
-      { href: '/docs/cron', text: 'Cron', active: false },
-      { href: '/docs/segfault', text: 'Segfault', active: false },
-      { href: '/docs/object-object', text: '[object Object]', active: false },
-      { href: '/docs/404', text: '404', active: false },
-    ],
-  },
-  {
-    group: 'Products',
-    pages: [
-      { href: '/docs/cron', text: 'Cron', active: false },
-      { href: '/docs/segfault', text: 'Segfault', active: false },
-      { href: '/docs/object-object', text: '[object Object]', active: false },
-      { href: '/docs/404', text: '404', active: false },
+      { href: '/docs/sdks', text: 'Client SDKs' },
+      { href: '/docs/api/reference', text: 'API Reference' },
     ],
   },
 ]
@@ -133,13 +115,15 @@ if (current) current.active = true
         </div>
         <Editor data-content>
           <slot />
+          <Line />
+          <Line />
         </Editor>
       </div>
       <aside class="hidden xl:block border-l">
         <div
           class="h-[calc(100dvh-40px)] flex flex-col sticky top-10 overflow-y-auto overflow-x-hidden border-r"
         >
-          <Line inactive class="leading-10 text-white">on this page</Line>
+          <Line inactive class="text-white">on this page</Line>
           <DocsToc {headings} />
         </div>
       </aside>

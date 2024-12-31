@@ -1,7 +1,6 @@
 ---
 import type { HTMLAttributes } from 'astro/types'
 import Line from '@components/line.astro'
-import EmptyLine from '@components/markdown/empty-line.astro'
 import type { State } from 'src/types'
 import { parseHTML } from 'linkedom'
 
@@ -42,51 +41,50 @@ switch (dataType) {
     state = 'normal'
 }
 
-const title = props['data-title']
+const title = props['data-title'] ?? dataType.toUpperCase()
 ---
 
-<Fragment>
-  <EmptyLine />
-  <aside {...props} class="text-white">
-    {
-      title && (
-        <Line {state}>
-          <div
-            class:list={{
-              'flex items-center gap-2': true,
-              'text-blue-11': dataType === 'note',
-              'text-green-11': dataType === 'tip',
-              'text-yellow-11': dataType === 'caution',
-              'text-red-11': dataType === 'danger',
-            }}
-          >
-            {svgD && (
-              <svg
-                viewBox="0 0 15 15"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                class="size-5"
-              >
-                <path
-                  d={svgD}
-                  fill="currentColor"
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            )}
-            <p class="">{title}</p>
-          </div>
-        </Line>
-      )
-    }
-    {
-      [...document.children].map((c) => (
+<Line />
+<aside {...props} class="text-white">
+  {
+    title && (
+      <Line {state}>
+        <div
+          class:list={{
+            'flex items-center gap-2': true,
+            'text-blue-11': dataType === 'note',
+            'text-green-11': dataType === 'tip',
+            'text-yellow-11': dataType === 'caution',
+            'text-red-11': dataType === 'danger',
+          }}
+        >
+          {svgD && (
+            <svg
+              viewBox="0 0 15 15"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              class="size-5"
+            >
+              <path
+                d={svgD}
+                fill="currentColor"
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+              />
+            </svg>
+          )}
+          <p class="">{title}</p>
+        </div>
+      </Line>
+    )
+  }
+  {
+    [...document.children]
+      .flatMap((c) => c.textContent?.split('\n'))
+      .map((c) => (
         <Line {state} class="[&>*]:text-white">
           <Fragment set:html={c} />
         </Line>
       ))
-    }
-  </aside>
-  <EmptyLine />
-</Fragment>
+  }
+</aside>

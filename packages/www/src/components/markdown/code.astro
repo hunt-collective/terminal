@@ -3,8 +3,10 @@ import Line from '@components/line.astro'
 import type { HTMLAttributes } from 'astro/types'
 import { parseHTML } from 'linkedom'
 
-interface Props extends HTMLAttributes<'code'> {}
-const { class: _, ...props } = Astro.props
+interface Props extends HTMLAttributes<'code'> {
+  'is:raw'?: ''
+}
+const { class: _, 'is:raw': isRaw, ...props } = Astro.props
 
 const html = await Astro.slots.render('default')
 const { document } = parseHTML(html)
@@ -12,7 +14,7 @@ const lines = document.toString().trim().split('\n')
 ---
 
 {
-  lines.length === 1 ? (
+  isRaw === undefined ? (
     <code {...props} set:html={lines[0]} />
   ) : (
     <code {...props} class="w-full">
