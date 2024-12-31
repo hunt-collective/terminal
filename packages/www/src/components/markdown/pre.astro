@@ -12,7 +12,9 @@ const code = child?.getAttribute('data-code')
 ---
 
 <figure class="relative">
-  <pre {...props} class="bg-gray-1 flex flex-col">
+  <pre
+    {...props}
+    class="bg-gray-1 flex flex-col overflow-x-auto">
     <slot />
   </pre>
   <div class="absolute top-1 right-5">

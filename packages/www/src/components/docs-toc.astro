@@ -1,0 +1,44 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+import Editor from '@components/editor.astro'
+import Line from '@components/line.astro'
+import type { MarkdownHeading } from 'astro'
+
+interface Props extends HTMLAttributes<'nav'> {
+  headings: MarkdownHeading[]
+}
+const { class: _, headings, ...props } = Astro.props
+---
+
+<terminal-toc>
+  <nav
+    {...props}
+    class:list={{
+      'flex flex-col gap-y-0': true,
+      [Astro.props.class ?? '']: !!Astro.props.class,
+    }}
+  >
+    <Editor class="lowercase" numberless>
+      {
+        headings.map((heading, i) => (
+          <Line
+            internalLink
+            href={`#${heading.slug}`}
+            class="aria-[current]:border-orange aria-[current]:text-gray-11 aria-[current]:bg-gray-6"
+          >
+            <span
+              style={{
+                // display: 'inline-block',
+                paddingLeft: `${Math.max(heading.depth - 2, 0) * 15}px`,
+              }}
+            >
+              {i === 0 ? 'Overview' : heading.text}
+            </span>
+          </Line>
+        ))
+      }
+    </Editor>
+  </nav>
+</terminal-toc>
+
+<script src="./terminal-toc"></script>

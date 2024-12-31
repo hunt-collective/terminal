@@ -6,8 +6,8 @@ interface Props extends HTMLAttributes<'h4'> {}
 const { class: _, ...props } = Astro.props
 ---
 
-<Line>
-  <h4 {...props} class="text-gray-11">
+<Line class="bg-gray-1">
+  <h4 {...props} class="text-gray-11 scroll-m-20 lg:scroll-m-10">
     <slot />
   </h4>
 </Line>

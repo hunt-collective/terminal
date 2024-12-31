@@ -29,10 +29,10 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props
-const { Content, components } = await entry.render()
+const { Content, components, headings } = await entry.render()
 ---
 
-<DocsLayout frontmatter={entry.data}>
+<DocsLayout {headings}>
   <Content
     components={{
       ...components,

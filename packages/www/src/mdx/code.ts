@@ -17,7 +17,6 @@ export function remarkCode(): ReturnType<Plugin<[], Root>> {
   return (tree) => {
     visit(tree, 'element', (node: CodeElement) => {
       if (node.tagName === 'code') {
-        console.log(node)
         node.properties['data-code'] = toString(node).replace(/\n/g, '\u007f')
       }
     })

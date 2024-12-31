@@ -20,7 +20,6 @@ const { class: _, ...props } = Astro.props
   }}
 >
   <Editor class="lowercase" numberless>
-    <Line inactive class="h-10" />
     {
       props.links.map(({ group, pages }) => (
         <>
@@ -41,6 +40,6 @@ const { class: _, ...props } = Astro.props
         </>
       ))
     }
+    <Line class="h-10" />
   </Editor>
-  <Line inactive class="h-10" />
 </nav>

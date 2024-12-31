@@ -8,8 +8,8 @@ const { class: _, ...props } = Astro.props
 ---
 
 <Fragment>
-  <Line>
-    <h1 {...props} class="text-white">
+  <Line class="bg-gray-1">
+    <h1 {...props} class="text-white scroll-m-20 lg:scroll-m-10">
       <slot />
     </h1>
   </Line>

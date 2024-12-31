@@ -3,7 +3,15 @@ import BaseLayout from './base.astro'
 import Nav from '@components/docs-nav.astro'
 import Line from '@components/line.astro'
 import Editor from '@components/editor.astro'
+import type { MarkdownHeading } from 'astro'
+import DocsToc from '@components/docs-toc.astro'
+import MobileToc from '@components/docs-mobile-toc.astro'
 
+interface Props {
+  headings: MarkdownHeading[]
+}
+
+const headings = Astro.props.headings
 const links = [
   {
     group: 'Getting Started',
@@ -60,63 +68,10 @@ if (current) current.active = true
 ---
 
 <BaseLayout>
-  <div slot="docs" class="relative">
-    <div class="lg:hidden h-10 w-full sticky top-10 bg-black z-10">
-      <div
-        class="flex items-center align-middle lowercase h-full px-2 border-b"
-      >
-        <button
-          data-menu-open-button
-          class="grid px-unset !p-3 text-gray-10 size-10 hover:text-white"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            class="stroke-2 size-full block align-middle rendering-legibility"
-            aria-hidden="true"
-            role="presentation"
-          >
-            <path
-              fill="none"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M22 6.8H2m20 10.4H2"
-            >
-            </path>
-          </svg>
-          <span class="sr-only">Open Menu</span>
-        </button>
-        <button
-          data-menu-close-button
-          class="hidden px-unset !p-3 text-gray-10 size-10 hover:text-white"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            class="stroke-2 size-full block align-middle rendering-legibility"
-            aria-hidden="true"
-            role="presentation"
-          >
-            <path
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M18 6 6 18M6 6l12 12"
-            >
-            </path>
-          </svg>
-          <span class="sr-only">Close Menu</span>
-        </button>
-        {
-          Astro.props.frontmatter?.title && (
-            <h1>{Astro.props.frontmatter?.title}</h1>
-          )
-        }
-      </div>
-    </div>
-    <div data-content class="lg:grid grid-cols-[280px_1fr]">
+  <main slot="docs" class="relative">
+    <div
+      class="lg:grid lg:grid-cols-[280px_1fr] xl:grid-cols-[280px_1fr_280px]"
+    >
       <aside class="hidden lg:block">
         <div
           class="h-[calc(100dvh-40px)] flex flex-col sticky top-10 overflow-y-auto overflow-x-hidden border-r"
@@ -124,16 +79,78 @@ if (current) current.active = true
           <Nav {links} />
         </div>
       </aside>
-      <Editor>
-        <Line class="h-10" />
-        <slot />
-        <Line class="h-10" />
-      </Editor>
+      <div>
+        <div class="xl:hidden h-10 w-full sticky top-10 bg-black z-10">
+          <div
+            class="flex items-center align-middle lowercase h-full px-2 border-b"
+          >
+            <button
+              data-menu-open-button
+              class="lg:hidden grid px-unset !p-3 text-gray-10 size-10 hover:text-white"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                class="stroke-2 size-full block align-middle rendering-legibility"
+                aria-hidden="true"
+                role="presentation"
+              >
+                <path
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M22 6.8H2m20 10.4H2"
+                >
+                </path>
+              </svg>
+              <span class="sr-only">Open Menu</span>
+            </button>
+            <button
+              data-menu-close-button
+              class="hidden lg:hidden px-unset !p-3 text-gray-10 size-10 hover:text-white"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                class="stroke-2 size-full block align-middle rendering-legibility"
+                aria-hidden="true"
+                role="presentation"
+              >
+                <path
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M18 6 6 18M6 6l12 12"
+                >
+                </path>
+              </svg>
+              <span class="sr-only">Close Menu</span>
+            </button>
+            <MobileToc {headings} />
+          </div>
+        </div>
+        <Editor data-content>
+          <slot />
+        </Editor>
+      </div>
+      <aside class="hidden xl:block border-l">
+        <div
+          class="h-[calc(100dvh-40px)] flex flex-col sticky top-10 overflow-y-auto overflow-x-hidden border-r"
+        >
+          <Line inactive class="leading-10 text-white">on this page</Line>
+          <DocsToc {headings} />
+        </div>
+      </aside>
     </div>
-    <div data-menu class="hidden sticky top-10 inset-x-0 size-full bg-black">
+    <div
+      data-menu
+      class="hidden fixed top-20 inset-x-0 size-full bg-black overflow-y-auto"
+    >
       <Nav {links} />
     </div>
-  </div>
+  </main>
 </BaseLayout>
 
 <script>
