@@ -2,6 +2,7 @@
 import '@styles/global.css'
 // import Banner from '@components/banner.astro'
 import Button from '@components/button.astro'
+import { Resource } from 'sst'
 
 const title = 'wip: terminal (initial commit)'
 const description =
@@ -55,6 +56,8 @@ if (current) current.active = true
       property="twitter:image"
       content="https://www.terminal.shop/images/twitter.png"
     />
+    <meta property="api-url" content={Resource.Api.url} />
+    <meta property="auth-url" content={Resource.Auth.url} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="stylesheet" href="/css/prism.css" />
@@ -231,7 +234,40 @@ if (current) current.active = true
           ))
         }
       </nav>
-      <!-- <Button disabled class="ml-auto border-l">share</Button> -->
+      <Button class="border-l hidden" id="login-btn">
+        <svg
+          viewBox="0 0 15 15"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          class="md:hidden size-5"
+        >
+          <path
+            d="M2.05005 13.5C2.05005 13.7485 2.25152 13.95 2.50005 13.95C2.74858 13.95 2.95005 13.7485 2.95005 13.5L2.95005 1.49995C2.95005 1.25142 2.74858 1.04995 2.50005 1.04995C2.25152 1.04995 2.05005 1.25142 2.05005 1.49995L2.05005 13.5ZM8.4317 11.0681C8.60743 11.2439 8.89236 11.2439 9.06809 11.0681C9.24383 10.8924 9.24383 10.6075 9.06809 10.4317L6.58629 7.94993L14.5 7.94993C14.7485 7.94993 14.95 7.74846 14.95 7.49993C14.95 7.2514 14.7485 7.04993 14.5 7.04993L6.58629 7.04993L9.06809 4.56813C9.24383 4.39239 9.24383 4.10746 9.06809 3.93173C8.89236 3.75599 8.60743 3.75599 8.4317 3.93173L5.1817 7.18173C5.00596 7.35746 5.00596 7.64239 5.1817 7.81812L8.4317 11.0681Z"
+            fill="currentColor"
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+          >
+          </path>
+        </svg>
+        <span class="hidden md:block">sign in</span>
+      </Button>
+      <Button class="border-l hidden" id="logout-btn">
+        <svg
+          viewBox="0 0 15 15"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          class="md:hidden size-5"
+        >
+          <path
+            d="M12.95 1.50005C12.95 1.25152 12.7485 1.05005 12.5 1.05005C12.2514 1.05005 12.05 1.25152 12.05 1.50005L12.05 13.5C12.05 13.7486 12.2514 13.95 12.5 13.95C12.7485 13.95 12.95 13.7486 12.95 13.5L12.95 1.50005ZM6.5683 3.93188C6.39257 3.75614 6.10764 3.75614 5.93191 3.93188C5.75617 4.10761 5.75617 4.39254 5.93191 4.56827L8.41371 7.05007L0.499984 7.05007C0.251456 7.05007 0.0499847 7.25155 0.0499847 7.50007C0.0499846 7.7486 0.251457 7.95007 0.499984 7.95007L8.41371 7.95007L5.93191 10.4319C5.75617 10.6076 5.75617 10.8925 5.93191 11.0683C6.10764 11.244 6.39257 11.244 6.56831 11.0683L9.8183 7.81827C9.99404 7.64254 9.99404 7.35761 9.8183 7.18188L6.5683 3.93188Z"
+            fill="currentColor"
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+          >
+          </path>
+        </svg>
+        <span class="hidden md:block">sign out</span>
+      </Button>
     </header>
     <slot name="docs" />
     {
@@ -243,3 +279,122 @@ if (current) current.active = true
     }
   </body>
 </html>
+
+<script>
+  import { createClient } from '@openauthjs/openauth/client'
+  import Terminal from '@terminaldotshop/sdk'
+
+  const apiUrl = document
+    .querySelector('meta[property="api-url"]')!
+    .getAttribute('content')!
+  const authUrl = document
+    .querySelector('meta[property="auth-url"]')!
+    .getAttribute('content')!
+
+  const client = createClient({
+    clientID: 'www',
+    issuer: authUrl,
+  })
+
+  let accessToken: string | undefined = undefined
+  const initializing = { current: true }
+
+  // DOM elements
+  const loginBtn = document.getElementById('login-btn')!
+  const logoutBtn = document.getElementById('logout-btn')!
+
+  async function getToken() {
+    const refresh = localStorage.getItem('refresh')
+    if (!refresh) return
+    const next = await client.refresh(refresh, {
+      access: accessToken,
+    })
+    if (next.err) return
+    if (!next.tokens) return accessToken
+
+    localStorage.setItem('refresh', next.tokens.refresh)
+    accessToken = next.tokens.access
+
+    return next.tokens.access
+  }
+
+  async function login() {
+    const token = await getToken()
+    if (!token) {
+      const { challenge, url } = await client.authorize(
+        location.origin,
+        'code',
+        { pkce: true },
+      )
+      sessionStorage.setItem('challenge', JSON.stringify(challenge))
+      location.href = url
+    }
+  }
+
+  async function callback(code: string, state: string) {
+    const challengeStr = sessionStorage.getItem('challenge')
+    if (!challengeStr) return
+
+    const challenge = JSON.parse(challengeStr)
+    if (code) {
+      if (state === challenge.state && challenge.verifier) {
+        const exchanged = await client.exchange(
+          code,
+          location.origin,
+          challenge.verifier,
+        )
+        if (!exchanged.err && exchanged.tokens) {
+          accessToken = exchanged.tokens.access
+          localStorage.setItem('refresh', exchanged.tokens.refresh)
+        }
+      }
+      window.location.replace('/')
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem('refresh')
+    accessToken = undefined
+    window.location.replace('/')
+  }
+
+  async function auth() {
+    const token = await getToken()
+    if (token) {
+      accessToken = token
+    }
+  }
+
+  // Initialize
+  const hash = new URLSearchParams(location.search.slice(1))
+  const code = hash.get('code')
+  const state = hash.get('state')
+
+  if (code && state) {
+    await callback(code, state)
+  }
+
+  if (initializing.current) {
+    initializing.current = false
+    await auth()
+  }
+
+  if (accessToken) {
+    loginBtn.classList.add('hidden')
+    logoutBtn.classList.remove('hidden')
+
+    const terminal = new Terminal({
+      bearerToken: accessToken,
+      baseURL: apiUrl,
+    })
+
+    console.log(await terminal.profile.me())
+  } else {
+    loginBtn.classList.remove('hidden')
+    logoutBtn.classList.add('hidden')
+  }
+
+  // Event listeners
+  loginBtn.addEventListener('click', login)
+  logoutBtn.addEventListener('click', logout)
+</script>
