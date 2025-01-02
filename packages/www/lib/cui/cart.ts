@@ -161,12 +161,6 @@ function renderCartItem(
 
 export const CartView = createView({
   name: 'cart',
-  key: (model) => {
-    const cartKey = model.cart?.items
-      .map((item) => `${item.productVariantID}-${item.quantity}`)
-      .join('-')
-    return `cart-${cartKey}-${model.state.cart.selected}`
-  },
   view: (model, state) => {
     const lines = []
 

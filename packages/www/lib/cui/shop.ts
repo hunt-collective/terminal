@@ -71,12 +71,6 @@ function updateSelectedProduct(
 
 export const ShopView = createView({
   name: 'shop',
-  key: (model) => {
-    const cartKey = model.cart?.items
-      .map((i) => `${i.productVariantID}-${i.quantity}`)
-      .join('-')
-    return `split-${model.state.shop.selected}-${cartKey}`
-  },
   view: (model, state) => {
     const LIST_WIDTH = 20
     const DETAILS_WIDTH = 45

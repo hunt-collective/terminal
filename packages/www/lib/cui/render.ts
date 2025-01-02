@@ -17,43 +17,6 @@ export const styles = {
   },
 }
 
-interface CacheEntry {
-  lines: StyledLine[]
-  timestamp: number
-}
-
-class ViewCache {
-  private cache = new Map<string, CacheEntry>()
-  private maxAge: number
-
-  constructor(maxAgeMs: number = 5000) {
-    this.maxAge = maxAgeMs
-  }
-
-  get(key: string): StyledLine[] | null {
-    const entry = this.cache.get(key)
-    if (!entry) return null
-
-    if (Date.now() - entry.timestamp > this.maxAge) {
-      this.cache.delete(key)
-      return null
-    }
-
-    return entry.lines
-  }
-
-  set(key: string, lines: StyledLine[]): void {
-    this.cache.set(key, {
-      lines,
-      timestamp: Date.now(),
-    })
-  }
-
-  clear(): void {
-    this.cache.clear()
-  }
-}
-
 export interface View {
   name: string
   init?: (model: Model) => Cmd | undefined
@@ -66,7 +29,6 @@ export function createView<
   T extends keyof Model['state'] | (string & {}),
 >(options: {
   name: T
-  key?: (model: Model) => string
   init?: (model: Model) => Cmd | undefined
   view: T extends keyof Model['state']
     ? (model: Model, state: Model['state'][T]) => StyledLine[]
@@ -74,21 +36,10 @@ export function createView<
   update?: (msg: Msg, model: Model) => [ModelUpdate, Cmd | undefined]
   fullscreen?: boolean
 }) {
-  const cache = new ViewCache()
-
   return {
     name: options.name,
     init: options.init,
     view: (model) => {
-      // Try to get from cache if key function provided
-      if (options.key) {
-        const cacheKey = options.key(model)
-        const cached = cache.get(cacheKey)
-        if (cached) {
-          return cached
-        }
-      }
-
       // Generate new content
       const local =
         options.name in model.state
@@ -98,9 +49,6 @@ export function createView<
         model,
         local,
       )
-
-      // Cache if key function provided
-      if (options.key) cache.set(options.key(model), lines)
 
       return lines
     },

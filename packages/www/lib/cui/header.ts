@@ -2,8 +2,6 @@ import { createView, styles } from './render'
 
 export const HeaderView = createView({
   name: 'header',
-  key: (model) =>
-    `header-${model.view}-${model.cart?.subtotal}-${model.cart?.items.length}`,
   view: (model) => {
     const parts = [
       // Logo

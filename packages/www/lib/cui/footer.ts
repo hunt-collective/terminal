@@ -2,7 +2,6 @@ import { createView } from './render'
 
 export const FooterView = createView({
   name: 'footer',
-  key: (model) => `footer-${model.view}`,
   view: (model) => {
     let footerText = ''
 
