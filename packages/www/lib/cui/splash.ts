@@ -1,20 +1,26 @@
-import { launch } from './shop'
+import { Delay } from './events'
 import { createView } from './render'
-import type { StyledLine } from './types'
 
-const SplashView = createView({
-  name: 'SplashView',
-  getCacheKey: (
-    context,
-    cursorVisible: boolean,
-    width: number,
-    height: number,
-  ) => `splash-${cursorVisible}-${width}-${height}`,
-  render: (context, cursorVisible: boolean, width: number, height: number) => {
+export type SplashState = {
+  cursorVisible: boolean
+}
+
+export const SplashView = createView({
+  name: 'splash',
+  fullscreen: true,
+  init: () => {
+    return () => {
+      return { type: 'splash:blink' }
+    }
+  },
+  view: (_, local) => {
+    const width = 80
+    const height = 20
+
     const cursor = '█'
     const logoText = 'terminal'
-    const logoWithCursor = logoText + (cursorVisible ? cursor : ' ')
-    const lines: StyledLine[] = []
+    const logoWithCursor = logoText + (local?.cursorVisible ? cursor : ' ')
+    const lines = []
 
     // Calculate vertical padding
     const contentHeight = 1
@@ -44,7 +50,7 @@ const SplashView = createView({
           style: { 'font-family': 'monospace', color: 'white' },
         },
         {
-          text: cursorVisible ? cursor : ' ',
+          text: local?.cursorVisible ? cursor : ' ',
           style: { 'font-family': 'monospace', color: '#FF6600' },
         },
         {
@@ -61,58 +67,22 @@ const SplashView = createView({
 
     return lines
   },
-})
-
-export class TerminalSplash {
-  private isVisible: boolean = true
-  private intervalId: number | null = null
-  private displayWidth: number = 80
-  private displayHeight: number = 20
-
-  constructor(private duration: number = 3000) {}
-
-  private clearConsole(): void {
-    console.clear()
-  }
-
-  private refreshDisplay(): void {
-    this.clearConsole()
-    SplashView.render(
-      {} as any,
-      this.isVisible,
-      this.displayWidth,
-      this.displayHeight,
-    )
-  }
-
-  public start(): void {
-    this.refreshDisplay()
-
-    this.intervalId = window.setInterval(() => {
-      this.isVisible = !this.isVisible
-      this.refreshDisplay()
-    }, 500)
-
-    setTimeout(() => {
-      this.stop()
-    }, this.duration)
-  }
-
-  public async stop(): Promise<void> {
-    if (this.intervalId !== null) {
-      clearInterval(this.intervalId)
-      this.intervalId = null
+  update: (msg, model) => {
+    switch (msg.type) {
+      case 'splash:blink':
+        return [
+          {
+            ...model,
+            state: {
+              ...model.state,
+              splash: { cursorVisible: !model.state.splash.cursorVisible },
+            },
+          },
+          Delay(700, () => {
+            return { type: 'splash:blink' }
+          }),
+        ]
     }
-    this.isVisible = true
-    this.refreshDisplay()
-
-    const shop = await launch()
-    await shop.init()
-  }
-
-  public setDimensions(width: number, height: number): void {
-    this.displayWidth = width
-    this.displayHeight = height
-    SplashView.clearCache()
-  }
-}
+    return [model, undefined]
+  },
+})

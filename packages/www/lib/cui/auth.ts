@@ -15,7 +15,7 @@ export const client = createClient({
 export const API_URL = apiUrl
 
 let accessToken: string | undefined = undefined
-const initializing = { current: true }
+let initializing = true
 
 // Cache DOM elements
 const loginBtn = document.getElementById('login-btn')!
@@ -59,6 +59,13 @@ export async function login() {
   }
 }
 
+export function logout() {
+  localStorage.removeItem('refresh')
+  accessToken = undefined
+  updateAuthUI()
+  window.location.replace('/')
+}
+
 export async function callback(code: string, state: string) {
   const challengeStr = sessionStorage.getItem('challenge')
   if (!challengeStr) return
@@ -81,13 +88,6 @@ export async function callback(code: string, state: string) {
   }
 }
 
-export function logout() {
-  localStorage.removeItem('refresh')
-  accessToken = undefined
-  updateAuthUI()
-  window.location.replace('/')
-}
-
 export async function auth() {
   const token = await getToken()
   if (token) accessToken = token
@@ -95,7 +95,11 @@ export async function auth() {
   return accessToken
 }
 
-export function getCurrentToken() {
+export async function getCurrentToken() {
+  if (initializing) {
+    initializing = false
+    return auth()
+  }
   return accessToken
 }
 

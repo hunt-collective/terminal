@@ -1,4 +1,8 @@
-import type { Context, StyledLine, StyledText } from './types'
+import type { Model } from './app'
+import type { Cmd, Msg } from './events'
+import type { StyledLine } from './types'
+
+export const EMPTY_LINE = { texts: [{ text: '' }] }
 
 export const styles = {
   white: { color: 'white' },
@@ -12,9 +16,6 @@ export const styles = {
     'font-family': 'monospace',
   },
 }
-
-// Type for view render functions
-type ViewRenderer = (context: Context, ...args: any[]) => StyledLine[]
 
 interface CacheEntry {
   lines: StyledLine[]
@@ -53,42 +54,67 @@ class ViewCache {
   }
 }
 
-export function createView(options: {
+export interface View {
   name: string
-  getCacheKey: (context: Context, ...args: any[]) => string
-  render: ViewRenderer
-  maxAge?: number
+  init?: (model: Model) => Cmd | undefined
+  update?: (msg: Msg, model: Model) => [Model, Cmd | undefined]
+  view: (model: Model) => StyledLine[]
+  fullscreen?: boolean
+}
+
+export function createView<
+  T extends keyof Model['state'] | (string & {}),
+>(options: {
+  name: T
+  key?: (model: Model) => string
+  init?: (model: Model) => Cmd | undefined
+  view: T extends keyof Model['state']
+    ? (model: Model, state: Model['state'][T]) => StyledLine[]
+    : (model: Model) => StyledLine[]
+  update?: (msg: Msg, model: Model) => [Model, Cmd | undefined]
+  fullscreen?: boolean
 }) {
-  const cache = new ViewCache(options.maxAge)
+  const cache = new ViewCache()
 
   return {
     name: options.name,
-    render: (context: Context, ...args: any[]) => {
-      const cacheKey = options.getCacheKey(context, ...args)
-
-      // Try to get from cache
-      const cached = cache.get(cacheKey)
-      if (cached) {
-        renderConsole(cached)
-        return
+    init: options.init,
+    view: (model) => {
+      // Try to get from cache if key function provided
+      if (options.key) {
+        const cacheKey = options.key(model)
+        const cached = cache.get(cacheKey)
+        if (cached) {
+          return cached
+        }
       }
 
       // Generate new content
-      const lines = options.render(context, ...args)
+      const local =
+        options.name in model.state
+          ? model.state[options.name as keyof Model['state']]
+          : undefined
+      const lines = ((model, state) => options.view(model, state as any))(
+        model,
+        local,
+      )
 
-      // Cache the result
-      cache.set(cacheKey, lines)
+      // Cache if key function provided
+      if (options.key) cache.set(options.key(model), lines)
 
-      // Render
-      renderConsole(lines)
+      return lines
     },
-    clearCache: () => cache.clear(),
-  }
+    update: (msg, model) => {
+      if (options.update) return options.update(msg, model)
+      return [model, undefined]
+    },
+    fullscreen: options.fullscreen,
+  } satisfies View
 }
 
 export function pad(str: string | undefined, length: number): string {
   const value = str || ''
-  const renderedLength = value.replaceAll('%c', '').length
+  const renderedLength = value.replaceAll('%c', '').replaceAll('\n', '').length
   const delta = value.length - renderedLength
   return value.padEnd(length + delta)
 }
@@ -97,7 +123,7 @@ export function formatPrice(price: number): string {
   return `$${(price / 100).toFixed(2)}`
 }
 
-export function formatStyle(style: object): string {
+function formatStyle(style: object): string {
   return Object.entries(style)
     .map(([key, value]) => `${key}: ${value};`)
     .join(' ')
@@ -134,9 +160,4 @@ export function combineLines(lines: StyledLine[]): {
     text: combinedText.join('\n'),
     styles: combinedStyles,
   }
-}
-
-export function renderConsole(lines: StyledLine[]): void {
-  const { text, styles } = combineLines(lines)
-  console.log(text, ...styles)
 }

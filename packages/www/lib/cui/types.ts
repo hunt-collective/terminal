@@ -1,6 +1,6 @@
 import type Terminal from '@terminaldotshop/sdk'
 
-export type View = 'shop' | 'cart' | 'account'
+export type View = 'shop' | 'cart' | 'account' | 'splash'
 export type CheckoutStep = 'cart' | 'shipping' | 'payment' | 'confirmation'
 
 export type Context = {
