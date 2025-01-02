@@ -55,17 +55,15 @@ export const ShopView = createView({
     // Prepare the content for both columns
     const featured = model.products.filter((p) => p.tags?.featured === 'true')
     const staples = model.products.filter((p) => p.tags?.featured !== 'true')
-    const selectedProduct = model.products.find(
-      (p) => p.id === model.selectedProductId,
-    )
+    const product = model.products.find((p) => p.id === model.selectedProductId)
 
     // Prepare product details content
     const detailsLines = []
-    if (selectedProduct) {
-      const variant = selectedProduct.variants[0]
+    if (product) {
+      const variant = product.variants[0]
 
       detailsLines.push({
-        texts: [{ text: selectedProduct.name, style: styles.white }],
+        texts: [{ text: product.name, style: styles.white }],
       })
       detailsLines.push({
         texts: [{ text: variant.name, style: styles.gray }],
@@ -78,7 +76,7 @@ export const ShopView = createView({
 
       // Split description into lines
       const maxLineLength = DETAILS_WIDTH
-      const words = selectedProduct.description.split(' ')
+      const words = product.description.split(' ')
       let line = ''
       for (const word of words) {
         if ((line + word).length > maxLineLength) {
@@ -102,13 +100,35 @@ export const ShopView = createView({
           ?.quantity ?? 0
 
       detailsLines.push(undefined)
-      detailsLines.push({
-        texts: [
-          { text: '- ', style: styles.gray },
-          { text: currentQuantity.toString(), style: styles.white },
-          { text: ' +', style: styles.gray },
-        ],
-      })
+      if (product.subscription === 'required') {
+        detailsLines.push({
+          texts: [
+            {
+              text: 'subscribe',
+              style: {
+                color: 'white',
+                background: '#ff4800',
+                padding: '0px 5px',
+              },
+            },
+            {
+              text: ' enter',
+              style: {
+                color: 'gray',
+                padding: '2px 5px',
+              },
+            },
+          ],
+        })
+      } else {
+        detailsLines.push({
+          texts: [
+            { text: '- ', style: styles.gray },
+            { text: currentQuantity.toString(), style: styles.white },
+            { text: ' +', style: styles.gray },
+          ],
+        })
+      }
     }
 
     // Combine both columns
