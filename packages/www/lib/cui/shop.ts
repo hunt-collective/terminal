@@ -1,30 +1,29 @@
 import type Terminal from '@terminaldotshop/sdk'
-import type { Model } from './app'
+import type { Model, ModelUpdate } from './app'
 import type { Cmd, Msg } from './events'
 import type { StyledText } from './types'
 import { createView, styles, formatPrice } from './render'
 
 export type ShopState = {
-  selected: number | undefined
+  selected: number
 }
 
 function renderProduct(
   product: Terminal.Product,
-  selectedId: string | null,
+  selected: boolean,
   LIST_WIDTH: number,
 ) {
   const texts = [
     {
       text: ' ' + product.name,
-      style:
-        product.id === selectedId
-          ? { ...styles.white, background: '#ff4800' }
-          : styles.gray,
-      pad: product.id === selectedId ? 0 : undefined,
+      style: selected
+        ? { ...styles.white, background: '#ff4800' }
+        : styles.gray,
+      pad: selected ? 0 : undefined,
     },
   ]
 
-  if (product.id === selectedId) {
+  if (selected) {
     texts.push({
       text: '',
       style: { ...styles.white, background: '#ff4800' },
@@ -39,15 +38,46 @@ function renderProduct(
   return texts
 }
 
+function updateSelectedProduct(
+  model: Model,
+  previous: boolean,
+): [ModelUpdate, undefined] {
+  let next: number
+  if (previous) {
+    next = model.state.shop.selected - 1
+  } else {
+    next = model.state.shop.selected + 1
+  }
+
+  if (next < 0) {
+    next = 0
+  }
+  const max = model.products.length - 1
+  if (next > max) {
+    next = max
+  }
+
+  return [
+    {
+      state: {
+        shop: {
+          selected: next,
+        },
+      },
+    },
+    undefined,
+  ]
+}
+
 export const ShopView = createView({
   name: 'shop',
   key: (model) => {
     const cartKey = model.cart?.items
       .map((i) => `${i.productVariantID}-${i.quantity}`)
       .join('-')
-    return `split-${model.selectedProductId}-${cartKey}`
+    return `split-${model.state.shop.selected}-${cartKey}`
   },
-  view: (model) => {
+  view: (model, state) => {
     const LIST_WIDTH = 20
     const DETAILS_WIDTH = 45
     const lines = []
@@ -55,7 +85,7 @@ export const ShopView = createView({
     // Prepare the content for both columns
     const featured = model.products.filter((p) => p.tags?.featured === 'true')
     const staples = model.products.filter((p) => p.tags?.featured !== 'true')
-    const product = model.products.find((p) => p.id === model.selectedProductId)
+    const product = model.products[state.selected]
 
     // Prepare product details content
     const detailsLines = []
@@ -145,17 +175,16 @@ export const ShopView = createView({
       if (leftLineIndex === 0) {
         leftTexts = [{ text: '\n~ featured ~', style: styles.white }]
       } else if (leftLineIndex === 1 && featured.length > 0) {
-        leftTexts = renderProduct(
-          featured[0],
-          model.selectedProductId,
-          LIST_WIDTH,
-        )
-      } else if (leftLineIndex > 1 && leftLineIndex < featured.length + 2) {
+        const product = featured[0]
+        const index = model.products.findIndex((p) => p.id === product.id)
+        leftTexts = renderProduct(product, state.selected === index, LIST_WIDTH)
+      } else if (leftLineIndex > 0 && leftLineIndex < featured.length + 2) {
         const product = featured[leftLineIndex - 1]
         if (product) {
+          const index = model.products.findIndex((p) => p.id === product.id)
           leftTexts = renderProduct(
             product,
-            model.selectedProductId,
+            index === state.selected,
             LIST_WIDTH,
           )
         }
@@ -164,9 +193,11 @@ export const ShopView = createView({
       } else if (leftLineIndex > featured.length + 2) {
         const stapleIndex = leftLineIndex - featured.length - 3
         if (stapleIndex < staples.length) {
+          const product = staples[stapleIndex]
+          const index = model.products.findIndex((p) => p.id === product.id)
           leftTexts = renderProduct(
             staples[stapleIndex],
-            model.selectedProductId,
+            index === state.selected,
             LIST_WIDTH,
           )
         }
@@ -201,21 +232,21 @@ export const ShopView = createView({
     if (msg.type !== 'browser:keydown') return [model, undefined]
 
     const { key } = msg.event
-    const selectedProduct = model.products.find(
-      (p) => p.id === model.selectedProductId,
-    )
-    const variant = selectedProduct?.variants[0]
+    const product = model.state.shop.selected
+      ? model.products[model.state.shop.selected]
+      : undefined
+    const variant = product?.variants[0]
 
     const simple = (msg: Msg): [Model, Cmd | undefined] => [model, () => msg]
 
     switch (key.toLowerCase()) {
       case 'arrowdown':
       case 'j':
-        return simple({ type: 'SelectProduct', productId: 'next' })
+        return updateSelectedProduct(model, false)
 
       case 'arrowup':
       case 'k':
-        return simple({ type: 'SelectProduct', productId: 'prev' })
+        return updateSelectedProduct(model, true)
 
       case 'arrowright':
       case 'l':

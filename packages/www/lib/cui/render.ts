@@ -1,4 +1,4 @@
-import type { Model } from './app'
+import type { Model, ModelUpdate } from './app'
 import type { Cmd, Msg } from './events'
 import type { StyledLine } from './types'
 
@@ -57,7 +57,7 @@ class ViewCache {
 export interface View {
   name: string
   init?: (model: Model) => Cmd | undefined
-  update?: (msg: Msg, model: Model) => [Model, Cmd | undefined]
+  update?: (msg: Msg, model: Model) => [ModelUpdate, Cmd | undefined]
   view: (model: Model) => StyledLine[]
   fullscreen?: boolean
 }
@@ -71,7 +71,7 @@ export function createView<
   view: T extends keyof Model['state']
     ? (model: Model, state: Model['state'][T]) => StyledLine[]
     : (model: Model) => StyledLine[]
-  update?: (msg: Msg, model: Model) => [Model, Cmd | undefined]
+  update?: (msg: Msg, model: Model) => [ModelUpdate, Cmd | undefined]
   fullscreen?: boolean
 }) {
   const cache = new ViewCache()

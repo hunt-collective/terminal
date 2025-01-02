@@ -9,13 +9,16 @@ import { SplashView, type SplashState } from './splash'
 import { FooterView } from './footer'
 import { combineLines, EMPTY_LINE, type View } from './render'
 
+export type ModelUpdate = Partial<
+  Omit<Model, 'state'> & { state: Partial<Model['state']> }
+>
+
 export type Model = {
   view: ViewType
   client: () => Promise<Terminal>
   cart: Terminal.Cart | null
   products: Terminal.Product[]
-  selectedProductId: string | null
-  dimensions?: { width: number; height: number }
+  // dimensions?: { width: number; height: number }
   state: {
     splash: SplashState
     shop: ShopState
@@ -49,7 +52,6 @@ export class App {
       },
       cart: null,
       products: [],
-      selectedProductId: null,
       state: {
         splash: {
           cursorVisible: true,
@@ -57,7 +59,9 @@ export class App {
         shop: {
           selected: 0,
         },
-        cart: {},
+        cart: {
+          selected: 0,
+        },
       },
     }
 
@@ -119,17 +123,22 @@ export class App {
       view: 'shop',
       products,
       cart,
-      selectedProductId:
-        products.find((p) => p.tags?.featured === 'true')?.id ??
-        products[0]?.id ??
-        null,
+      state: {
+        shop: {
+          selected: products.findIndex((p) => p.tags?.featured === 'true') ?? 0,
+        },
+      },
     })
 
     this.render()
   }
 
-  private update(model: Partial<Model>) {
-    this.model = { ...this.model, ...model }
+  private update(model: ModelUpdate) {
+    this.model = {
+      ...this.model,
+      ...model,
+      state: { ...this.model.state, ...model.state },
+    }
     return this.model
   }
 
@@ -146,35 +155,22 @@ export class App {
     }
   }
 
-  private getNextProductId(direction: 'next' | 'prev' = 'next'): string {
-    const products = this.model.products
-    const currentIndex = products.findIndex(
-      (p) => p.id === this.model?.selectedProductId,
-    )
-    const delta = direction === 'next' ? 1 : -1
-    const nextIndex = Math.min(
-      Math.max(0, currentIndex + delta),
-      products.length - 1,
-    )
-    return products[nextIndex].id
-  }
-
   private async handleMsg(msg: Msg) {
     switch (msg.type) {
       case 'app:navigate':
         this.model.view = msg.view
         break
 
-      case 'SelectProduct': {
-        const nextId =
-          msg.productId === 'next'
-            ? this.getNextProductId()
-            : msg.productId === 'prev'
-              ? this.getNextProductId('prev')
-              : msg.productId
-        this.model.selectedProductId = nextId
-        break
-      }
+      // case 'SelectProduct': {
+      //   const nextId =
+      //     msg.productId === 'next'
+      //       ? this.getNextProductId()
+      //       : msg.productId === 'prev'
+      //         ? this.getNextProductId('prev')
+      //         : msg.productId
+      //   this.model.selectedProductId = nextId
+      //   break
+      // }
 
       case 'UpdateQuantity': {
         try {
@@ -249,5 +245,6 @@ export class App {
   }
 
   // Create app instance
-  await App.create()
+  // @ts-expect-error
+  window.app = await App.create()
 })()

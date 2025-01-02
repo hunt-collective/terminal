@@ -15,5 +15,5 @@ export type Msg =
   | { type: 'browser:keydown'; event: KeyboardEvent }
   | { type: 'app:navigate'; view: 'shop' | 'cart' | 'account' }
   | { type: 'splash:blink' }
-  | { type: 'SelectProduct'; productId: string }
+  | { type: 'shop:selection-updated'; index: number }
   | { type: 'UpdateQuantity'; variantId: string; delta: number }

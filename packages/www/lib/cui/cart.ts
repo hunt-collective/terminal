@@ -1,11 +1,44 @@
 import type Terminal from '@terminaldotshop/sdk'
-import type { Model } from './app'
+import type { Model, ModelUpdate } from './app'
 import { createView, styles, formatPrice } from './render'
 import type { StyledLine } from './types'
 
-export type CartState = {}
+export type CartState = {
+  selected: number
+}
 
 type CheckoutStep = 'cart' | 'shipping' | 'payment' | 'confirmation'
+
+function updateSelectedItem(
+  model: Model,
+  previous: boolean,
+): [ModelUpdate, undefined] {
+  let next: number
+  if (previous) {
+    next = model.state.cart.selected - 1
+  } else {
+    next = model.state.cart.selected + 1
+  }
+
+  if (next < 0) {
+    next = 0
+  }
+  const max = (model.cart?.items.length ?? 0) - 1
+  if (next > max) {
+    next = max
+  }
+
+  return [
+    {
+      state: {
+        cart: {
+          selected: next,
+        },
+      },
+    },
+    undefined,
+  ]
+}
 
 function renderBreadcrumbs(currentStep: CheckoutStep) {
   const steps: CheckoutStep[] = ['cart', 'shipping', 'payment', 'confirmation']
@@ -32,7 +65,7 @@ function renderBreadcrumbs(currentStep: CheckoutStep) {
 function renderCartItem(
   state: Model,
   item: Terminal.CartResource.Cart.Item,
-  isSelected: boolean,
+  selected: boolean,
 ) {
   const lines: StyledLine[] = []
   const product = state.products.find((p) =>
@@ -47,7 +80,7 @@ function renderCartItem(
     texts: [
       {
         text: '┌' + '─'.repeat(78) + '┐',
-        style: isSelected ? styles.white : styles.gray,
+        style: selected ? styles.white : styles.gray,
       },
     ],
   })
@@ -57,36 +90,36 @@ function renderCartItem(
     texts: [
       {
         text: '│',
-        style: isSelected ? styles.white : styles.gray,
+        style: selected ? styles.white : styles.gray,
       },
       {
         text: ` ${product.name}`,
-        style: isSelected ? styles.white : styles.gray,
+        style: selected ? styles.white : styles.gray,
         pad: 30,
       },
       {
-        text: isSelected ? '- ' : ' ',
+        text: selected ? '- ' : ' ',
         style: styles.gray,
       },
       {
-        text: isSelected
+        text: selected
           ? item.quantity.toString()
           : item.quantity.toString().padStart(2),
         style: styles.white,
       },
       {
-        text: isSelected ? ' + ' : '   ',
+        text: selected ? ' + ' : '   ',
         style: styles.gray,
         pad: 10,
       },
       {
         text: formatPrice(item.subtotal),
         style: styles.gray,
-        pad: isSelected ? 31 : 33,
+        pad: selected ? 31 : 33,
       },
       {
         text: '│',
-        style: isSelected ? styles.white : styles.gray,
+        style: selected ? styles.white : styles.gray,
       },
     ],
   })
@@ -97,7 +130,7 @@ function renderCartItem(
       texts: [
         {
           text: '│',
-          style: isSelected ? styles.white : styles.gray,
+          style: selected ? styles.white : styles.gray,
         },
         {
           text: ` ${variant.name}`,
@@ -106,7 +139,7 @@ function renderCartItem(
         },
         {
           text: '│',
-          style: isSelected ? styles.white : styles.gray,
+          style: selected ? styles.white : styles.gray,
         },
       ],
     })
@@ -117,7 +150,7 @@ function renderCartItem(
     texts: [
       {
         text: '└' + '─'.repeat(78) + '┘',
-        style: isSelected ? styles.white : styles.gray,
+        style: selected ? styles.white : styles.gray,
       },
     ],
   })
@@ -132,11 +165,10 @@ export const CartView = createView({
     const cartKey = model.cart?.items
       .map((item) => `${item.productVariantID}-${item.quantity}`)
       .join('-')
-    return `cart-content-${cartKey}`
+    return `cart-${cartKey}-${model.state.cart.selected}`
   },
   view: (model, state) => {
     const lines = []
-    const selectedIndex = Number(model.selectedProductId) || 0
 
     // Add breadcrumbs
     lines.push(...renderBreadcrumbs('cart'))
@@ -148,7 +180,7 @@ export const CartView = createView({
     } else {
       // Render cart items
       model.cart.items.forEach((item, index) => {
-        lines.push(...renderCartItem(model, item, index === selectedIndex))
+        lines.push(...renderCartItem(model, item, index === state.selected))
       })
 
       // Render free shipping message
@@ -170,35 +202,17 @@ export const CartView = createView({
 
     const { key } = msg.event
     const items = model.cart?.items || []
-    const selectedIndex = Number(model.selectedProductId) || 0
+    const selectedIndex = model.state.shop.selected
     const selectedItem = items[selectedIndex]
 
     switch (key.toLowerCase()) {
       case 'arrowdown':
       case 'j':
-        if (selectedIndex < items.length - 1) {
-          return [
-            model,
-            () => ({
-              type: 'SelectProduct',
-              productId: String(selectedIndex + 1),
-            }),
-          ]
-        }
-        break
+        return updateSelectedItem(model, false)
 
       case 'arrowup':
       case 'k':
-        if (selectedIndex > 0) {
-          return [
-            model,
-            () => ({
-              type: 'SelectProduct',
-              productId: String(selectedIndex - 1),
-            }),
-          ]
-        }
-        break
+        return updateSelectedItem(model, true)
 
       case 'arrowright':
       case 'l':
