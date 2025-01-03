@@ -155,7 +155,7 @@ export const ShopView = createView({
 
       // Left column content
       if (leftLineIndex === 0) {
-        leftTexts = [{ text: '\n~ featured ~', style: styles.white }]
+        leftTexts = [{ text: '~ featured ~', style: styles.white }]
       } else if (leftLineIndex === 1 && featured.length > 0) {
         const product = featured[0]
         const index = model.products.findIndex((p) => p.id === product.id)

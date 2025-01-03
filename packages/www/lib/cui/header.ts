@@ -1,68 +1,66 @@
-import { createView, styles } from './render'
+import { createView, EMPTY_LINE } from './render'
+
+const style = {
+  color: 'white',
+  background: '#1e1e1e',
+  'padding-top': '7px',
+  'padding-bottom': '7px',
+  'font-family': 'monospace',
+  'border-bottom': '1px solid #666',
+}
 
 export const HeaderView = createView({
   name: 'header',
   view: (model) => {
     const parts = [
-      // Logo
       {
         text: ' terminal',
-        style: styles.header,
+        style,
         pad: 20,
       },
-
-      // Shop section
       {
         text: 's ',
-        style: styles.header,
+        style,
       },
       {
         text: 'shop',
         style: {
-          ...styles.header,
+          ...style,
           color: model.view === 'shop' ? 'white' : 'gray',
         },
         pad: 15,
       },
-
-      // Account section
       {
         text: 'a ',
-        style: styles.header,
+        style,
       },
       {
         text: 'account',
         style: {
-          ...styles.header,
+          ...style,
           color: model.view === 'account' ? 'white' : 'gray',
         },
         pad: 15,
       },
-
-      // Cart section
       {
         text: 'c ',
-        style: styles.header,
+        style,
       },
       {
         text: 'cart ',
         style: {
-          ...styles.header,
+          ...style,
           color: model.view === 'cart' ? 'white' : 'gray',
         },
       },
-
-      // Cart total
       {
         text: `$ ${(model.cart?.subtotal ?? 0) / 100} `,
-        style: styles.header,
+        style,
       },
-
-      // Cart count
       {
         text: `[${model.cart?.items.reduce((acc, item) => acc + item.quantity, 0) ?? 0}] `,
         style: {
-          ...styles.header,
+          ...style,
           color: 'gray',
         },
       },
@@ -73,6 +71,7 @@ export const HeaderView = createView({
         texts: parts,
         pad: model.dimensions.width, // Total width for the header
       },
+      EMPTY_LINE,
     ]
   },
 })

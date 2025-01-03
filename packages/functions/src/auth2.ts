@@ -17,6 +17,9 @@ import { Email } from "@terminal/core/email/index";
 
 const app = authorizer({
   subjects,
+  ttl: {
+    access: 60 * 8,
+  },
   theme: THEME_TERMINAL,
   select: Select({
     providers: {
