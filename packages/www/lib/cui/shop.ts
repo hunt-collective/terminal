@@ -123,7 +123,6 @@ export const ShopView = createView({
     const featured = model.products.filter((p) => p.tags?.featured === 'true')
     const staples = model.products.filter((p) => p.tags?.featured !== 'true')
     const selectedProduct = model.products[state.selected]
-    // const highlightColor = selectedProduct.name === 'cron' ? 'blue' : 'orange'
 
     let highlightColor = 'orange'
     switch (selectedProduct.name) {
