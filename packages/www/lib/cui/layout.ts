@@ -1,13 +1,21 @@
 import type { StyledText, StyledLine } from './types'
-import { pad } from './render'
+
+// Layout context to track parent dimensions
+type LayoutContext = {
+  width?: number
+}
+
+// A Component is a function that takes a context and returns StyledLine[]
+type Component = (context: LayoutContext) => StyledLine[]
 
 // Core types for the layout system
-export type LayoutNode = StyledLine[] | StyledText | string
+export type LayoutNode = Component | StyledLine[] | StyledText | string
 
 type JustifyContent = 'start' | 'center' | 'end' | 'between'
 type AlignItems = 'start' | 'center' | 'end'
 
 export type FlexOptions = {
+  gap?: number
   justify?: JustifyContent
   align?: AlignItems
   width?: number
@@ -46,17 +54,21 @@ export type SpacerOptions = {
   size?: number
 }
 
-// Helper to normalize nodes into StyledLines
-function normalizeNode(node: LayoutNode) {
-  if (Array.isArray(node)) {
+// Helper to normalize nodes into Components
+function normalizeNode(node: LayoutNode): Component {
+  if (typeof node === 'function') {
     return node
   }
 
-  if (typeof node === 'string') {
-    return [{ texts: [{ text: node }] }]
+  if (Array.isArray(node)) {
+    return () => node
   }
 
-  return [{ texts: [node] }]
+  if (typeof node === 'string') {
+    return () => [{ texts: [{ text: node }] }]
+  }
+
+  return () => [{ texts: [node] }]
 }
 
 // Helper to wrap text into lines
@@ -101,8 +113,8 @@ function createSpanningLine(
         texts: [{ text: ' '.repeat(remainingSpace) }, ...content],
       }
     case 'center': {
-      const leftPad = Math.floor(remainingSpace / 2)
-      const rightPad = remainingSpace - leftPad
+      const leftPad = Math.max(0, Math.floor(remainingSpace / 2))
+      const rightPad = Math.max(0, remainingSpace - leftPad)
       return {
         texts: [
           { text: ' '.repeat(leftPad) },
@@ -122,113 +134,140 @@ function createSpanningLine(
 export function flex(
   nodes: LayoutNode[],
   options: FlexOptions = {},
-): StyledLine[] {
-  const { justify = 'start', align = 'start', width } = options
+): Component {
+  return (parentContext: LayoutContext) => {
+    const { justify = 'start', align = 'start', gap = 0 } = options
+    const width =
+      (options.width ?? options.justify === 'between')
+        ? parentContext.width
+        : undefined
+    const context = { width }
 
-  // Normalize all nodes to StyledLines
-  const lines = nodes.map(normalizeNode)
+    // Convert nodes to components and evaluate them with our context
+    const lines = nodes.map((node) => normalizeNode(node)(context))
+    const firstLines = lines.map((line) => line[0])
+    let validLines = firstLines.filter(
+      (line): line is StyledLine => line !== undefined,
+    )
+    if (gap) {
+      const spacing = Math.max(0, gap)
+      const spacer = { text: ' '.repeat(spacing) }
+      validLines = validLines.map((line, i) =>
+        i < validLines.length - 1
+          ? { ...line, texts: [...line!.texts, spacer] }
+          : line,
+      )
+    }
 
-  // For now, we'll just handle single line flex layouts
-  const firstLines = lines.map((line) => line[0])
-  const validLines = firstLines.filter(
-    (line): line is StyledLine => line !== undefined,
-  )
+    if (!width) {
+      return [{ texts: validLines.flatMap((line) => line!.texts) }]
+    }
 
-  if (!width) {
+    const totalContentWidth = validLines.reduce((acc, line) => {
+      return acc + line!.texts.reduce((w, t) => w + (t.text?.length || 0), 0)
+    }, 0)
+
+    if (justify === 'between' && validLines.length > 1) {
+      const raw = Math.floor(
+        (width - totalContentWidth) / (validLines.length - 1),
+      )
+      const spacing = Math.max(0, raw)
+      const spacer = { text: ' '.repeat(spacing) }
+      const result = validLines.flatMap((line, i) =>
+        i < validLines.length - 1 ? [...line!.texts, spacer] : line!.texts,
+      )
+      return [createSpanningLine(width, align, result)]
+    }
+
     return [
-      {
-        texts: validLines.flatMap((line) => line!.texts),
-      },
+      createSpanningLine(
+        width,
+        align,
+        validLines.flatMap((line) => line!.texts),
+      ),
     ]
   }
-
-  const totalContentWidth = validLines.reduce((acc, line) => {
-    return acc + line!.texts.reduce((w, t) => w + (t.text?.length || 0), 0)
-  }, 0)
-
-  const allContent = validLines.flatMap((line) => line!.texts)
-
-  if (justify === 'between' && validLines.length > 1) {
-    const spacing = Math.floor(
-      (width - totalContentWidth) / (validLines.length - 1),
-    )
-    const spacer = { text: ' '.repeat(spacing) }
-
-    const result = validLines.flatMap((line, i) =>
-      i < validLines.length - 1 ? [...line!.texts, spacer] : line!.texts,
-    )
-
-    return [createSpanningLine(width, align, result)]
-  }
-
-  return [createSpanningLine(width, align, allContent)]
 }
 
 export function stack(
   nodes: LayoutNode[],
   options: StackOptions = {},
-): StyledLine[] {
-  const { gap = 0, width, align = 'start' } = options
+): Component {
+  return (parentContext: LayoutContext) => {
+    const width = options.width ?? parentContext.width
+    const context = { width }
+    const { gap = 0, align = 'start' } = options
 
-  const lines: StyledLine[] = []
+    const lines: StyledLine[] = []
 
-  nodes.forEach((node, index) => {
-    const nodeLines = normalizeNode(node)
+    nodes.forEach((node, index) => {
+      // Convert node to component and evaluate it with our context
+      const nodeLines = normalizeNode(node)(context)
 
-    nodeLines.forEach((line) => {
-      if (!line) {
-        lines.push({ texts: [{ text: '' }], pad: width })
-        return
-      }
+      nodeLines.forEach((line) => {
+        if (!line) {
+          lines.push({ texts: [{ text: '' }], pad: width })
+          return
+        }
 
-      if (width) {
-        lines.push(createSpanningLine(width, align, line.texts))
-      } else {
-        lines.push(line)
+        if (width) {
+          const contentWidth = line.texts.reduce(
+            (w, t) => w + (t.text?.length || 0),
+            0,
+          )
+          if (contentWidth < width) {
+            lines.push(createSpanningLine(width, align, line.texts))
+          } else {
+            lines.push(line)
+          }
+        } else {
+          lines.push(line)
+        }
+      })
+
+      // Add gap if not last item
+      if (index < nodes.length - 1 && gap > 0) {
+        for (let i = 0; i < gap; i++) {
+          lines.push({ texts: [{ text: '' }], pad: width })
+        }
       }
     })
 
-    // Add gap if not last item
-    if (index < nodes.length - 1 && gap > 0) {
-      for (let i = 0; i < gap; i++) {
-        lines.push({ texts: [{ text: '' }], pad: width })
-      }
-    }
-  })
-
-  return lines
+    return lines
+  }
 }
 
-export function text(content: string, options: TextOptions = {}): StyledLine[] {
-  const { style, pad: padding, maxWidth } = options
+export function text(content: string, options: TextOptions = {}): Component {
+  return (parentContext: LayoutContext) => {
+    const maxWidth = options.maxWidth ?? parentContext.width
+    const { style, pad: padding } = options
 
-  if (!maxWidth) {
-    // Simple single-line text
-    return [
-      {
-        texts: [
-          {
-            text: content,
-            style,
-            pad: padding,
-          },
-        ],
-      },
-    ]
+    if (!maxWidth) {
+      return [
+        {
+          texts: [
+            {
+              text: content,
+              style,
+              pad: padding,
+            },
+          ],
+        },
+      ]
+    }
+
+    const wrappedLines = wrapText(content, maxWidth)
+
+    return wrappedLines.map((line) => ({
+      texts: [
+        {
+          text: line,
+          style,
+          pad: padding,
+        },
+      ],
+    }))
   }
-
-  // Handle text wrapping
-  const wrappedLines = wrapText(content, maxWidth)
-
-  return wrappedLines.map((line) => ({
-    texts: [
-      {
-        text: line,
-        style,
-        pad: padding,
-      },
-    ],
-  }))
 }
 
 const defaultBorderChars = {
@@ -240,178 +279,209 @@ const defaultBorderChars = {
   vertical: '│',
 }
 
-export function box(nodes: LayoutNode, options: BoxOptions = {}): StyledLine[] {
-  const { border = false, borderStyle = {}, width: totalWidth } = options
+export function box(node: LayoutNode, options: BoxOptions = {}): Component {
+  return (parentContext: LayoutContext) => {
+    const width = options.width ?? parentContext.width
+    const { border = false, borderStyle = {} } = options
 
-  // Handle padding options
-  const padding =
-    typeof options.padding === 'number'
-      ? { x: options.padding, y: options.padding }
-      : { x: options.padding?.x ?? 0, y: options.padding?.y ?? 0 }
+    // Handle padding options
+    const padding =
+      typeof options.padding === 'number'
+        ? { x: options.padding, y: options.padding }
+        : { x: options.padding?.x ?? 0, y: options.padding?.y ?? 0 }
 
-  const chars = {
-    ...defaultBorderChars,
-    ...borderStyle.chars,
-  }
+    const chars = {
+      ...defaultBorderChars,
+      ...borderStyle.chars,
+    }
 
-  const borderColor = borderStyle.color || {}
+    const borderColor = borderStyle.color || {}
 
-  // Calculate available content width
-  const borderWidth = border ? 2 : 0
-  const availableWidth = totalWidth
-    ? totalWidth - padding.x * 2 - borderWidth
-    : undefined
+    // Calculate available content width
+    const borderWidth = border ? 2 : 0
+    const availableWidth = width
+      ? width - padding.x * 2 - borderWidth
+      : undefined
 
-  // Normalize content
-  let lines = normalizeNode(nodes)
+    const childContext = { width: availableWidth }
 
-  if (availableWidth) {
-    lines = lines.map((line) => {
-      if (!line) return line
+    // Convert node to component and evaluate it with our child context
+    let lines = normalizeNode(node)(childContext)
 
-      const lineWidth = line.texts.reduce(
-        (w, t) => w + (t.text?.length || 0),
-        0,
+    if (availableWidth) {
+      lines = lines.map((line) => {
+        if (!line) return line
+
+        const lineWidth = line.texts.reduce(
+          (w, t) => w + (t.text?.length || 0),
+          0,
+        )
+
+        if (lineWidth > availableWidth) {
+          return {
+            texts: line.texts.map((t) => ({
+              ...t,
+              text: t.text?.slice(0, availableWidth),
+            })),
+          }
+        }
+        return line
+      })
+    }
+
+    const contentWidth =
+      availableWidth ??
+      Math.max(
+        ...lines.map((line) =>
+          line ? line.texts.reduce((w, t) => w + (t.text?.length || 0), 0) : 0,
+        ),
       )
 
-      if (lineWidth > availableWidth) {
-        return {
-          texts: line.texts.map((t) => ({
-            ...t,
-            text: t.text?.slice(0, availableWidth),
-          })),
-        }
-      }
-      return line
-    })
-  }
+    const horizontalPad = ' '.repeat(Math.max(0, padding.x))
+    const fullWidth = contentWidth + padding.x * 2 + borderWidth
 
-  const contentWidth =
-    availableWidth ??
-    Math.max(
-      ...lines.map((line) =>
-        line ? line.texts.reduce((w, t) => w + (t.text?.length || 0), 0) : 0,
-      ),
-    )
+    const resultLines: StyledLine[] = []
 
-  const horizontalPad = ' '.repeat(padding.x)
-  const fullWidth = contentWidth + padding.x * 2 + borderWidth
+    if (border) {
+      resultLines.push({
+        texts: [
+          {
+            text:
+              chars.topLeft +
+              chars.horizontal.repeat(
+                Math.max(0, contentWidth + padding.x * 2),
+              ) +
+              chars.topRight,
+            style: borderColor,
+          },
+        ],
+      })
+    }
 
-  const resultLines: StyledLine[] = []
-
-  if (border) {
-    resultLines.push({
-      texts: [
-        {
-          text:
-            chars.topLeft +
-            chars.horizontal.repeat(contentWidth + padding.x * 2) +
-            chars.topRight,
-          style: borderColor,
-        },
-      ],
-    })
-  }
-
-  // Top padding
-  for (let i = 0; i < padding.y; i++) {
-    resultLines.push({
-      texts: border
-        ? [
-            { text: chars.vertical, style: borderColor },
-            { text: ' '.repeat(contentWidth + padding.x * 2) },
-            { text: chars.vertical, style: borderColor },
-          ]
-        : [{ text: ' '.repeat(fullWidth) }],
-    })
-  }
-
-  // Content
-  lines.forEach((line) => {
-    if (!line) {
+    // Top padding
+    for (let i = 0; i < padding.y; i++) {
       resultLines.push({
         texts: border
           ? [
               { text: chars.vertical, style: borderColor },
-              { text: ' '.repeat(contentWidth + padding.x * 2) },
+              { text: ' '.repeat(Math.max(0, contentWidth + padding.x * 2)) },
               { text: chars.vertical, style: borderColor },
             ]
-          : [{ text: ' '.repeat(fullWidth) }],
+          : [{ text: ' '.repeat(Math.max(0, fullWidth)) }],
       })
-      return
     }
 
-    const innerContent = line.texts
-    const remainingSpace =
-      contentWidth - innerContent.reduce((w, t) => w + (t.text?.length || 0), 0)
+    // Content lines
+    lines.forEach((line) => {
+      if (!line) {
+        resultLines.push({
+          texts: border
+            ? [
+                { text: chars.vertical, style: borderColor },
+                { text: ' '.repeat(Math.max(0, contentWidth + padding.x * 2)) },
+                { text: chars.vertical, style: borderColor },
+              ]
+            : [{ text: ' '.repeat(Math.max(0, fullWidth)) }],
+        })
+        return
+      }
 
-    resultLines.push({
-      texts: [
-        ...(border ? [{ text: chars.vertical, style: borderColor }] : []),
-        { text: horizontalPad },
-        ...innerContent,
-        { text: ' '.repeat(remainingSpace) },
-        { text: horizontalPad },
-        ...(border ? [{ text: chars.vertical, style: borderColor }] : []),
-      ],
+      const remainingSpace = Math.max(
+        0,
+        contentWidth -
+          line.texts.reduce((w, t) => w + (t.text?.length || 0), 0),
+      )
+
+      resultLines.push({
+        texts: [
+          ...(border ? [{ text: chars.vertical, style: borderColor }] : []),
+          { text: horizontalPad },
+          ...line.texts,
+          { text: ' '.repeat(remainingSpace) },
+          { text: horizontalPad },
+          ...(border ? [{ text: chars.vertical, style: borderColor }] : []),
+        ],
+      })
     })
-  })
 
-  // Bottom padding
-  for (let i = 0; i < padding.y; i++) {
-    resultLines.push({
-      texts: border
-        ? [
-            { text: chars.vertical, style: borderColor },
-            { text: ' '.repeat(contentWidth + padding.x * 2) },
-            { text: chars.vertical, style: borderColor },
-          ]
-        : [{ text: ' '.repeat(fullWidth) }],
+    // Bottom padding
+    for (let i = 0; i < padding.y; i++) {
+      resultLines.push({
+        texts: border
+          ? [
+              { text: chars.vertical, style: borderColor },
+              { text: ' '.repeat(Math.max(0, contentWidth + padding.x * 2)) },
+              { text: chars.vertical, style: borderColor },
+            ]
+          : [{ text: ' '.repeat(Math.max(0, fullWidth)) }],
+      })
+    }
+
+    if (border) {
+      resultLines.push({
+        texts: [
+          {
+            text:
+              chars.bottomLeft +
+              chars.horizontal.repeat(
+                Math.max(0, contentWidth + padding.x * 2),
+              ) +
+              chars.bottomRight,
+            style: borderColor,
+          },
+        ],
+      })
+    }
+
+    return resultLines
+  }
+}
+
+// Utility components
+export function spacer(options: SpacerOptions = {}): Component {
+  return (parentContext: LayoutContext) => {
+    const { size = 1 } = options
+    const width = parentContext.width
+    return Array(size).fill({
+      texts: [{ text: width ? ' '.repeat(Math.max(0, width)) : '' }],
     })
   }
+}
 
-  if (border) {
-    resultLines.push({
-      texts: [
-        {
-          text:
-            chars.bottomLeft +
-            chars.horizontal.repeat(contentWidth + padding.x * 2) +
-            chars.bottomRight,
-          style: borderColor,
-        },
-      ],
-    })
+export function center(nodes: LayoutNode[], width?: number): Component {
+  return (parentContext: LayoutContext) => {
+    const context = { width: width ?? parentContext.width }
+    return flex(nodes, {
+      justify: 'center',
+      align: 'center',
+      width: context.width,
+    })(context)
   }
-
-  return resultLines
 }
 
-// New utility components
-export function spacer(options: SpacerOptions = {}): StyledLine[] {
-  const { size = 1 } = options
-  return Array(size).fill({ texts: [{ text: '' }] })
+export function rightAlign(nodes: LayoutNode[], width?: number): Component {
+  return (parentContext: LayoutContext) => {
+    const context = { width: width ?? parentContext.width }
+    return flex(nodes, {
+      justify: 'end',
+      align: 'center',
+      width: context.width,
+    })(context)
+  }
 }
 
-// Container that centers its content horizontally
-export function center(nodes: LayoutNode[], width?: number): StyledLine[] {
-  return flex(nodes, { justify: 'center', align: 'center', width })
+export function title(content: string): Component {
+  return (parentContext: LayoutContext) => {
+    return text(content.toUpperCase(), {
+      style: { color: 'white', 'font-weight': 'bold' },
+    })(parentContext)
+  }
 }
 
-// Container that right-aligns its content
-export function rightAlign(nodes: LayoutNode[], width?: number): StyledLine[] {
-  return flex(nodes, { justify: 'end', align: 'center', width })
-}
-
-// Shorthand for common text styles
-export function title(content: string): StyledLine[] {
-  return text(content.toUpperCase(), {
-    style: { color: 'white', 'font-weight': 'bold' },
-  })
-}
-
-export function subtitle(content: string): StyledLine[] {
-  return text(content, {
-    style: { color: 'gray', 'font-style': 'italic' },
-  })
+export function subtitle(content: string): Component {
+  return (parentContext: LayoutContext) => {
+    return text(content, {
+      style: { color: 'gray', 'font-style': 'italic' },
+    })(parentContext)
+  }
 }

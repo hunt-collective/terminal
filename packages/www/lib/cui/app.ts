@@ -157,6 +157,12 @@ export class App {
           if (item) {
             item.quantity = newQuantity
             item.subtotal = variant.price * newQuantity
+
+            if (item.quantity === 0) {
+              const index = this.model.cart?.items.indexOf(item) ?? 0
+              this.model.cart?.items.splice(index, 1)
+              this.model.state.cart.selected = Math.max(index - 1, 0)
+            }
           } else if (this.model.cart) {
             this.model.cart.items.push({
               id: '',
@@ -165,6 +171,7 @@ export class App {
               subtotal: variant.price * newQuantity,
             })
           }
+
           if (this.model.cart) {
             this.model.cart.subtotal = this.model.cart.items.reduce(
               (acc, item) => acc + item.subtotal,

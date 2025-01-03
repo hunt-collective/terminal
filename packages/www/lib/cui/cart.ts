@@ -30,23 +30,20 @@ function updateSelectedItem(model: Model, previous: boolean) {
 
 function renderBreadcrumbs(currentStep: CheckoutStep) {
   const steps: CheckoutStep[] = ['cart', 'shipping', 'payment', 'confirmation']
-  return flex([
-    ...steps.flatMap(
-      (step, index) => [
-        text(step, {
-          style: step === currentStep ? styles.white : styles.gray,
-        }),
-        index < steps.length - 1 ? text(' / ', { style: styles.gray }) : '',
-      ],
-      { width: 80 },
-    ),
-  ])
+  return flex(
+    steps.flatMap((step, index) => [
+      text(step, {
+        style: step === currentStep ? styles.white : styles.gray,
+      }),
+      index < steps.length - 1 ? text(' / ', { style: styles.gray }) : '',
+    ]),
+  )
 }
 
 function renderCartItem(
-  model: Model,
   item: Terminal.CartResource.Cart.Item,
   selected: boolean,
+  model: Model,
 ) {
   const product = model.products.find((p) =>
     p.variants.find((v) => v.id === item.productVariantID),
@@ -70,7 +67,7 @@ function renderCartItem(
                 text(selected ? ' + ' : '   ', { style: styles.gray }),
                 text(formatPrice(item.subtotal), { style: styles.gray }),
               ],
-              { justify: 'end' },
+              { gap: 1 },
             ),
           ],
           { justify: 'between' },
@@ -81,7 +78,6 @@ function renderCartItem(
     ),
     {
       padding: { x: 1, y: 0 },
-      width: model.dimensions.width,
       border: true,
       borderStyle: {
         color: selected ? styles.white : styles.gray,
@@ -96,17 +92,16 @@ export const CartView = createView({
     return stack(
       [
         renderBreadcrumbs('cart'),
-
         !model.cart?.items.length
           ? text('Your cart is empty', { style: styles.gray })
           : stack(
               model.cart.items.map((item, index) =>
-                renderCartItem(model, item, index === state.selected),
+                renderCartItem(item, index === state.selected, model),
               ),
             ),
       ],
-      { gap: 1, width: model.dimensions.width },
-    )
+      { gap: 1 },
+    )({ width: model.dimensions.width })
   },
   update: (msg, model) => {
     if (msg.type !== 'browser:keydown') return
