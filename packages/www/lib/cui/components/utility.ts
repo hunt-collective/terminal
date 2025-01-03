@@ -1,12 +1,12 @@
 import type { Component, LayoutContext, LayoutNode } from '../layout'
-import { flex } from './flex'
-import { text } from './text'
+import { Flex } from './flex'
+import { Text } from './text'
 
 export type SpacerOptions = {
   size?: number
 }
 
-export function spacer(options: SpacerOptions = {}): Component {
+export function Spacer(options: SpacerOptions = {}): Component {
   return (parentContext: LayoutContext) => {
     const { size = 1 } = options
     const width = parentContext.width
@@ -16,10 +16,10 @@ export function spacer(options: SpacerOptions = {}): Component {
   }
 }
 
-export function center(nodes: LayoutNode[], width?: number): Component {
+export function Center(nodes: LayoutNode[], width?: number): Component {
   return (parentContext: LayoutContext) => {
     const context = { width: width ?? parentContext.width }
-    return flex(nodes, {
+    return Flex(nodes, {
       justify: 'center',
       align: 'center',
       width: context.width,
@@ -27,34 +27,23 @@ export function center(nodes: LayoutNode[], width?: number): Component {
   }
 }
 
-export function rightAlign(nodes: LayoutNode[], width?: number): Component {
+export function Title(content: string): Component {
   return (parentContext: LayoutContext) => {
-    const context = { width: width ?? parentContext.width }
-    return flex(nodes, {
-      justify: 'end',
-      align: 'center',
-      width: context.width,
-    })(context)
-  }
-}
-
-export function title(content: string): Component {
-  return (parentContext: LayoutContext) => {
-    return text(content.toUpperCase(), {
+    return Text(content.toUpperCase(), {
       style: { color: 'white', 'font-weight': 'bold' },
     })(parentContext)
   }
 }
 
-export function subtitle(content: string): Component {
+export function Subtitle(content: string): Component {
   return (parentContext: LayoutContext) => {
-    return text(content, {
+    return Text(content, {
       style: { color: 'gray', 'font-style': 'italic' },
     })(parentContext)
   }
 }
 
-export function empty(): Component {
+export function Break(): Component {
   return (parentContext: LayoutContext) => {
     const width = parentContext.width
     return [

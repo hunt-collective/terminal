@@ -1,7 +1,7 @@
 import type Terminal from '@terminaldotshop/sdk'
 import type { Model } from './app'
 import { createView, styles, formatPrice } from './render'
-import { box, empty, flex, stack, text } from './components'
+import { Box, Break, Flex, Stack, Text } from './components'
 
 export type ShopState = {
   selected: number
@@ -12,7 +12,7 @@ function ProductListItem(product: Terminal.Product, isSelected: boolean) {
     ? { ...styles.white, background: '#ff4800' }
     : styles.gray
 
-  return box(text(product.name, { style }), {
+  return Box(Text(product.name, { style }), {
     padding: { x: 1, y: 0 },
     style: isSelected ? { background: '#ff4800' } : undefined,
   })
@@ -24,8 +24,8 @@ function ProductSection(
   selectedIndex: number,
   allProducts: Terminal.Product[],
 ) {
-  return stack([
-    text(`~ ${title} ~`, { style: styles.white }),
+  return Stack([
+    Text(`~ ${title} ~`, { style: styles.white }),
     ...products.map((product) => {
       const index = allProducts.findIndex((p) => p.id === product.id)
       return ProductListItem(product, index === selectedIndex)
@@ -34,27 +34,27 @@ function ProductSection(
 }
 
 function QuantityControl(currentQuantity: number) {
-  return flex(
+  return Flex(
     [
-      text('-', { style: styles.gray }),
-      text(currentQuantity.toString(), { style: styles.white }),
-      text('+', { style: styles.gray }),
+      Text('-', { style: styles.gray }),
+      Text(currentQuantity.toString(), { style: styles.white }),
+      Text('+', { style: styles.gray }),
     ],
     { gap: 1 },
   )
 }
 
 function SubscriptionButton() {
-  return flex(
+  return Flex(
     [
-      text('subscribe', {
+      Text('subscribe', {
         style: {
           color: 'white',
           background: '#ff4800',
           padding: '0px 5px',
         },
       }),
-      text('enter', {
+      Text('enter', {
         style: styles.gray,
       }),
     ],
@@ -71,14 +71,14 @@ function ProductDetails(
   const currentQuantity =
     cart?.items.find((i) => i.productVariantID === variant.id)?.quantity ?? 0
 
-  return box(
-    stack([
-      text(product.name, { style: styles.white }),
-      stack(
+  return Box(
+    Stack([
+      Text(product.name, { style: styles.white }),
+      Stack(
         [
-          text(variant.name, { style: styles.gray }),
-          text(formatPrice(variant.price), { style: styles.orange }),
-          text(product.description, {
+          Text(variant.name, { style: styles.gray }),
+          Text(formatPrice(variant.price), { style: styles.orange }),
+          Text(product.description, {
             style: styles.gray,
             maxWidth: detailsWidth - 2,
           }),
@@ -116,9 +116,9 @@ export const ShopView = createView({
     const staples = model.products.filter((p) => p.tags?.featured !== 'true')
     const selectedProduct = model.products[state.selected]
 
-    return flex(
+    return Flex(
       [
-        stack(
+        Stack(
           [
             ProductSection(
               'featured',
@@ -126,7 +126,7 @@ export const ShopView = createView({
               state.selected,
               model.products,
             ),
-            empty(),
+            Break(),
             ProductSection('staples', staples, state.selected, model.products),
           ],
           { width: listWidth },

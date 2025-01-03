@@ -15,7 +15,7 @@ export type StackOptions = {
   align?: AlignItems
 }
 
-export function stack(
+export function Stack(
   nodes: LayoutNode[],
   options: StackOptions = {},
 ): Component {

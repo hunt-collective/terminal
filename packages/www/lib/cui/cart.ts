@@ -1,7 +1,7 @@
 import type Terminal from '@terminaldotshop/sdk'
 import type { Model } from './app'
 import { createView, styles, formatPrice } from './render'
-import { box, flex, stack, text } from './components'
+import { Box, Flex, Stack, Text } from './components'
 
 export type CartState = {
   selected: number
@@ -30,12 +30,12 @@ function updateSelectedItem(model: Model, previous: boolean) {
 
 function Breadcrumbs(currentStep: CheckoutStep) {
   const steps: CheckoutStep[] = ['cart', 'shipping', 'payment', 'confirmation']
-  return flex(
+  return Flex(
     steps.flatMap((step, index) => [
-      text(step, {
+      Text(step, {
         style: step === currentStep ? styles.white : styles.gray,
       }),
-      index < steps.length - 1 ? text('/', { style: styles.gray }) : '',
+      index < steps.length - 1 ? Text('/', { style: styles.gray }) : '',
     ]),
     { gap: 1 },
   )
@@ -53,26 +53,26 @@ function CartItem(
 
   const variant = product.variants.find((v) => v.id === item.productVariantID)
 
-  return box(
-    stack([
-      flex(
+  return Box(
+    Stack([
+      Flex(
         [
-          text(product.name, {
+          Text(product.name, {
             style: selected ? styles.white : styles.gray,
           }),
-          flex(
+          Flex(
             [
-              text(selected ? '-' : ' ', { style: styles.gray }),
-              text(item.quantity.toString(), { style: styles.white }),
-              text(selected ? '+' : ' ', { style: styles.gray }),
-              text(formatPrice(item.subtotal), { style: styles.gray }),
+              Text(selected ? '-' : ' ', { style: styles.gray }),
+              Text(item.quantity.toString(), { style: styles.white }),
+              Text(selected ? '+' : ' ', { style: styles.gray }),
+              Text(formatPrice(item.subtotal), { style: styles.gray }),
             ],
             { gap: 1 },
           ),
         ],
         { justify: 'between' },
       ),
-      variant ? text(variant.name, { style: styles.gray }) : '',
+      variant ? Text(variant.name, { style: styles.gray }) : '',
     ]),
     {
       padding: { x: 1, y: 0 },
@@ -87,12 +87,12 @@ function CartItem(
 export const CartView = createView({
   name: 'cart',
   view: (model, state) => {
-    return stack(
+    return Stack(
       [
         Breadcrumbs('cart'),
         !model.cart?.items.length
-          ? text('Your cart is empty', { style: styles.gray })
-          : stack(
+          ? Text('Your cart is empty', { style: styles.gray })
+          : Stack(
               model.cart.items.map((item, index) =>
                 CartItem(item, index === state.selected, model),
               ),

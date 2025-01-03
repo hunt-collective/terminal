@@ -16,8 +16,7 @@ export type FlexOptions = {
   width?: number
 }
 
-// Core layout components with nodes as first parameter
-export function flex(
+export function Flex(
   nodes: LayoutNode[],
   options: FlexOptions = {},
 ): Component {

@@ -33,7 +33,7 @@ const defaultBorderChars = {
   vertical: '│',
 }
 
-export function box(node: LayoutNode, options: BoxOptions = {}): Component {
+export function Box(node: LayoutNode, options: BoxOptions = {}): Component {
   return (parentContext: LayoutContext) => {
     const width = options.width ?? parentContext.width
     const { border = false, borderStyle = {} } = options
