@@ -7,14 +7,18 @@ export type ShopState = {
   selected: number
 }
 
-function ProductListItem(product: Terminal.Product, isSelected: boolean) {
+function ProductListItem(
+  product: Terminal.Product,
+  isSelected: boolean,
+  highlightColor: string,
+) {
   const style = isSelected
-    ? { ...styles.white, background: '#ff4800' }
+    ? { ...styles.white, background: highlightColor }
     : styles.gray
 
   return Box(Text(product.name, { style }), {
     padding: { x: 1, y: 0 },
-    style: isSelected ? { background: '#ff4800' } : undefined,
+    style: isSelected ? { background: highlightColor } : undefined,
   })
 }
 
@@ -23,12 +27,13 @@ function ProductSection(
   products: Terminal.Product[],
   selectedIndex: number,
   allProducts: Terminal.Product[],
+  highlightColor: string,
 ) {
   return Stack([
     Text(`~ ${title} ~`, { style: styles.white }),
     ...products.map((product) => {
       const index = allProducts.findIndex((p) => p.id === product.id)
-      return ProductListItem(product, index === selectedIndex)
+      return ProductListItem(product, index === selectedIndex, highlightColor)
     }),
   ])
 }
@@ -66,6 +71,7 @@ function ProductDetails(
   product: Terminal.Product,
   cart: Terminal.Cart | null,
   detailsWidth: number,
+  highlightColor: string,
 ) {
   const variant = product.variants[0]
   const currentQuantity =
@@ -77,7 +83,9 @@ function ProductDetails(
       Stack(
         [
           Text(variant.name, { style: styles.gray }),
-          Text(formatPrice(variant.price), { style: styles.orange }),
+          Text(formatPrice(variant.price), {
+            style: { color: highlightColor },
+          }),
           Text(product.description, {
             style: styles.gray,
             maxWidth: detailsWidth - 2,
@@ -115,6 +123,28 @@ export const ShopView = createView({
     const featured = model.products.filter((p) => p.tags?.featured === 'true')
     const staples = model.products.filter((p) => p.tags?.featured !== 'true')
     const selectedProduct = model.products[state.selected]
+    // const highlightColor = selectedProduct.name === 'cron' ? 'blue' : 'orange'
+
+    let highlightColor = 'orange'
+    switch (selectedProduct.name) {
+      case 'segfault':
+        highlightColor = '#169FC1'
+        break
+      case 'dark mode':
+        highlightColor = '#118B39'
+        break
+      case '[object Object]':
+        highlightColor = '#F5BB1D'
+        break
+      case '404':
+        highlightColor = '#D53C81'
+        break
+      case 'artisan':
+        highlightColor = '#EB4432'
+        break
+      default:
+        highlightColor = '#FF5C00'
+    }
 
     return Flex(
       [
@@ -125,13 +155,25 @@ export const ShopView = createView({
               featured,
               state.selected,
               model.products,
+              highlightColor,
             ),
             Break(),
-            ProductSection('staples', staples, state.selected, model.products),
+            ProductSection(
+              'staples',
+              staples,
+              state.selected,
+              model.products,
+              highlightColor,
+            ),
           ],
           { width: listWidth },
         ),
-        ProductDetails(selectedProduct, model.cart, detailsWidth),
+        ProductDetails(
+          selectedProduct,
+          model.cart,
+          detailsWidth,
+          highlightColor,
+        ),
       ],
       { gap },
     )({ width: model.dimensions.width })
