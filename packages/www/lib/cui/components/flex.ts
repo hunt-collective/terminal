@@ -7,7 +7,7 @@ import {
   type LayoutContext,
   type LayoutNode,
 } from '../layout'
-import type { StyledLine, StyledText } from '../types'
+import type { StyledLine } from '../types'
 
 export type FlexOptions = {
   gap?: number
@@ -22,79 +22,92 @@ export function Flex(
 ): Component {
   return (parentContext: LayoutContext) => {
     const { justify = 'start', align = 'start', gap = 0 } = options
-    const width = options.width ?? parentContext.width
+    const width =
+      options.width ?? (justify === 'between' ? parentContext.width : undefined)
     const context = { width }
 
     // Convert nodes to components and evaluate them
     const componentLines = nodes.map((node) => normalizeNode(node)(context))
-
     const maxLines = Math.max(...componentLines.map((lines) => lines.length))
     const result: StyledLine[] = []
 
-    // Process each line across all components
+    // Calculate component widths for consistent spacing
+    const componentWidths = componentLines.map((lines) =>
+      Math.max(
+        ...lines.map(
+          (l) => l?.texts.reduce((w, t) => w + (t.text?.length || 0), 0) || 0,
+        ),
+      ),
+    )
+
+    // Process each line
     for (let lineIndex = 0; lineIndex < maxLines; lineIndex++) {
-      const currentLineTexts: StyledText[] = []
-
-      // Gather texts from each component for this line
-      componentLines.forEach((lines, componentIndex) => {
+      const currentLines = componentLines.map((lines, componentIndex) => {
         const line = lines[lineIndex]
-
-        // Add spacing between components if not first component
-        if (componentIndex > 0 && gap > 0) {
-          currentLineTexts.push({ text: ' '.repeat(gap) })
-        }
-
-        // If this component has no line at this index, add empty space matching its width
         if (!line) {
-          // Find the maximum width of this component
-          const componentWidth = Math.max(
-            ...lines.map(
-              (l) =>
-                l?.texts.reduce((w, t) => w + (t.text?.length || 0), 0) || 0,
-            ),
-            0,
-          )
-          currentLineTexts.push({ text: ' '.repeat(componentWidth) })
-        } else {
-          currentLineTexts.push(...line.texts)
+          return componentWidths[componentIndex] > 0
+            ? { texts: [{ text: ' '.repeat(componentWidths[componentIndex]) }] }
+            : undefined
         }
+        return line
       })
 
-      if (currentLineTexts.length === 0) {
+      const validLines = currentLines
+        .map((line, index) => ({ line, index }))
+        .filter(
+          (entry): entry is { line: StyledLine; index: number } =>
+            entry.line !== undefined,
+        )
+
+      if (validLines.length === 0) {
         result.push({ texts: [{ text: '' }] })
         continue
       }
 
+      // Handle justification
       if (!width) {
-        result.push({ texts: currentLineTexts })
+        const texts = validLines.flatMap((entry, i) => {
+          const lineTexts = [...entry.line!.texts]
+          if (i < validLines.length - 1 && gap > 0) {
+            lineTexts.push({ text: ' '.repeat(gap) })
+          }
+          return lineTexts
+        })
+        result.push({ texts })
         continue
       }
 
-      const totalContentWidth = currentLineTexts.reduce(
-        (acc, text) => acc + (text.text?.length || 0),
-        0,
-      )
-
-      if (justify === 'between' && componentLines.length > 1) {
-        const remainingSpace = Math.max(0, width - totalContentWidth)
-        const spaceBetween = Math.floor(
-          remainingSpace / (componentLines.length - 1),
+      if (justify === 'between' && validLines.length > 1) {
+        const totalContentWidth = validLines.reduce(
+          (acc, entry) =>
+            acc +
+            entry.line!.texts.reduce((w, t) => w + (t.text?.length || 0), 0),
+          0,
         )
-        const adjustedTexts: StyledText[] = []
+        const gapWidth = (validLines.length - 1) * gap
+        const remainingSpace = Math.max(0, width - totalContentWidth - gapWidth)
+        const spaceBetween = Math.floor(
+          remainingSpace / (validLines.length - 1),
+        )
 
-        componentLines.forEach((_, index) => {
-          const componentTexts = componentLines[index][lineIndex]?.texts
-          if (componentTexts) {
-            adjustedTexts.push(...componentTexts)
-            if (index < componentLines.length - 1) {
-              adjustedTexts.push({ text: ' '.repeat(spaceBetween) })
-            }
+        const texts = validLines.flatMap((entry, i) => {
+          const lineTexts = [...entry.line!.texts]
+          if (i < validLines.length - 1) {
+            lineTexts.push({ text: ' '.repeat(gap + spaceBetween) })
           }
+          return lineTexts
         })
-
-        result.push(createSpanningLine(width, align, adjustedTexts))
+        result.push({ texts })
       } else {
-        result.push(createSpanningLine(width, align, currentLineTexts))
+        // For subsequent lines in non-between cases, or any other justification
+        const texts = validLines.flatMap((entry, i) => {
+          const lineTexts = [...entry.line!.texts]
+          if (i < validLines.length - 1 && gap > 0) {
+            lineTexts.push({ text: ' '.repeat(gap) })
+          }
+          return lineTexts
+        })
+        result.push(createSpanningLine(width, align, texts))
       }
     }
 
