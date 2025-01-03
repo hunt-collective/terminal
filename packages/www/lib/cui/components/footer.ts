@@ -1,9 +1,8 @@
-import { createView } from './render'
-import { Box, Stack, Text, Center } from './components'
+import { Box, Stack, Text, Center } from '../components'
+import type { Component } from '../render'
 
-export const FooterView = createView({
-  name: 'footer',
-  view: (model) => {
+export function Footer(): Component {
+  return (model, parentContext) => {
     let footerText = ''
     switch (model.view) {
       case 'shop':
@@ -42,6 +41,6 @@ export const FooterView = createView({
           },
         }),
       ]),
-    ])({ width: model.dimensions.width })
-  },
-})
+    ])(model, parentContext)
+  }
+}

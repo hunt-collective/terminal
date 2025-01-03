@@ -4,10 +4,9 @@ import {
   type AlignItems,
   type Component,
   type JustifyContent,
-  type LayoutContext,
   type LayoutNode,
   type StyledLine,
-} from '../layout'
+} from '../render'
 
 export type FlexOptions = {
   gap?: number
@@ -20,14 +19,16 @@ export function Flex(
   nodes: LayoutNode[],
   options: FlexOptions = {},
 ): Component {
-  return (parentContext: LayoutContext) => {
+  return (model, parentContext) => {
     const { justify = 'start', align = 'start', gap = 0 } = options
     const width =
       options.width ?? (justify === 'between' ? parentContext.width : undefined)
     const context = { width }
 
     // Convert nodes to components and evaluate them
-    const componentLines = nodes.map((node) => normalizeNode(node)(context))
+    const componentLines = nodes.map((node) =>
+      normalizeNode(node)(model, context),
+    )
     const maxLines = Math.max(...componentLines.map((lines) => lines.length))
     const result: StyledLine[] = []
 

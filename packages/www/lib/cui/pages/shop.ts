@@ -1,7 +1,8 @@
 import type Terminal from '@terminaldotshop/sdk'
-import type { Model } from './app'
-import { createView, styles, formatPrice } from './render'
-import { Box, Break, Flex, Stack, Text } from './components'
+import type { Model } from '../app'
+import { createView, styles, formatPrice } from '../render'
+import { Box, Break, Flex, Stack, Text } from '../components'
+import { Layout } from '../layouts/base'
 
 export type ShopState = {
   selected: number
@@ -17,7 +18,7 @@ function ProductListItem(
     : styles.gray
 
   return Box(Text(product.name, { style }), {
-    padding: { x: 1, y: 0 },
+    padding: { x: 2, y: 0 },
     style: isSelected ? { background: highlightColor } : undefined,
   })
 }
@@ -145,37 +146,39 @@ export const ShopView = createView({
         highlightColor = '#FF5C00'
     }
 
-    return Flex(
-      [
-        Stack(
-          [
-            ProductSection(
-              'featured',
-              featured,
-              state.selected,
-              model.products,
-              highlightColor,
-            ),
-            Break(),
-            ProductSection(
-              'staples',
-              staples,
-              state.selected,
-              model.products,
-              highlightColor,
-            ),
-          ],
-          { width: listWidth },
-        ),
-        ProductDetails(
-          selectedProduct,
-          model.cart,
-          detailsWidth,
-          highlightColor,
-        ),
-      ],
-      { gap },
-    )({ width: model.dimensions.width })
+    return Layout(
+      Flex(
+        [
+          Stack(
+            [
+              ProductSection(
+                'featured',
+                featured,
+                state.selected,
+                model.products,
+                highlightColor,
+              ),
+              Break(),
+              ProductSection(
+                'staples',
+                staples,
+                state.selected,
+                model.products,
+                highlightColor,
+              ),
+            ],
+            { width: listWidth },
+          ),
+          ProductDetails(
+            selectedProduct,
+            model.cart,
+            detailsWidth,
+            highlightColor,
+          ),
+        ],
+        { gap },
+      ),
+    )
   },
   update: (msg, model) => {
     if (msg.type !== 'browser:keydown') return

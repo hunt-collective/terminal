@@ -1,12 +1,10 @@
 import Terminal from '@terminaldotshop/sdk'
 import { getCurrentToken, API_URL, callback, auth } from './auth'
 import { type Message } from './events'
-import { HeaderView } from './header'
-import { ShopView, type ShopState } from './shop'
-import { CartView, type CartState } from './cart'
-import { SplashView, type SplashState } from './splash'
-import { FooterView } from './footer'
-import { combineLines, EMPTY_LINE, type View } from './render'
+import { ShopView, type ShopState } from './pages/shop'
+import { CartView, type CartState } from './pages/cart'
+import { SplashView, type SplashState } from './pages/splash'
+import { combineLines, type View } from './render'
 
 export type Model = {
   view: 'shop' | 'cart' | 'account' | 'splash'
@@ -250,25 +248,8 @@ export class App {
   }
 
   render() {
-    const { view, fullscreen } = this.getCurrentView()
-
-    const lines = []
-    if (!fullscreen) lines.push(...HeaderView.view(this.model))
-
-    const viewLines = view(this.model)
-
-    if (!fullscreen) {
-      const delta = this.model.dimensions.height - viewLines.length
-      for (let i = 0; i < delta; i++) {
-        viewLines.push(EMPTY_LINE)
-      }
-    }
-
-    lines.push(...viewLines)
-
-    if (!fullscreen) lines.push(...FooterView.view(this.model))
-
-    const { text, styles } = combineLines(lines)
+    const { view } = this.getCurrentView()
+    const { text, styles } = combineLines(view(this.model))
     if (this.last === text) return
 
     console.clear()

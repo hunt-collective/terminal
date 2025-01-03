@@ -1,4 +1,4 @@
-import type { Component, LayoutContext } from '../layout'
+import type { Component } from '../render'
 
 export type TextOptions = {
   style?: object
@@ -7,7 +7,7 @@ export type TextOptions = {
 }
 
 export function Text(content: string, options: TextOptions = {}): Component {
-  return (parentContext: LayoutContext) => {
+  return (_model, parentContext) => {
     const maxWidth = options.maxWidth ?? parentContext.width
     const { style, pad } = options
 

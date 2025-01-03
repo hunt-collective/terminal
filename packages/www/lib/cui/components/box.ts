@@ -1,10 +1,9 @@
 import {
   normalizeNode,
   type Component,
-  type LayoutContext,
   type LayoutNode,
   type StyledLine,
-} from '../layout'
+} from '../render'
 
 export type BoxOptions = {
   padding?: number | { x?: number; y?: number }
@@ -34,7 +33,7 @@ const defaultBorderChars = {
 }
 
 export function Box(node: LayoutNode, options: BoxOptions = {}): Component {
-  return (parentContext: LayoutContext) => {
+  return (model, parentContext) => {
     const width = options.width ?? parentContext.width
     const { border = false, borderStyle = {} } = options
 
@@ -60,7 +59,7 @@ export function Box(node: LayoutNode, options: BoxOptions = {}): Component {
     const childContext = { width: availableWidth }
 
     // Convert node to component and evaluate it with our child context
-    let lines = normalizeNode(node)(childContext)
+    let lines = normalizeNode(node)(model, childContext)
 
     if (availableWidth) {
       lines = lines.map((line) => {

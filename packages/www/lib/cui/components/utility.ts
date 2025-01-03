@@ -1,4 +1,4 @@
-import type { Component, LayoutContext, LayoutNode } from '../layout'
+import type { Component, LayoutNode } from '../render'
 import { Flex } from './flex'
 import { Text } from './text'
 
@@ -7,7 +7,7 @@ export type SpacerOptions = {
 }
 
 export function Spacer(options: SpacerOptions = {}): Component {
-  return (parentContext: LayoutContext) => {
+  return (_model, parentContext) => {
     const { size = 1 } = options
     const width = parentContext.width
     return Array(size).fill({
@@ -17,34 +17,34 @@ export function Spacer(options: SpacerOptions = {}): Component {
 }
 
 export function Center(nodes: LayoutNode[], width?: number): Component {
-  return (parentContext: LayoutContext) => {
+  return (model, parentContext) => {
     const context = { width: width ?? parentContext.width }
     return Flex(nodes, {
       justify: 'center',
       align: 'center',
       width: context.width,
-    })(context)
+    })(model, context)
   }
 }
 
 export function Title(content: string): Component {
-  return (parentContext: LayoutContext) => {
+  return (model, parentContext) => {
     return Text(content.toUpperCase(), {
       style: { color: 'white', 'font-weight': 'bold' },
-    })(parentContext)
+    })(model, parentContext)
   }
 }
 
 export function Subtitle(content: string): Component {
-  return (parentContext: LayoutContext) => {
+  return (model, parentContext) => {
     return Text(content, {
       style: { color: 'gray', 'font-style': 'italic' },
-    })(parentContext)
+    })(model, parentContext)
   }
 }
 
 export function Break(): Component {
-  return (parentContext: LayoutContext) => {
+  return (_model, parentContext) => {
     const width = parentContext.width
     return [
       {

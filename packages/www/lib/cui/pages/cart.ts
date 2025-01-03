@@ -1,7 +1,8 @@
 import type Terminal from '@terminaldotshop/sdk'
-import type { Model } from './app'
-import { createView, styles, formatPrice } from './render'
-import { Box, Flex, Stack, Text } from './components'
+import type { Model } from '../app'
+import { createView, styles, formatPrice } from '../render'
+import { Box, Flex, Stack, Text } from '../components'
+import { Layout } from '../layouts/base'
 
 export type CartState = {
   selected: number
@@ -87,19 +88,21 @@ function CartItem(
 export const CartView = createView({
   name: 'cart',
   view: (model, state) => {
-    return Stack(
-      [
-        Breadcrumbs('cart'),
-        !model.cart?.items.length
-          ? Text('Your cart is empty', { style: styles.gray })
-          : Stack(
-              model.cart.items.map((item, index) =>
-                CartItem(item, index === state.selected, model),
+    return Layout(
+      Stack(
+        [
+          Breadcrumbs('cart'),
+          !model.cart?.items.length
+            ? Text('Your cart is empty', { style: styles.gray })
+            : Stack(
+                model.cart.items.map((item, index) =>
+                  CartItem(item, index === state.selected, model),
+                ),
               ),
-            ),
-      ],
-      { gap: 1 },
-    )({ width: model.dimensions.width })
+        ],
+        { gap: 1 },
+      ),
+    )
   },
   update: (msg, model) => {
     if (msg.type !== 'browser:keydown') return

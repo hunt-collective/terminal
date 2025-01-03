@@ -1,8 +1,32 @@
-import type { Model } from './app'
 import type { Command, Message } from './events'
-import type { StyledLine } from './layout'
+import type { Model } from './app'
 
-export const EMPTY_LINE = { texts: [{ text: '', style: {} }] }
+export type StyledText = {
+  text: string
+  style?: object
+  pad?: number
+}
+
+export type StyledLine =
+  | {
+      texts: StyledText[]
+      pad?: number
+    }
+  | undefined
+
+// Layout context to track parent dimensions
+export type LayoutContext = {
+  width?: number
+}
+
+// A Component is a function that takes a context and returns StyledLine[]
+export type Component = (model: Model, context: LayoutContext) => StyledLine[]
+
+// Core types for the layout system
+export type LayoutNode = Component | StyledLine[] | StyledText | string
+
+export type JustifyContent = 'start' | 'center' | 'end' | 'between'
+export type AlignItems = 'start' | 'center' | 'end'
 
 export const styles = {
   white: { color: 'white' },
@@ -23,7 +47,6 @@ export interface View {
   init?: (model: Model) => Command | undefined
   update?: (msg: Message, model: Model) => UpdateResult<any>
   view: (model: Model) => StyledLine[]
-  fullscreen?: boolean
 }
 
 export function createView<
@@ -32,32 +55,26 @@ export function createView<
   name: T
   init?: (model: Model) => Command | undefined
   view: T extends keyof Model['state']
-    ? (model: Model, state: Model['state'][T]) => StyledLine[]
-    : (model: Model) => StyledLine[]
+    ? (model: Model, state: Model['state'][T]) => Component
+    : (model: Model) => Component
   update?: (
     msg: Message,
     model: Model,
   ) => UpdateResult<T extends keyof Model['state'] ? Model['state'][T] : never>
-  fullscreen?: boolean
 }) {
   return {
-    name: options.name,
-    init: options.init,
+    ...options,
     view: (model) => {
-      // Generate new content
-      const local =
+      const state =
         options.name in model.state
           ? model.state[options.name as keyof Model['state']]
           : undefined
-      const lines = ((model, state) => options.view(model, state as any))(
+      const component = ((model, state) => options.view(model, state as any))(
         model,
-        local,
+        state,
       )
-
-      return lines
+      return component(model, { width: model.dimensions.width })
     },
-    update: options.update,
-    fullscreen: options.fullscreen,
   } satisfies View
 }
 
@@ -107,5 +124,57 @@ export function combineLines(lines: StyledLine[]): {
   return {
     text: combinedText.join('\n'),
     styles: combinedStyles,
+  }
+}
+
+// Helper to normalize nodes into Components
+export function normalizeNode(node: LayoutNode): Component {
+  if (typeof node === 'function') {
+    return node
+  }
+
+  if (Array.isArray(node)) {
+    return () => node
+  }
+
+  if (typeof node === 'string') {
+    return () => [{ texts: [{ text: node }] }]
+  }
+
+  return () => [{ texts: [node] }]
+}
+
+// Create a line of text that spans a width
+export function createSpanningLine(
+  width: number,
+  align: AlignItems,
+  content: StyledText[],
+): StyledLine {
+  const contentWidth = content.reduce(
+    (acc, text) => acc + (text.text?.length || 0),
+    0,
+  )
+  const remainingSpace = Math.max(0, width - contentWidth)
+
+  switch (align) {
+    case 'end':
+      return {
+        texts: [{ text: ' '.repeat(remainingSpace) }, ...content],
+      }
+    case 'center': {
+      const leftPad = Math.max(0, Math.floor(remainingSpace / 2))
+      const rightPad = Math.max(0, remainingSpace - leftPad)
+      return {
+        texts: [
+          { text: ' '.repeat(leftPad) },
+          ...content,
+          { text: ' '.repeat(rightPad) },
+        ],
+      }
+    }
+    default: // 'start'
+      return {
+        texts: [...content, { text: ' '.repeat(remainingSpace) }],
+      }
   }
 }

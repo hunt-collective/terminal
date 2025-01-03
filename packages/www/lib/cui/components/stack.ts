@@ -2,15 +2,15 @@ import {
   type AlignItems,
   type LayoutNode,
   type Component,
-  type LayoutContext,
   normalizeNode,
   createSpanningLine,
   type StyledLine,
-} from '../layout'
+} from '../render'
 
 export type StackOptions = {
   gap?: number
   width?: number
+  minHeight?: number
   align?: AlignItems
 }
 
@@ -18,7 +18,7 @@ export function Stack(
   nodes: LayoutNode[],
   options: StackOptions = {},
 ): Component {
-  return (parentContext: LayoutContext) => {
+  return (model, parentContext) => {
     const width = options.width ?? parentContext.width
     const context = { width }
     const { gap = 0, align = 'start' } = options
@@ -27,7 +27,7 @@ export function Stack(
 
     nodes.forEach((node, index) => {
       // Convert node to component and evaluate it with our context
-      const nodeLines = normalizeNode(node)(context)
+      const nodeLines = normalizeNode(node)(model, context)
 
       nodeLines.forEach((line) => {
         if (!line) {
@@ -57,6 +57,13 @@ export function Stack(
         }
       }
     })
+
+    if (options.minHeight && lines.length < options.minHeight) {
+      const delta = options.minHeight - lines.length
+      for (let i = 0; i < delta; i++) {
+        lines.push({ texts: [{ text: '' }], pad: width })
+      }
+    }
 
     return lines
   }

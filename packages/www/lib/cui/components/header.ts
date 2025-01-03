@@ -1,9 +1,9 @@
-import { createView, styles } from './render'
-import { Box, Flex, Text, Stack, Break } from './components'
+import { styles } from '../render'
+import { Box, Flex, Text, Stack, Break } from './'
+import type { Component } from '../render'
 
-export const HeaderView = createView({
-  name: 'header',
-  view: (model) => {
+export function Header(): Component {
+  return (model, parentContext) => {
     return Stack([
       Box(
         Flex(
@@ -63,6 +63,6 @@ export const HeaderView = createView({
         },
       ),
       Break(), // Empty line after header
-    ])({ width: model.dimensions.width })
-  },
-})
+    ])(model, parentContext)
+  }
+}

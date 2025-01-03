@@ -1,6 +1,6 @@
-import { Delay } from './events'
-import { createView } from './render'
-import { Stack, Text, Center, Spacer, Flex } from './components'
+import { Delay } from '../events'
+import { createView } from '../render'
+import { Stack, Text, Center, Spacer, Flex } from '../components'
 
 export type SplashState = {
   cursorVisible: boolean
@@ -8,7 +8,6 @@ export type SplashState = {
 
 export const SplashView = createView({
   name: 'splash',
-  fullscreen: true,
   init: () => {
     return async () => {
       return { type: 'splash:blink' }
@@ -37,7 +36,7 @@ export const SplashView = createView({
         ]),
       ]),
       Spacer({ size: Math.floor(model.dimensions.height / 2) }),
-    ])({ width: model.dimensions.width })
+    ])
   },
   update: (msg, model) => {
     switch (msg.type) {
