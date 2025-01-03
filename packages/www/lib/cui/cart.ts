@@ -1,7 +1,7 @@
 import type Terminal from '@terminaldotshop/sdk'
 import type { Model } from './app'
 import { createView, styles, formatPrice } from './render'
-import type { StyledLine } from './types'
+import { box, flex, stack, text } from './layout'
 
 export type CartState = {
   selected: number
@@ -30,143 +30,83 @@ function updateSelectedItem(model: Model, previous: boolean) {
 
 function renderBreadcrumbs(currentStep: CheckoutStep) {
   const steps: CheckoutStep[] = ['cart', 'shipping', 'payment', 'confirmation']
-  const breadcrumbs = steps
-    .map((step, index) => {
-      const isActive = step === currentStep
-      const separator = index < steps.length - 1 ? ' / ' : ''
-      return [
-        {
-          text: step,
-          style: isActive ? styles.white : styles.gray,
-        },
-        { text: separator, style: styles.gray },
-      ]
-    })
-    .flat()
-
-  return [
-    { texts: breadcrumbs },
-    undefined, // newline
-  ]
+  return flex([
+    ...steps.flatMap(
+      (step, index) => [
+        text(step, {
+          style: step === currentStep ? styles.white : styles.gray,
+        }),
+        index < steps.length - 1 ? text(' / ', { style: styles.gray }) : '',
+      ],
+      { width: 80 },
+    ),
+  ])
 }
 
 function renderCartItem(
-  state: Model,
+  model: Model,
   item: Terminal.CartResource.Cart.Item,
   selected: boolean,
 ) {
-  const lines: StyledLine[] = []
-  const product = state.products.find((p) =>
+  const product = model.products.find((p) =>
     p.variants.find((v) => v.id === item.productVariantID),
   )
-  if (!product) return lines
+  if (!product) return []
 
   const variant = product.variants.find((v) => v.id === item.productVariantID)
 
-  // Box top border
-  lines.push({
-    texts: [
-      {
-        text: '┌' + '─'.repeat(78) + '┐',
-        style: selected ? styles.white : styles.gray,
-      },
-    ],
-  })
-
-  // Item name and price row
-  lines.push({
-    texts: [
-      {
-        text: '│',
-        style: selected ? styles.white : styles.gray,
-      },
-      {
-        text: ` ${product.name}`,
-        style: selected ? styles.white : styles.gray,
-        pad: 30,
-      },
-      {
-        text: selected ? '- ' : ' ',
-        style: styles.gray,
-      },
-      {
-        text: selected
-          ? item.quantity.toString()
-          : item.quantity.toString().padStart(2),
-        style: styles.white,
-      },
-      {
-        text: selected ? ' + ' : '   ',
-        style: styles.gray,
-        pad: 10,
-      },
-      {
-        text: formatPrice(item.subtotal),
-        style: styles.gray,
-        pad: selected ? 31 : 33,
-      },
-      {
-        text: '│',
-        style: selected ? styles.white : styles.gray,
-      },
-    ],
-  })
-
-  // Variant details row
-  if (variant) {
-    lines.push({
-      texts: [
-        {
-          text: '│',
-          style: selected ? styles.white : styles.gray,
-        },
-        {
-          text: ` ${variant.name}`,
-          style: styles.gray,
-          pad: 77,
-        },
-        {
-          text: '│',
-          style: selected ? styles.white : styles.gray,
-        },
+  return box(
+    stack(
+      [
+        flex(
+          [
+            text(product.name, {
+              style: selected ? styles.white : styles.gray,
+            }),
+            flex(
+              [
+                text(selected ? '- ' : ' ', { style: styles.gray }),
+                text(item.quantity.toString(), { style: styles.white }),
+                text(selected ? ' + ' : '   ', { style: styles.gray }),
+                text(formatPrice(item.subtotal), { style: styles.gray }),
+              ],
+              { justify: 'end' },
+            ),
+          ],
+          { justify: 'between' },
+        ),
+        variant ? text(variant.name, { style: styles.gray }) : '',
       ],
-    })
-  }
-
-  // Box bottom border
-  lines.push({
-    texts: [
-      {
-        text: '└' + '─'.repeat(78) + '┘',
-        style: selected ? styles.white : styles.gray,
+      { gap: 1 },
+    ),
+    {
+      padding: { x: 1, y: 0 },
+      width: model.dimensions.width,
+      border: true,
+      borderStyle: {
+        color: selected ? styles.white : styles.gray,
       },
-    ],
-  })
-
-  lines.push(undefined) // newline
-  return lines
+    },
+  )
 }
 
 export const CartView = createView({
   name: 'cart',
   view: (model, state) => {
-    const lines = []
+    return stack(
+      [
+        renderBreadcrumbs('cart'),
 
-    // Add breadcrumbs
-    lines.push(...renderBreadcrumbs('cart'))
-
-    if (!model.cart?.items.length) {
-      lines.push({
-        texts: [{ text: 'Your cart is empty', style: styles.gray }],
-      })
-    } else {
-      // Render cart items
-      model.cart.items.forEach((item, index) => {
-        lines.push(...renderCartItem(model, item, index === state.selected))
-      })
-    }
-
-    return lines
+        !model.cart?.items.length
+          ? text('Your cart is empty', { style: styles.gray })
+          : stack(
+              model.cart.items.map((item, index) =>
+                renderCartItem(model, item, index === state.selected),
+              ),
+            ),
+      ],
+      { gap: 1, width: model.dimensions.width },
+    )
   },
   update: (msg, model) => {
     if (msg.type !== 'browser:keydown') return
