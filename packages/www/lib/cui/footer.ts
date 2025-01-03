@@ -1,4 +1,4 @@
-import { createView } from './render'
+import { createView, EMPTY_LINE } from './render'
 
 export const FooterView = createView({
   name: 'footer',
@@ -17,9 +17,26 @@ export const FooterView = createView({
         break
     }
 
+    const freeShippingText = 'free shipping on US orders over $40'
+    const freeShippingSpace = ' '.repeat(
+      (model.dimensions.width - freeShippingText.length) / 2,
+    )
     const space = ' '.repeat((model.dimensions.width - footerText.length) / 2)
 
     return [
+      {
+        texts: [
+          {
+            text: freeShippingSpace + freeShippingText + freeShippingSpace,
+            style: {
+              color: 'gray',
+              'border-bottom': '1px solid #666',
+              padding: '10px 0px',
+            },
+          },
+          { text: '\n' },
+        ],
+      },
       {
         texts: [
           { text: space },

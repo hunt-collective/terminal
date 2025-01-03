@@ -238,7 +238,8 @@ export class App {
       case 'splash':
         return SplashView
       case 'account':
-        throw new Error('Account view not implemented')
+        return ShopView
+      // throw new Error('Account view not implemented')
     }
   }
 
@@ -251,7 +252,7 @@ export class App {
     const viewLines = view(this.model)
 
     if (!fullscreen) {
-      const delta = 15 - viewLines.length
+      const delta = this.model.dimensions.height - viewLines.length
       for (let i = 0; i < delta; i++) {
         viewLines.push(EMPTY_LINE)
       }

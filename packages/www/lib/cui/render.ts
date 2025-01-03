@@ -2,7 +2,7 @@ import type { Model } from './app'
 import type { Command, Message } from './events'
 import type { StyledLine } from './types'
 
-export const EMPTY_LINE = { texts: [{ text: '' }] }
+export const EMPTY_LINE = { texts: [{ text: '', style: {} }] }
 
 export const styles = {
   white: { color: 'white' },
@@ -14,6 +14,7 @@ export const styles = {
     'padding-top': '7px',
     'padding-bottom': '7px',
     'font-family': 'monospace',
+    'border-bottom': '1px solid #666',
   },
 }
 
@@ -102,10 +103,9 @@ export function combineLines(lines: StyledLine[]): {
     let lineText = ''
 
     texts.forEach((p) => {
-      if (p.style) {
-        lineText += '%c'
-        combinedStyles.push(formatStyle(p.style))
-      }
+      const style = p.style ?? {}
+      lineText += '%c'
+      combinedStyles.push(formatStyle(style))
       lineText += pad(p.text, p.pad ?? 0)
     })
 

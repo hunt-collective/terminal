@@ -164,17 +164,6 @@ export const CartView = createView({
       model.cart.items.forEach((item, index) => {
         lines.push(...renderCartItem(model, item, index === state.selected))
       })
-
-      // Render free shipping message
-      lines.push(undefined)
-      lines.push({
-        texts: [
-          {
-            text: 'free shipping on US orders over $40',
-            style: styles.gray,
-          },
-        ],
-      })
     }
 
     return lines
@@ -184,8 +173,7 @@ export const CartView = createView({
 
     const { key } = msg.event
     const items = model.cart?.items || []
-    const selectedIndex = model.state.shop.selected
-    const selectedItem = items[selectedIndex]
+    const selectedItem = items[model.state.cart.selected]
 
     switch (key.toLowerCase()) {
       case 'arrowdown':
