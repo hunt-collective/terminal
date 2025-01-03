@@ -11,8 +11,8 @@ export const styles = {
   header: {
     color: 'white',
     background: '#1e1e1e',
-    'padding-top': '7px',
-    'padding-bottom': '7px',
+    // 'padding-top': '7px',
+    // 'padding-bottom': '7px',
     'font-family': 'monospace',
     'border-bottom': '1px solid #666',
   },

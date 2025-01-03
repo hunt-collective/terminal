@@ -1,77 +1,68 @@
-import { createView, EMPTY_LINE } from './render'
-
-const style = {
-  color: 'white',
-  background: '#1e1e1e',
-  'padding-top': '7px',
-  'padding-bottom': '7px',
-  'font-family': 'monospace',
-  'border-bottom': '1px solid #666',
-}
+import { createView, styles } from './render'
+import { Box, Flex, Text, Stack, Break } from './components'
 
 export const HeaderView = createView({
   name: 'header',
   view: (model) => {
-    const parts = [
-      {
-        text: ' terminal',
-        style,
-        pad: 20,
-      },
-      {
-        text: 's ',
-        style,
-      },
-      {
-        text: 'shop',
-        style: {
-          ...style,
-          color: model.view === 'shop' ? 'white' : 'gray',
+    return Stack([
+      Box(
+        Flex(
+          [
+            Flex(
+              [
+                Text('terminal', { style: styles.white }),
+                Flex(
+                  [
+                    Text('s', { style: styles.white }),
+                    Text('shop', {
+                      style: {
+                        color: model.view === 'shop' ? 'white' : 'gray',
+                      },
+                    }),
+                  ],
+                  { gap: 1 },
+                ),
+                Flex(
+                  [
+                    Text('a', { style: styles.white }),
+                    Text('account', {
+                      style: {
+                        color: model.view === 'account' ? 'white' : 'gray',
+                      },
+                    }),
+                  ],
+                  { gap: 1 },
+                ),
+              ],
+              { gap: 5 },
+            ),
+            Flex(
+              [
+                Text('c', { style: styles.white }),
+                Text('cart', {
+                  style: {
+                    color: model.view === 'cart' ? 'white' : 'gray',
+                  },
+                }),
+                Text(`$ ${(model.cart?.subtotal ?? 0) / 100}`, {
+                  style: styles.white,
+                }),
+                Text(
+                  `[${model.cart?.items.reduce((acc, item) => acc + item.quantity, 0) ?? 0}]`,
+                  { style: { color: 'gray' } },
+                ),
+              ],
+              { gap: 1 },
+            ),
+          ],
+          { justify: 'between', gap: 1 },
+        ),
+        {
+          padding: { x: 2 },
+          style: { background: '#1e1e1e', padding: '7px 0px' },
         },
-        pad: 15,
-      },
-      {
-        text: 'a ',
-        style,
-      },
-      {
-        text: 'account',
-        style: {
-          ...style,
-          color: model.view === 'account' ? 'white' : 'gray',
-        },
-        pad: 15,
-      },
-      {
-        text: 'c ',
-        style,
-      },
-      {
-        text: 'cart ',
-        style: {
-          ...style,
-          color: model.view === 'cart' ? 'white' : 'gray',
-        },
-      },
-      {
-        text: `$ ${(model.cart?.subtotal ?? 0) / 100} `,
-        style,
-      },
-      {
-        text: `[${model.cart?.items.reduce((acc, item) => acc + item.quantity, 0) ?? 0}] `,
-        style: {
-          ...style,
-          color: 'gray',
-        },
-      },
-    ]
-
-    return [
-      {
-        texts: parts,
-        pad: model.dimensions.width, // Total width for the header
-      },
-      EMPTY_LINE,
-    ]
+      ),
+      Break(), // Empty line after header
+    ])({ width: model.dimensions.width })
   },
 })
