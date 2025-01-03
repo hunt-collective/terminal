@@ -1,5 +1,5 @@
-import type { Model, ModelUpdate } from './app'
-import type { Cmd, Msg } from './events'
+import type { Model } from './app'
+import type { Command, Message } from './events'
 import type { StyledLine } from './types'
 
 export const EMPTY_LINE = { texts: [{ text: '' }] }
@@ -17,10 +17,18 @@ export const styles = {
   },
 }
 
+export type UpdateResult<T> =
+  | {
+      state?: Partial<T> // Direct local state updates
+      message?: Message | Message[] // Messages for global state changes
+      command?: Command // Side effects
+    }
+  | undefined
+
 export interface View {
   name: string
-  init?: (model: Model) => Cmd | undefined
-  update?: (msg: Msg, model: Model) => [ModelUpdate, Cmd | undefined]
+  init?: (model: Model) => Command | undefined
+  update?: (msg: Message, model: Model) => UpdateResult<any>
   view: (model: Model) => StyledLine[]
   fullscreen?: boolean
 }
@@ -29,11 +37,14 @@ export function createView<
   T extends keyof Model['state'] | (string & {}),
 >(options: {
   name: T
-  init?: (model: Model) => Cmd | undefined
+  init?: (model: Model) => Command | undefined
   view: T extends keyof Model['state']
     ? (model: Model, state: Model['state'][T]) => StyledLine[]
     : (model: Model) => StyledLine[]
-  update?: (msg: Msg, model: Model) => [ModelUpdate, Cmd | undefined]
+  update?: (
+    msg: Message,
+    model: Model,
+  ) => UpdateResult<T extends keyof Model['state'] ? Model['state'][T] : never>
   fullscreen?: boolean
 }) {
   return {
@@ -52,10 +63,7 @@ export function createView<
 
       return lines
     },
-    update: (msg, model) => {
-      if (options.update) return options.update(msg, model)
-      return [model, undefined]
-    },
+    update: options.update,
     fullscreen: options.fullscreen,
   } satisfies View
 }

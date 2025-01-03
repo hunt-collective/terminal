@@ -1,6 +1,6 @@
 import Terminal from '@terminaldotshop/sdk'
-import { auth, callback, getCurrentToken, API_URL } from './auth'
-import { type Msg } from './events'
+import { getCurrentToken, API_URL, callback, auth } from './auth'
+import { type Message } from './events'
 import type { View as ViewType } from './types'
 import { HeaderView } from './header'
 import { ShopView, type ShopState } from './shop'
@@ -9,16 +9,15 @@ import { SplashView, type SplashState } from './splash'
 import { FooterView } from './footer'
 import { combineLines, EMPTY_LINE, type View } from './render'
 
-export type ModelUpdate = Partial<
-  Omit<Model, 'state'> & { state: Partial<Model['state']> }
->
-
 export type Model = {
   view: ViewType
+  dimensions: { width: number; height: number }
   client: () => Promise<Terminal>
   cart: Terminal.Cart | null
   products: Terminal.Product[]
-  // dimensions?: { width: number; height: number }
+  updates: {
+    cart?: number
+  }
   state: {
     splash: SplashState
     shop: ShopState
@@ -40,6 +39,7 @@ export class App {
     // Start with splash view while loading data
     this.model = {
       view: 'splash',
+      dimensions: { width: 75, height: 20 },
       client: async () => {
         const token = await getCurrentToken()
         if (!token) throw new Error('No access token available')
@@ -52,6 +52,7 @@ export class App {
       },
       cart: null,
       products: [],
+      updates: {},
       state: {
         splash: {
           cursorVisible: true,
@@ -96,10 +97,7 @@ export class App {
 
   private async initialize() {
     const cmd = SplashView.init?.(this.model)
-    if (cmd) {
-      const msg = await cmd()
-      await this.handleMsg(msg)
-    }
+    if (cmd) cmd().then(this.handleMsg.bind(this))
 
     const client = await this.model.client()
 
@@ -119,27 +117,116 @@ export class App {
     ]).then(([data]) => data)
 
     // Switch to shop view with loaded data
-    this.update({
+    this.model = {
+      ...this.model,
       view: 'shop',
       products,
       cart,
       state: {
+        ...this.model.state,
         shop: {
           selected: products.findIndex((p) => p.tags?.featured === 'true') ?? 0,
         },
       },
-    })
+    }
 
     this.render()
   }
 
-  private update(model: ModelUpdate) {
-    this.model = {
-      ...this.model,
-      ...model,
-      state: { ...this.model.state, ...model.state },
+  private handleMsg(msg: Message) {
+    // Handle global messages first
+    switch (msg.type) {
+      case 'app:navigate':
+        this.model.view = msg.view
+        break
+
+      case 'cart:quantity-updated': {
+        try {
+          const product = this.model.products.find((p) =>
+            p.variants.find((v) => v.id === msg.variantId),
+          )
+          const variant = product?.variants.find((v) => v.id === msg.variantId)
+          if (!variant) return
+
+          const item = this.model.cart?.items.find(
+            (i) => i.productVariantID === variant?.id,
+          )
+          const newQuantity = Math.max(msg.quantity, 0)
+
+          // Optimistic update
+          if (item) {
+            item.quantity = newQuantity
+            item.subtotal = variant.price * newQuantity
+          } else if (this.model.cart) {
+            this.model.cart.items.push({
+              id: '',
+              productVariantID: variant.id,
+              quantity: newQuantity,
+              subtotal: variant.price * newQuantity,
+            })
+          }
+          if (this.model.cart) {
+            this.model.cart.subtotal = this.model.cart.items.reduce(
+              (acc, item) => acc + item.subtotal,
+              0,
+            )
+          }
+
+          const now = Date.now()
+          this.model.updates.cart = now
+
+          this.model
+            .client()
+            .then((client) =>
+              client.cart.setItem({
+                productVariantID: msg.variantId,
+                quantity: msg.quantity,
+              }),
+            )
+            .then((response) => {
+              if (this.model.updates.cart === now) {
+                this.model.cart = response.data
+                this.render()
+              }
+            })
+        } catch {}
+        break
+      }
     }
-    return this.model
+
+    // Forward to current view's update function
+    const view = this.getCurrentView()
+    if (view.update) {
+      const result = view.update(msg, this.model)
+
+      // Apply local state updates if any
+      if (result?.state) {
+        const viewName = view.name as keyof Model['state']
+        this.model.state = {
+          ...this.model.state,
+          [viewName]: {
+            ...this.model.state[viewName],
+            ...result.state,
+          },
+        }
+      }
+
+      // Handle any resulting messages
+      if (result?.message) {
+        if (Array.isArray(result.message)) {
+          result.message.forEach(this.handleMsg.bind(this))
+        } else {
+          this.handleMsg(result.message)
+        }
+      }
+
+      // Handle any commands
+      if (result?.command) {
+        result.command().then(this.handleMsg.bind(this))
+      }
+    }
+
+    this.render()
   }
 
   private getCurrentView(): View {
@@ -155,53 +242,6 @@ export class App {
     }
   }
 
-  private async handleMsg(msg: Msg) {
-    switch (msg.type) {
-      case 'app:navigate':
-        this.model.view = msg.view
-        break
-
-      // case 'SelectProduct': {
-      //   const nextId =
-      //     msg.productId === 'next'
-      //       ? this.getNextProductId()
-      //       : msg.productId === 'prev'
-      //         ? this.getNextProductId('prev')
-      //         : msg.productId
-      //   this.model.selectedProductId = nextId
-      //   break
-      // }
-
-      case 'UpdateQuantity': {
-        try {
-          const client = await this.model.client()
-          const response = await client.cart.setItem({
-            productVariantID: msg.variantId,
-            quantity: msg.delta,
-          })
-          this.model.cart = response.data
-        } catch (error) {
-          console.error('Failed to update cart:', error)
-        }
-        break
-      }
-    }
-
-    // Forward to current view's update function
-    const view = this.getCurrentView()
-    if (view.update) {
-      const [model, cmd] = view.update?.(msg, this.model)
-      this.update(model)
-
-      if (cmd) {
-        const nextMsg = await cmd()
-        this.handleMsg(nextMsg)
-      }
-    }
-
-    this.render()
-  }
-
   render() {
     const { view, fullscreen } = this.getCurrentView()
 
@@ -209,9 +249,12 @@ export class App {
     if (!fullscreen) lines.push(...HeaderView.view(this.model))
 
     const viewLines = view(this.model)
-    const delta = 15 - viewLines.length
-    for (let i = 0; i < delta; i++) {
-      viewLines.push(EMPTY_LINE)
+
+    if (!fullscreen) {
+      const delta = 15 - viewLines.length
+      for (let i = 0; i < delta; i++) {
+        viewLines.push(EMPTY_LINE)
+      }
     }
 
     lines.push(...viewLines)
@@ -245,6 +288,19 @@ export class App {
   }
 
   // Create app instance
+  const app = await App.create()
   // @ts-expect-error
-  window.app = await App.create()
+  window.app = app
+
+  // TODO: implement these
+  // Object.defineProperties(window, {
+  //   s: { get: () => app?.render() },
+  //   c: { get: () => app?.navigate('cart') },
+  //   a: { get: () => app?.render() },
+  //   q: { get: () => app?.render() },
+  //   j: { get: () => app?.moveSelection('down') },
+  //   k: { get: () => app?.moveSelection('up') },
+  //   h: { get: () => app?.updateQuantity(-1) },
+  //   l: { get: () => app?.updateQuantity(1) },
+  // })
 })()

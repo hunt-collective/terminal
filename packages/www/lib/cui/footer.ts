@@ -17,9 +17,12 @@ export const FooterView = createView({
         break
     }
 
+    const space = ' '.repeat((model.dimensions.width - footerText.length) / 2)
+
     return [
       {
         texts: [
+          { text: space },
           {
             text: footerText,
             style: {
@@ -27,6 +30,7 @@ export const FooterView = createView({
               'font-family': 'monospace',
             },
           },
+          { text: space },
         ],
       },
     ]

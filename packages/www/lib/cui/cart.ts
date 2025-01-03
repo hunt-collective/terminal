@@ -1,5 +1,5 @@
 import type Terminal from '@terminaldotshop/sdk'
-import type { Model, ModelUpdate } from './app'
+import type { Model } from './app'
 import { createView, styles, formatPrice } from './render'
 import type { StyledLine } from './types'
 
@@ -9,10 +9,7 @@ export type CartState = {
 
 type CheckoutStep = 'cart' | 'shipping' | 'payment' | 'confirmation'
 
-function updateSelectedItem(
-  model: Model,
-  previous: boolean,
-): [ModelUpdate, undefined] {
+function updateSelectedItem(model: Model, previous: boolean) {
   let next: number
   if (previous) {
     next = model.state.cart.selected - 1
@@ -28,16 +25,7 @@ function updateSelectedItem(
     next = max
   }
 
-  return [
-    {
-      state: {
-        cart: {
-          selected: next,
-        },
-      },
-    },
-    undefined,
-  ]
+  return next
 }
 
 function renderBreadcrumbs(currentStep: CheckoutStep) {
@@ -192,7 +180,7 @@ export const CartView = createView({
     return lines
   },
   update: (msg, model) => {
-    if (msg.type !== 'browser:keydown') return [model, undefined]
+    if (msg.type !== 'browser:keydown') return
 
     const { key } = msg.event
     const items = model.cart?.items || []
@@ -202,24 +190,23 @@ export const CartView = createView({
     switch (key.toLowerCase()) {
       case 'arrowdown':
       case 'j':
-        return updateSelectedItem(model, false)
+        return { state: { selected: updateSelectedItem(model, false) } }
 
       case 'arrowup':
       case 'k':
-        return updateSelectedItem(model, true)
+        return { state: { selected: updateSelectedItem(model, true) } }
 
       case 'arrowright':
       case 'l':
       case '+':
         if (selectedItem) {
-          return [
-            model,
-            () => ({
-              type: 'UpdateQuantity',
+          return {
+            message: {
+              type: 'cart:quantity-updated',
               variantId: selectedItem.productVariantID,
-              delta: selectedItem.quantity + 1,
-            }),
-          ]
+              quantity: selectedItem.quantity + 1,
+            },
+          }
         }
         break
 
@@ -227,21 +214,18 @@ export const CartView = createView({
       case 'h':
       case '-':
         if (selectedItem && selectedItem.quantity > 0) {
-          return [
-            model,
-            () => ({
-              type: 'UpdateQuantity',
+          return {
+            message: {
+              type: 'cart:quantity-updated',
               variantId: selectedItem.productVariantID,
-              delta: selectedItem.quantity - 1,
-            }),
-          ]
+              quantity: selectedItem.quantity - 1,
+            },
+          }
         }
         break
 
       case 'escape':
-        return [model, () => ({ type: 'app:navigate', view: 'shop' })]
+        return { message: { type: 'app:navigate', view: 'shop' } }
     }
-
-    return [model, undefined]
   },
 })

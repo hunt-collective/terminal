@@ -9,35 +9,32 @@ export const SplashView = createView({
   name: 'splash',
   fullscreen: true,
   init: () => {
-    return () => {
+    return async () => {
       return { type: 'splash:blink' }
     }
   },
-  view: (_, local) => {
-    const width = 80
-    const height = 20
-
+  view: (model, state) => {
     const cursor = '█'
     const logoText = 'terminal'
-    const logoWithCursor = logoText + (local?.cursorVisible ? cursor : ' ')
+    const logoWithCursor = logoText + (state?.cursorVisible ? cursor : ' ')
     const lines = []
 
     // Calculate vertical padding
     const contentHeight = 1
     const verticalPadding = Math.max(
       0,
-      Math.floor((height - contentHeight) / 2),
+      Math.floor((model.dimensions.height - contentHeight) / 2),
     )
 
     // Add top padding
     for (let i = 0; i < verticalPadding; i++) {
-      lines.push({ texts: [{ text: ' '.repeat(width) }] })
+      lines.push({ texts: [{ text: ' '.repeat(model.dimensions.width) }] })
     }
 
     // Create the logo line with cursor
     const textPadding = Math.max(
       0,
-      Math.floor((width - logoWithCursor.length) / 2),
+      Math.floor((model.dimensions.width - logoWithCursor.length) / 2),
     )
     lines.push({
       texts: [
@@ -50,19 +47,25 @@ export const SplashView = createView({
           style: { 'font-family': 'monospace', color: 'white' },
         },
         {
-          text: local?.cursorVisible ? cursor : ' ',
+          text: state?.cursorVisible ? cursor : ' ',
           style: { 'font-family': 'monospace', color: '#FF6600' },
         },
         {
-          text: ' '.repeat(width - textPadding - logoWithCursor.length),
+          text: ' '.repeat(
+            model.dimensions.width - textPadding - logoWithCursor.length,
+          ),
           style: { 'font-family': 'monospace', color: 'white' },
         },
       ],
     })
 
     // Add bottom padding
-    for (let i = 0; i < height - contentHeight - verticalPadding; i++) {
-      lines.push({ texts: [{ text: ' '.repeat(width) }] })
+    for (
+      let i = 0;
+      i < model.dimensions.height - contentHeight - verticalPadding;
+      i++
+    ) {
+      lines.push({ texts: [{ text: ' '.repeat(model.dimensions.width) }] })
     }
 
     return lines
@@ -70,19 +73,12 @@ export const SplashView = createView({
   update: (msg, model) => {
     switch (msg.type) {
       case 'splash:blink':
-        return [
-          {
-            ...model,
-            state: {
-              ...model.state,
-              splash: { cursorVisible: !model.state.splash.cursorVisible },
-            },
-          },
-          Delay(700, () => {
+        return {
+          state: { cursorVisible: !model.state.splash.cursorVisible },
+          command: Delay(700, () => {
             return { type: 'splash:blink' }
           }),
-        ]
+        }
     }
-    return [model, undefined]
   },
 })

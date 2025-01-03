@@ -1,7 +1,7 @@
-export type Cmd = () => Promise<Msg> | Msg
+export type Command = () => Promise<Message>
 
 export const Delay =
-  (milliseconds: number, cb: (t: Date) => Msg): Cmd =>
+  (milliseconds: number, cb: (t: Date) => Message): Command =>
   () => {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -11,9 +11,9 @@ export const Delay =
     })
   }
 
-export type Msg =
+export type Message =
   | { type: 'browser:keydown'; event: KeyboardEvent }
   | { type: 'app:navigate'; view: 'shop' | 'cart' | 'account' }
   | { type: 'splash:blink' }
   | { type: 'shop:selection-updated'; index: number }
-  | { type: 'UpdateQuantity'; variantId: string; delta: number }
+  | { type: 'cart:quantity-updated'; variantId: string; quantity: number }

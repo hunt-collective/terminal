@@ -71,7 +71,7 @@ export const HeaderView = createView({
     return [
       {
         texts: parts,
-        pad: 75, // Total width for the header
+        pad: model.dimensions.width, // Total width for the header
       },
     ]
   },

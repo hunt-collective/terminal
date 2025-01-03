@@ -1,6 +1,5 @@
 import type Terminal from '@terminaldotshop/sdk'
-import type { Model, ModelUpdate } from './app'
-import type { Cmd, Msg } from './events'
+import type { Model } from './app'
 import type { StyledText } from './types'
 import { createView, styles, formatPrice } from './render'
 
@@ -38,10 +37,7 @@ function renderProduct(
   return texts
 }
 
-function updateSelectedProduct(
-  model: Model,
-  previous: boolean,
-): [ModelUpdate, undefined] {
+function updateSelectedProduct(model: Model, previous: boolean) {
   let next: number
   if (previous) {
     next = model.state.shop.selected - 1
@@ -57,23 +53,15 @@ function updateSelectedProduct(
     next = max
   }
 
-  return [
-    {
-      state: {
-        shop: {
-          selected: next,
-        },
-      },
-    },
-    undefined,
-  ]
+  return next
 }
 
 export const ShopView = createView({
   name: 'shop',
   view: (model, state) => {
-    const LIST_WIDTH = 20
-    const DETAILS_WIDTH = 45
+    const third = Math.floor(model.dimensions.width / 3)
+    const LIST_WIDTH = third
+    const DETAILS_WIDTH = third * 2
     const lines = []
 
     // Prepare the content for both columns
@@ -139,7 +127,7 @@ export const ShopView = createView({
               text: ' enter',
               style: {
                 color: 'gray',
-                padding: '2px 5px',
+                padding: '0px 5px',
               },
             },
           ],
@@ -223,24 +211,20 @@ export const ShopView = createView({
     return lines
   },
   update: (msg, model) => {
-    if (msg.type !== 'browser:keydown') return [model, undefined]
+    if (msg.type !== 'browser:keydown') return
 
     const { key } = msg.event
-    const product = model.state.shop.selected
-      ? model.products[model.state.shop.selected]
-      : undefined
-    const variant = product?.variants[0]
-
-    const simple = (msg: Msg): [Model, Cmd | undefined] => [model, () => msg]
+    const product = model.products[model.state.shop.selected]
+    const variant = product.variants[0]
 
     switch (key.toLowerCase()) {
       case 'arrowdown':
       case 'j':
-        return updateSelectedProduct(model, false)
+        return { state: { selected: updateSelectedProduct(model, false) } }
 
       case 'arrowup':
       case 'k':
-        return updateSelectedProduct(model, true)
+        return { state: { selected: updateSelectedProduct(model, true) } }
 
       case 'arrowright':
       case 'l':
@@ -249,11 +233,13 @@ export const ShopView = createView({
           const currentQty =
             model.cart?.items.find((i) => i.productVariantID === variant.id)
               ?.quantity ?? 0
-          return simple({
-            type: 'UpdateQuantity',
-            variantId: variant.id,
-            delta: currentQty + 1,
-          })
+          return {
+            message: {
+              type: 'cart:quantity-updated',
+              variantId: variant.id,
+              quantity: currentQty + 1,
+            },
+          }
         }
         break
 
@@ -265,16 +251,16 @@ export const ShopView = createView({
             model.cart?.items.find((i) => i.productVariantID === variant.id)
               ?.quantity ?? 0
           if (currentQty > 0) {
-            return simple({
-              type: 'UpdateQuantity',
-              variantId: variant.id,
-              delta: currentQty - 1,
-            })
+            return {
+              message: {
+                type: 'cart:quantity-updated',
+                variantId: variant.id,
+                quantity: currentQty - 1,
+              },
+            }
           }
         }
         break
     }
-
-    return [model, undefined]
   },
 })
