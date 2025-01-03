@@ -1,4 +1,4 @@
-import { createView, EMPTY_LINE } from './render'
+import { createView } from './render'
 
 export const FooterView = createView({
   name: 'footer',

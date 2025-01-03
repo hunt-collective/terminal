@@ -1,24 +1,19 @@
 import type Terminal from '@terminaldotshop/sdk'
 import type { Model } from './app'
 import { createView, styles, formatPrice } from './render'
-import { box, empty, flex, stack, text } from './layout'
+import { box, empty, flex, stack, text } from './components'
 
 export type ShopState = {
   selected: number
 }
 
-function ProductListItem(
-  product: Terminal.Product,
-  isSelected: boolean,
-  listWidth: number,
-) {
+function ProductListItem(product: Terminal.Product, isSelected: boolean) {
   const style = isSelected
     ? { ...styles.white, background: '#ff4800' }
     : styles.gray
 
   return box(text(product.name, { style }), {
     padding: { x: 1, y: 0 },
-    width: listWidth,
     style: isSelected ? { background: '#ff4800' } : undefined,
   })
 }

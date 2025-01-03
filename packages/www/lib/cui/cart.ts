@@ -1,7 +1,7 @@
 import type Terminal from '@terminaldotshop/sdk'
 import type { Model } from './app'
 import { createView, styles, formatPrice } from './render'
-import { box, flex, stack, text } from './layout'
+import { box, flex, stack, text } from './components'
 
 export type CartState = {
   selected: number
@@ -35,8 +35,9 @@ function Breadcrumbs(currentStep: CheckoutStep) {
       text(step, {
         style: step === currentStep ? styles.white : styles.gray,
       }),
-      index < steps.length - 1 ? text(' / ', { style: styles.gray }) : '',
+      index < steps.length - 1 ? text('/', { style: styles.gray }) : '',
     ]),
+    { gap: 1 },
   )
 }
 
