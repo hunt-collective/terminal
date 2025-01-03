@@ -8,14 +8,6 @@ export const styles = {
   white: { color: 'white' },
   gray: { color: '#666' },
   orange: { color: '#ff4800' },
-  header: {
-    color: 'white',
-    background: '#1e1e1e',
-    // 'padding-top': '7px',
-    // 'padding-bottom': '7px',
-    'font-family': 'monospace',
-    'border-bottom': '1px solid #666',
-  },
 }
 
 export type UpdateResult<T> =

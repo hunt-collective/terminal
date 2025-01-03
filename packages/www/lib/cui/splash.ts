@@ -1,5 +1,6 @@
 import { Delay } from './events'
 import { createView } from './render'
+import { Stack, Text, Center, Spacer, Flex } from './components'
 
 export type SplashState = {
   cursorVisible: boolean
@@ -16,59 +17,27 @@ export const SplashView = createView({
   view: (model, state) => {
     const cursor = '█'
     const logoText = 'terminal'
-    const logoWithCursor = logoText + (state?.cursorVisible ? cursor : ' ')
-    const lines = []
 
-    // Calculate vertical padding
-    const contentHeight = 1
-    const verticalPadding = Math.max(
-      0,
-      Math.floor((model.dimensions.height - contentHeight) / 2),
-    )
-
-    // Add top padding
-    for (let i = 0; i < verticalPadding; i++) {
-      lines.push({ texts: [{ text: ' '.repeat(model.dimensions.width) }] })
-    }
-
-    // Create the logo line with cursor
-    const textPadding = Math.max(
-      0,
-      Math.floor((model.dimensions.width - logoWithCursor.length) / 2),
-    )
-    lines.push({
-      texts: [
-        {
-          text: ' '.repeat(textPadding),
-          style: { 'font-family': 'monospace', color: 'white' },
-        },
-        {
-          text: logoText,
-          style: { 'font-family': 'monospace', color: 'white' },
-        },
-        {
-          text: state?.cursorVisible ? cursor : ' ',
-          style: { 'font-family': 'monospace', color: '#FF6600' },
-        },
-        {
-          text: ' '.repeat(
-            model.dimensions.width - textPadding - logoWithCursor.length,
-          ),
-          style: { 'font-family': 'monospace', color: 'white' },
-        },
-      ],
-    })
-
-    // Add bottom padding
-    for (
-      let i = 0;
-      i < model.dimensions.height - contentHeight - verticalPadding;
-      i++
-    ) {
-      lines.push({ texts: [{ text: ' '.repeat(model.dimensions.width) }] })
-    }
-
-    return lines
+    return Stack([
+      Spacer({ size: Math.floor(model.dimensions.height / 2) - 1 }),
+      Center([
+        Flex([
+          Text(logoText, {
+            style: {
+              'font-family': 'monospace',
+              color: 'white',
+            },
+          }),
+          Text(state?.cursorVisible ? cursor : ' ', {
+            style: {
+              'font-family': 'monospace',
+              color: '#FF6600',
+            },
+          }),
+        ]),
+      ]),
+      Spacer({ size: Math.floor(model.dimensions.height / 2) }),
+    ])({ width: model.dimensions.width })
   },
   update: (msg, model) => {
     switch (msg.type) {
