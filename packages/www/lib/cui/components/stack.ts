@@ -5,9 +5,8 @@ import {
   type LayoutContext,
   normalizeNode,
   createSpanningLine,
+  type StyledLine,
 } from '../layout'
-
-import type { StyledLine } from '../types'
 
 export type StackOptions = {
   gap?: number

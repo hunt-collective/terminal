@@ -1,6 +1,6 @@
 import type { Model } from './app'
 import type { Command, Message } from './events'
-import type { StyledLine } from './types'
+import type { StyledLine } from './layout'
 
 export const EMPTY_LINE = { texts: [{ text: '', style: {} }] }
 

@@ -6,8 +6,8 @@ import {
   type JustifyContent,
   type LayoutContext,
   type LayoutNode,
+  type StyledLine,
 } from '../layout'
-import type { StyledLine } from '../types'
 
 export type FlexOptions = {
   gap?: number

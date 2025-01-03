@@ -1,7 +1,6 @@
 import Terminal from '@terminaldotshop/sdk'
 import { getCurrentToken, API_URL, callback, auth } from './auth'
 import { type Message } from './events'
-import type { View as ViewType } from './types'
 import { HeaderView } from './header'
 import { ShopView, type ShopState } from './shop'
 import { CartView, type CartState } from './cart'
@@ -10,7 +9,7 @@ import { FooterView } from './footer'
 import { combineLines, EMPTY_LINE, type View } from './render'
 
 export type Model = {
-  view: ViewType
+  view: 'shop' | 'cart' | 'account' | 'splash'
   dimensions: { width: number; height: number }
   client: () => Promise<Terminal>
   cart: Terminal.Cart | null

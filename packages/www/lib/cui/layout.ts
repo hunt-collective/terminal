@@ -1,4 +1,15 @@
-import type { StyledText, StyledLine } from './types'
+export type StyledText = {
+  text: string
+  style?: object
+  pad?: number
+}
+
+export type StyledLine =
+  | {
+      texts: StyledText[]
+      pad?: number
+    }
+  | undefined
 
 // Layout context to track parent dimensions
 export type LayoutContext = {

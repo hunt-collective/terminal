@@ -3,8 +3,8 @@ import {
   type Component,
   type LayoutContext,
   type LayoutNode,
+  type StyledLine,
 } from '../layout'
-import type { StyledLine } from '../types'
 
 export type BoxOptions = {
   padding?: number | { x?: number; y?: number }
