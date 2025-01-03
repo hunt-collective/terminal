@@ -53,29 +53,26 @@ function renderCartItem(
   const variant = product.variants.find((v) => v.id === item.productVariantID)
 
   return box(
-    stack(
-      [
-        flex(
-          [
-            text(product.name, {
-              style: selected ? styles.white : styles.gray,
-            }),
-            flex(
-              [
-                text(selected ? '- ' : ' ', { style: styles.gray }),
-                text(item.quantity.toString(), { style: styles.white }),
-                text(selected ? ' + ' : '   ', { style: styles.gray }),
-                text(formatPrice(item.subtotal), { style: styles.gray }),
-              ],
-              { gap: 1 },
-            ),
-          ],
-          { justify: 'between' },
-        ),
-        variant ? text(variant.name, { style: styles.gray }) : '',
-      ],
-      { gap: 1 },
-    ),
+    stack([
+      flex(
+        [
+          text(product.name, {
+            style: selected ? styles.white : styles.gray,
+          }),
+          flex(
+            [
+              text(selected ? '- ' : ' ', { style: styles.gray }),
+              text(item.quantity.toString(), { style: styles.white }),
+              text(selected ? ' + ' : '   ', { style: styles.gray }),
+              text(formatPrice(item.subtotal), { style: styles.gray }),
+            ],
+            { gap: 1 },
+          ),
+        ],
+        { justify: 'between' },
+      ),
+      variant ? text(variant.name, { style: styles.gray }) : '',
+    ]),
     {
       padding: { x: 1, y: 0 },
       border: true,
