@@ -1,221 +1,152 @@
 import type Terminal from '@terminaldotshop/sdk'
 import type { Model } from './app'
-import type { StyledText } from './types'
 import { createView, styles, formatPrice } from './render'
+import { box, empty, flex, stack, text } from './layout'
 
 export type ShopState = {
   selected: number
 }
 
-function renderProduct(
+function ProductListItem(
   product: Terminal.Product,
-  selected: boolean,
-  LIST_WIDTH: number,
+  isSelected: boolean,
+  listWidth: number,
 ) {
-  const texts = [
-    {
-      text: ' ' + product.name,
-      style: selected
-        ? { ...styles.white, background: '#ff4800' }
-        : styles.gray,
-      pad: selected ? 0 : undefined,
-    },
-  ]
+  const style = isSelected
+    ? { ...styles.white, background: '#ff4800' }
+    : styles.gray
 
-  if (selected) {
-    texts.push({
-      text: '',
-      style: { ...styles.white, background: '#ff4800' },
-      pad: LIST_WIDTH - product.name.length - 4,
-    })
-    texts.push({
-      text: '',
-      style: styles.white,
-      pad: 3,
-    })
-  }
-  return texts
+  return box(text(product.name, { style }), {
+    padding: { x: 1, y: 0 },
+    width: listWidth,
+    style: isSelected ? { background: '#ff4800' } : undefined,
+  })
+}
+
+function ProductSection(
+  title: string,
+  products: Terminal.Product[],
+  selectedIndex: number,
+  allProducts: Terminal.Product[],
+) {
+  return stack([
+    text(`~ ${title} ~`, { style: styles.white }),
+    ...products.map((product) => {
+      const index = allProducts.findIndex((p) => p.id === product.id)
+      return ProductListItem(product, index === selectedIndex)
+    }),
+  ])
+}
+
+function QuantityControl(currentQuantity: number) {
+  return flex(
+    [
+      text('-', { style: styles.gray }),
+      text(currentQuantity.toString(), { style: styles.white }),
+      text('+', { style: styles.gray }),
+    ],
+    { gap: 1 },
+  )
+}
+
+function SubscriptionButton() {
+  return flex(
+    [
+      text('subscribe', {
+        style: {
+          color: 'white',
+          background: '#ff4800',
+          padding: '0px 5px',
+        },
+      }),
+      text('enter', {
+        style: styles.gray,
+      }),
+    ],
+    { gap: 1 },
+  )
+}
+
+function ProductDetails(
+  product: Terminal.Product,
+  cart: Terminal.Cart | null,
+  detailsWidth: number,
+) {
+  const variant = product.variants[0]
+  const currentQuantity =
+    cart?.items.find((i) => i.productVariantID === variant.id)?.quantity ?? 0
+
+  return box(
+    stack([
+      text(product.name, { style: styles.white }),
+      stack(
+        [
+          text(variant.name, { style: styles.gray }),
+          text(formatPrice(variant.price), { style: styles.orange }),
+          text(product.description, {
+            style: styles.gray,
+            maxWidth: detailsWidth - 2,
+          }),
+          product.subscription === 'required'
+            ? SubscriptionButton()
+            : QuantityControl(currentQuantity),
+        ],
+        { gap: 1 },
+      ),
+    ]),
+    {
+      padding: { x: 1, y: 0 },
+      width: detailsWidth,
+    },
+  )
 }
 
 function updateSelectedProduct(model: Model, previous: boolean) {
-  let next: number
-  if (previous) {
-    next = model.state.shop.selected - 1
-  } else {
-    next = model.state.shop.selected + 1
-  }
+  const next = previous
+    ? model.state.shop.selected - 1
+    : model.state.shop.selected + 1
 
-  if (next < 0) {
-    next = 0
-  }
-  const max = model.products.length - 1
-  if (next > max) {
-    next = max
-  }
-
-  return next
+  return Math.max(0, Math.min(next, model.products.length - 1))
 }
 
 export const ShopView = createView({
   name: 'shop',
   view: (model, state) => {
+    const gap = 2
     const third = Math.floor(model.dimensions.width / 3)
-    const LIST_WIDTH = third
-    const DETAILS_WIDTH = third * 2
-    const lines = []
+    const listWidth = third
+    const detailsWidth = third * 2 - gap
 
-    // Prepare the content for both columns
     const featured = model.products.filter((p) => p.tags?.featured === 'true')
     const staples = model.products.filter((p) => p.tags?.featured !== 'true')
-    const product = model.products[state.selected]
+    const selectedProduct = model.products[state.selected]
 
-    // Prepare product details content
-    const detailsLines = []
-    if (product) {
-      const variant = product.variants[0]
-
-      detailsLines.push({
-        texts: [{ text: product.name, style: styles.white }],
-      })
-      detailsLines.push({
-        texts: [{ text: variant.name, style: styles.gray }],
-      })
-      detailsLines.push(undefined)
-      detailsLines.push({
-        texts: [{ text: formatPrice(variant.price), style: styles.orange }],
-      })
-      detailsLines.push(undefined)
-
-      // Split description into lines
-      const maxLineLength = DETAILS_WIDTH
-      const words = product.description.split(' ')
-      let line = ''
-      for (const word of words) {
-        if ((line + word).length > maxLineLength) {
-          detailsLines.push({
-            texts: [{ text: line.trim(), style: styles.gray }],
-          })
-          line = word + ' '
-        } else {
-          line += word + ' '
-        }
-      }
-      if (line.trim()) {
-        detailsLines.push({
-          texts: [{ text: line.trim(), style: styles.gray }],
-        })
-      }
-
-      // Quantity indicator
-      const currentQuantity =
-        model.cart?.items.find((i) => i.productVariantID === variant.id)
-          ?.quantity ?? 0
-
-      detailsLines.push(undefined)
-      if (product.subscription === 'required') {
-        detailsLines.push({
-          texts: [
-            {
-              text: 'subscribe',
-              style: {
-                color: 'white',
-                background: '#ff4800',
-                padding: '0px 5px',
-              },
-            },
-            {
-              text: ' enter',
-              style: {
-                color: 'gray',
-                padding: '0px 5px',
-              },
-            },
+    return flex(
+      [
+        stack(
+          [
+            ProductSection(
+              'featured',
+              featured,
+              state.selected,
+              model.products,
+            ),
+            empty(),
+            ProductSection('staples', staples, state.selected, model.products),
           ],
-        })
-      } else {
-        detailsLines.push({
-          texts: [
-            { text: '- ', style: styles.gray },
-            { text: currentQuantity.toString(), style: styles.white },
-            { text: ' +', style: styles.gray },
-          ],
-        })
-      }
-    }
-
-    // Combine both columns
-    let leftLineIndex = 0
-    let rightLineIndex = 0
-
-    while (
-      leftLineIndex < featured.length + staples.length + 3 ||
-      rightLineIndex < detailsLines.length
-    ) {
-      let leftTexts = [{ text: '', pad: LIST_WIDTH }] as StyledText[]
-
-      // Left column content
-      if (leftLineIndex === 0) {
-        leftTexts = [{ text: '~ featured ~', style: styles.white }]
-      } else if (leftLineIndex === 1 && featured.length > 0) {
-        const product = featured[0]
-        const index = model.products.findIndex((p) => p.id === product.id)
-        leftTexts = renderProduct(product, state.selected === index, LIST_WIDTH)
-      } else if (leftLineIndex > 0 && leftLineIndex < featured.length + 2) {
-        const product = featured[leftLineIndex - 1]
-        if (product) {
-          const index = model.products.findIndex((p) => p.id === product.id)
-          leftTexts = renderProduct(
-            product,
-            index === state.selected,
-            LIST_WIDTH,
-          )
-        }
-      } else if (leftLineIndex === featured.length + 2) {
-        leftTexts = [{ text: '~ staples ~', style: styles.white }]
-      } else if (leftLineIndex > featured.length + 2) {
-        const stapleIndex = leftLineIndex - featured.length - 3
-        if (stapleIndex < staples.length) {
-          const product = staples[stapleIndex]
-          const index = model.products.findIndex((p) => p.id === product.id)
-          leftTexts = renderProduct(
-            staples[stapleIndex],
-            index === state.selected,
-            LIST_WIDTH,
-          )
-        }
-      }
-
-      // Right column content
-      const rightLine =
-        rightLineIndex < detailsLines.length
-          ? detailsLines[rightLineIndex]
-          : undefined
-
-      // Combine columns
-      if (leftTexts || rightLine?.texts) {
-        lines.push({
-          texts: [
-            ...leftTexts.map((t) => ({
-              ...t,
-              pad: t.pad ?? LIST_WIDTH,
-            })),
-            ...(rightLine?.texts ?? []),
-          ],
-        })
-      }
-
-      leftLineIndex++
-      rightLineIndex++
-    }
-
-    return lines
+          { width: listWidth },
+        ),
+        ProductDetails(selectedProduct, model.cart, detailsWidth),
+      ],
+      { gap },
+    )({ width: model.dimensions.width })
   },
   update: (msg, model) => {
     if (msg.type !== 'browser:keydown') return
 
     const { key } = msg.event
     const product = model.products[model.state.shop.selected]
-    const variant = product.variants[0]
+    const variant = product?.variants[0]
 
     switch (key.toLowerCase()) {
       case 'arrowdown':

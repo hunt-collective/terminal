@@ -37,6 +37,7 @@ export type BoxOptions = {
   padding?: number | { x?: number; y?: number }
   width?: number
   border?: boolean
+  style?: object
   borderStyle?: {
     color?: object
     chars?: {
@@ -137,55 +138,83 @@ export function flex(
 ): Component {
   return (parentContext: LayoutContext) => {
     const { justify = 'start', align = 'start', gap = 0 } = options
-    const width =
-      (options.width ?? options.justify === 'between')
-        ? parentContext.width
-        : undefined
+    const width = options.width ?? parentContext.width
     const context = { width }
 
-    // Convert nodes to components and evaluate them with our context
-    const lines = nodes.map((node) => normalizeNode(node)(context))
-    const firstLines = lines.map((line) => line[0])
-    let validLines = firstLines.filter(
-      (line): line is StyledLine => line !== undefined,
-    )
-    if (gap) {
-      const spacing = Math.max(0, gap)
-      const spacer = { text: ' '.repeat(spacing) }
-      validLines = validLines.map((line, i) =>
-        i < validLines.length - 1
-          ? { ...line, texts: [...line!.texts, spacer] }
-          : line,
+    // Convert nodes to components and evaluate them
+    const componentLines = nodes.map((node) => normalizeNode(node)(context))
+
+    const maxLines = Math.max(...componentLines.map((lines) => lines.length))
+    const result: StyledLine[] = []
+
+    // Process each line across all components
+    for (let lineIndex = 0; lineIndex < maxLines; lineIndex++) {
+      const currentLineTexts: StyledText[] = []
+
+      // Gather texts from each component for this line
+      componentLines.forEach((lines, componentIndex) => {
+        const line = lines[lineIndex]
+
+        // Add spacing between components if not first component
+        if (componentIndex > 0 && gap > 0) {
+          currentLineTexts.push({ text: ' '.repeat(gap) })
+        }
+
+        // If this component has no line at this index, add empty space matching its width
+        if (!line) {
+          // Find the maximum width of this component
+          const componentWidth = Math.max(
+            ...lines.map(
+              (l) =>
+                l?.texts.reduce((w, t) => w + (t.text?.length || 0), 0) || 0,
+            ),
+            0,
+          )
+          currentLineTexts.push({ text: ' '.repeat(componentWidth) })
+        } else {
+          currentLineTexts.push(...line.texts)
+        }
+      })
+
+      if (currentLineTexts.length === 0) {
+        result.push({ texts: [{ text: '' }] })
+        continue
+      }
+
+      if (!width) {
+        result.push({ texts: currentLineTexts })
+        continue
+      }
+
+      const totalContentWidth = currentLineTexts.reduce(
+        (acc, text) => acc + (text.text?.length || 0),
+        0,
       )
+
+      if (justify === 'between' && componentLines.length > 1) {
+        const remainingSpace = Math.max(0, width - totalContentWidth)
+        const spaceBetween = Math.floor(
+          remainingSpace / (componentLines.length - 1),
+        )
+        const adjustedTexts: StyledText[] = []
+
+        componentLines.forEach((_, index) => {
+          const componentTexts = componentLines[index][lineIndex]?.texts
+          if (componentTexts) {
+            adjustedTexts.push(...componentTexts)
+            if (index < componentLines.length - 1) {
+              adjustedTexts.push({ text: ' '.repeat(spaceBetween) })
+            }
+          }
+        })
+
+        result.push(createSpanningLine(width, align, adjustedTexts))
+      } else {
+        result.push(createSpanningLine(width, align, currentLineTexts))
+      }
     }
 
-    if (!width) {
-      return [{ texts: validLines.flatMap((line) => line!.texts) }]
-    }
-
-    const totalContentWidth = validLines.reduce((acc, line) => {
-      return acc + line!.texts.reduce((w, t) => w + (t.text?.length || 0), 0)
-    }, 0)
-
-    if (justify === 'between' && validLines.length > 1) {
-      const raw = Math.floor(
-        (width - totalContentWidth) / (validLines.length - 1),
-      )
-      const spacing = Math.max(0, raw)
-      const spacer = { text: ' '.repeat(spacing) }
-      const result = validLines.flatMap((line, i) =>
-        i < validLines.length - 1 ? [...line!.texts, spacer] : line!.texts,
-      )
-      return [createSpanningLine(width, align, result)]
-    }
-
-    return [
-      createSpanningLine(
-        width,
-        align,
-        validLines.flatMap((line) => line!.texts),
-      ),
-    ]
+    return result
   }
 }
 
@@ -240,7 +269,7 @@ export function stack(
 export function text(content: string, options: TextOptions = {}): Component {
   return (parentContext: LayoutContext) => {
     const maxWidth = options.maxWidth ?? parentContext.width
-    const { style, pad: padding } = options
+    const { style, pad } = options
 
     if (!maxWidth) {
       return [
@@ -249,7 +278,7 @@ export function text(content: string, options: TextOptions = {}): Component {
             {
               text: content,
               style,
-              pad: padding,
+              pad,
             },
           ],
         },
@@ -257,13 +286,12 @@ export function text(content: string, options: TextOptions = {}): Component {
     }
 
     const wrappedLines = wrapText(content, maxWidth)
-
     return wrappedLines.map((line) => ({
       texts: [
         {
           text: line,
           style,
-          pad: padding,
+          pad,
         },
       ],
     }))
@@ -352,7 +380,7 @@ export function box(node: LayoutNode, options: BoxOptions = {}): Component {
                 Math.max(0, contentWidth + padding.x * 2),
               ) +
               chars.topRight,
-            style: borderColor,
+            style: { ...options.style, ...borderColor },
           },
         ],
       })
@@ -363,11 +391,25 @@ export function box(node: LayoutNode, options: BoxOptions = {}): Component {
       resultLines.push({
         texts: border
           ? [
-              { text: chars.vertical, style: borderColor },
-              { text: ' '.repeat(Math.max(0, contentWidth + padding.x * 2)) },
-              { text: chars.vertical, style: borderColor },
+              {
+                text: chars.vertical,
+                style: { ...options.style, ...borderColor },
+              },
+              {
+                text: ' '.repeat(Math.max(0, contentWidth + padding.x * 2)),
+                style: options.style,
+              },
+              {
+                text: chars.vertical,
+                style: { ...options.style, ...borderColor },
+              },
             ]
-          : [{ text: ' '.repeat(Math.max(0, fullWidth)) }],
+          : [
+              {
+                text: ' '.repeat(Math.max(0, fullWidth)),
+                style: options.style,
+              },
+            ],
       })
     }
 
@@ -394,12 +436,29 @@ export function box(node: LayoutNode, options: BoxOptions = {}): Component {
 
       resultLines.push({
         texts: [
-          ...(border ? [{ text: chars.vertical, style: borderColor }] : []),
-          { text: horizontalPad },
-          ...line.texts,
-          { text: ' '.repeat(remainingSpace) },
-          { text: horizontalPad },
-          ...(border ? [{ text: chars.vertical, style: borderColor }] : []),
+          ...(border
+            ? [
+                {
+                  text: chars.vertical,
+                  style: { ...options.style, ...borderColor },
+                },
+              ]
+            : []),
+          { text: horizontalPad, style: options.style },
+          ...line.texts.map((t) => ({
+            ...t,
+            style: { ...options.style, ...t.style },
+          })),
+          { text: ' '.repeat(remainingSpace), style: options.style },
+          { text: horizontalPad, style: options.style },
+          ...(border
+            ? [
+                {
+                  text: chars.vertical,
+                  style: { ...options.style, ...borderColor },
+                },
+              ]
+            : []),
         ],
       })
     })
@@ -483,5 +542,16 @@ export function subtitle(content: string): Component {
     return text(content, {
       style: { color: 'gray', 'font-style': 'italic' },
     })(parentContext)
+  }
+}
+
+export function empty(): Component {
+  return (parentContext: LayoutContext) => {
+    const width = parentContext.width
+    return [
+      {
+        texts: [{ text: width ? ' '.repeat(width) : '' }],
+      },
+    ]
   }
 }

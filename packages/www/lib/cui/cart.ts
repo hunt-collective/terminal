@@ -28,7 +28,7 @@ function updateSelectedItem(model: Model, previous: boolean) {
   return next
 }
 
-function renderBreadcrumbs(currentStep: CheckoutStep) {
+function Breadcrumbs(currentStep: CheckoutStep) {
   const steps: CheckoutStep[] = ['cart', 'shipping', 'payment', 'confirmation']
   return flex(
     steps.flatMap((step, index) => [
@@ -40,7 +40,7 @@ function renderBreadcrumbs(currentStep: CheckoutStep) {
   )
 }
 
-function renderCartItem(
+function CartItem(
   item: Terminal.CartResource.Cart.Item,
   selected: boolean,
   model: Model,
@@ -61,9 +61,9 @@ function renderCartItem(
           }),
           flex(
             [
-              text(selected ? '- ' : ' ', { style: styles.gray }),
+              text(selected ? '-' : ' ', { style: styles.gray }),
               text(item.quantity.toString(), { style: styles.white }),
-              text(selected ? ' + ' : '   ', { style: styles.gray }),
+              text(selected ? '+' : ' ', { style: styles.gray }),
               text(formatPrice(item.subtotal), { style: styles.gray }),
             ],
             { gap: 1 },
@@ -88,12 +88,12 @@ export const CartView = createView({
   view: (model, state) => {
     return stack(
       [
-        renderBreadcrumbs('cart'),
+        Breadcrumbs('cart'),
         !model.cart?.items.length
           ? text('Your cart is empty', { style: styles.gray })
           : stack(
               model.cart.items.map((item, index) =>
-                renderCartItem(item, index === state.selected, model),
+                CartItem(item, index === state.selected, model),
               ),
             ),
       ],
