@@ -1,12 +1,12 @@
-import { authorizer } from "@openauthjs/openauth";
-import { PasswordAdapter } from "@openauthjs/openauth/adapter/password";
-import { Adapter } from "@openauthjs/openauth/adapter/adapter";
+import { issuer } from "@openauthjs/openauth";
+import { PasswordProvider } from "@openauthjs/openauth/provider/password";
+import { Provider } from "@openauthjs/openauth/provider/provider";
 import { PasswordUI } from "@openauthjs/openauth/ui/password";
-import { CodeAdapter } from "@openauthjs/openauth/adapter/code";
+import { CodeProvider } from "@openauthjs/openauth/provider/code";
 import { CodeUI } from "@openauthjs/openauth/ui/code";
 import { Select } from "@openauthjs/openauth/ui/select";
-import { TwitchAdapter } from "@openauthjs/openauth/adapter/twitch";
-import { GithubAdapter } from "@openauthjs/openauth/adapter/github";
+import { TwitchProvider } from "@openauthjs/openauth/provider/twitch";
+import { GithubProvider } from "@openauthjs/openauth/provider/github";
 import { subjects } from "./subject.js";
 import { THEME_TERMINAL } from "@openauthjs/openauth/ui/theme";
 import { Resource } from "sst";
@@ -15,7 +15,7 @@ import { User } from "@terminal/core/user/index";
 import { Api } from "@terminal/core/api/api";
 import { Email } from "@terminal/core/email/index";
 
-const app = authorizer({
+const app = issuer({
   subjects,
   ttl: {
     access: 60 * 8,
@@ -29,7 +29,7 @@ const app = authorizer({
     },
   }),
   providers: {
-    password: PasswordAdapter(
+    password: PasswordProvider(
       PasswordUI({
         sendCode: async (email, code) => {
           console.log(email, code);
@@ -42,7 +42,7 @@ const app = authorizer({
         },
       }),
     ),
-    code: CodeAdapter<{ email: string }>(
+    code: CodeProvider<{ email: string }>(
       CodeUI({
         sendCode: async (claims, code) => {
           console.log(code, claims.email);
@@ -55,12 +55,12 @@ const app = authorizer({
         },
       }),
     ),
-    twitch: TwitchAdapter({
+    twitch: TwitchProvider({
       clientID: Resource.TwitchClientID.value,
       clientSecret: Resource.TwitchClientSecret.value,
       scopes: ["user:read:email"],
     }),
-    github: GithubAdapter({
+    github: GithubProvider({
       clientID: Resource.GithubClientID.value,
       clientSecret: Resource.GithubClientSecret.value,
       scopes: ["user:email"],
@@ -80,11 +80,12 @@ const app = authorizer({
         };
       },
       init() {},
-    } as Adapter<{
+    } as Provider<{
       fingerprint: string;
     }>,
   },
   allow: async (input) => {
+    if (process.env.SST_DEV) return true;
     const url = new URL(input.redirectURI);
     const hostname = url.hostname;
     if (hostname.endsWith("terminal.shop")) return true;
