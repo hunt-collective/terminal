@@ -5,7 +5,7 @@ import {
   type StyledLine,
 } from '../render'
 
-export type BoxOptions = {
+type BoxOptions = {
   padding?: number | { x?: number; y?: number }
   width?: number
   border?: boolean
@@ -32,8 +32,17 @@ const defaultBorderChars = {
   vertical: '│',
 }
 
-export function Box(node: LayoutNode, options: BoxOptions = {}): Component {
+interface PropsWithOptions extends BoxOptions {
+  child: LayoutNode
+}
+
+export function Box(props: PropsWithOptions | LayoutNode): Component {
   return (parentContext) => {
+    const node =
+      typeof props === 'string' ? props : 'child' in props ? props.child : props
+    const options: BoxOptions =
+      typeof props === 'string' ? {} : 'child' in props ? props : {}
+
     const width = options.width ?? parentContext.width
     const { border = false, borderStyle = {} } = options
 

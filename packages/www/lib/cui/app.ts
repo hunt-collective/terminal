@@ -1,13 +1,13 @@
 import Terminal from '@terminaldotshop/sdk'
 import { getCurrentToken, API_URL, callback, auth } from './auth'
 import { type Message } from './events'
-import { ShopView, type ShopState } from './pages/shop'
-import { CartView, type CartState } from './pages/cart'
-import { SplashView, type SplashState } from './pages/splash'
-import { combineLines, type View } from './render'
+import { ShopPage, type ShopState } from './pages/shop'
+import { CartPage, type CartState } from './pages/cart'
+import { SplashPage, type SplashState } from './pages/splash'
+import { combineLines, type Page } from './render'
 
 export type Model = {
-  view: 'shop' | 'cart' | 'account' | 'splash'
+  page: 'shop' | 'cart' | 'account' | 'splash'
   dimensions: { width: number; height: number }
   client: () => Promise<Terminal>
   cart: Terminal.Cart | null
@@ -35,7 +35,7 @@ export class App {
   private constructor() {
     // Start with splash view while loading data
     this.model = {
-      view: 'splash',
+      page: 'splash',
       dimensions: { width: 75, height: 20 },
       client: async () => {
         const token = await getCurrentToken()
@@ -77,13 +77,13 @@ export class App {
       // Global navigation shortcuts
       switch (e.key.toLowerCase()) {
         case 's':
-          this.handleMsg({ type: 'app:navigate', view: 'shop' })
+          this.handleMsg({ type: 'app:navigate', page: 'shop' })
           return
         case 'c':
-          this.handleMsg({ type: 'app:navigate', view: 'cart' })
+          this.handleMsg({ type: 'app:navigate', page: 'cart' })
           return
         case 'a':
-          this.handleMsg({ type: 'app:navigate', view: 'account' })
+          this.handleMsg({ type: 'app:navigate', page: 'account' })
           return
       }
 
@@ -93,7 +93,7 @@ export class App {
   }
 
   private async initialize() {
-    const cmd = SplashView.init?.(this.model)
+    const cmd = SplashPage.init?.(this.model)
     if (cmd) cmd().then(this.handleMsg.bind(this))
 
     const client = await this.model.client()
@@ -116,7 +116,7 @@ export class App {
     // Switch to shop view with loaded data
     this.model = {
       ...this.model,
-      view: 'shop',
+      page: 'shop',
       products,
       cart,
       state: {
@@ -134,7 +134,7 @@ export class App {
     // Handle global messages first
     switch (msg.type) {
       case 'app:navigate':
-        this.model.view = msg.view
+        this.model.page = msg.page
         break
 
       case 'cart:quantity-updated': {
@@ -233,16 +233,16 @@ export class App {
     this.render()
   }
 
-  private getCurrentView(): View {
-    switch (this.model.view) {
+  private getCurrentView(): Page {
+    switch (this.model.page) {
       case 'shop':
-        return ShopView
+        return ShopPage
       case 'cart':
-        return CartView
+        return CartPage
       case 'splash':
-        return SplashView
+        return SplashPage
       case 'account':
-        return ShopView
+        return ShopPage
       // throw new Error('Account view not implemented')
     }
   }

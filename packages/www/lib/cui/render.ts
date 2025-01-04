@@ -19,6 +19,7 @@ export type LayoutContext = {
 }
 
 export type LayoutNode = Component | StyledLine[] | StyledText | string
+export type Children = LayoutNode[]
 
 export type Component = (context: LayoutContext) => StyledLine[]
 export interface ComponentProps {}
@@ -43,14 +44,14 @@ export type UpdateResult<T> =
     }
   | undefined
 
-export interface View {
+export interface Page {
   name: string
   init?: (model: Model) => Command | undefined
   update?: (msg: Message, model: Model) => UpdateResult<any>
   view: (model: Model) => StyledLine[]
 }
 
-export function createView<
+export function createPage<
   T extends keyof Model['state'] | (string & {}),
 >(options: {
   name: T
@@ -76,7 +77,7 @@ export function createView<
       )
       return component({ width: model.dimensions.width })
     },
-  } satisfies View
+  } satisfies Page
 }
 
 export function pad(str: string | undefined, length: number): string {

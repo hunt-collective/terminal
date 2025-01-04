@@ -1,6 +1,6 @@
 import type Terminal from '@terminaldotshop/sdk'
 import type { Model } from '../app'
-import { createView, styles, formatPrice } from '../render'
+import { createPage, styles, formatPrice } from '../render'
 import { Box, Flex, Stack, Text } from '../components'
 import { Layout } from '../layouts/base'
 
@@ -31,15 +31,15 @@ function updateSelectedItem(model: Model, previous: boolean) {
 
 function Breadcrumbs(currentStep: CheckoutStep) {
   const steps: CheckoutStep[] = ['cart', 'shipping', 'payment', 'confirmation']
-  return Flex(
-    steps.flatMap((step, index) => [
+  return Flex({
+    gap: 1,
+    children: steps.flatMap((step, index) => [
       Text(step, {
         style: step === currentStep ? styles.white : styles.gray,
       }),
       index < steps.length - 1 ? Text('/', { style: styles.gray }) : '',
     ]),
-    { gap: 1 },
-  )
+  })
 }
 
 function CartItem(
@@ -54,45 +54,44 @@ function CartItem(
 
   const variant = product.variants.find((v) => v.id === item.productVariantID)
 
-  return Box(
-    Stack([
-      Flex(
-        [
+  return Box({
+    padding: { x: 1, y: 0 },
+    border: true,
+    borderStyle: {
+      color: selected ? styles.white : styles.gray,
+    },
+    child: Stack([
+      Flex({
+        justify: 'between',
+        children: [
           Text(product.name, {
             style: selected ? styles.white : styles.gray,
           }),
-          Flex(
-            [
+          Flex({
+            children: [
               Text(selected ? '-' : ' ', { style: styles.gray }),
               Text(item.quantity.toString(), { style: styles.white }),
               Text(selected ? '+' : ' ', { style: styles.gray }),
               Text(formatPrice(item.subtotal), { style: styles.gray }),
             ],
-            { gap: 1 },
-          ),
+            gap: 1,
+          }),
         ],
-        { justify: 'between' },
-      ),
+      }),
       variant ? Text(variant.name, { style: styles.gray }) : '',
     ]),
-    {
-      padding: { x: 1, y: 0 },
-      border: true,
-      borderStyle: {
-        color: selected ? styles.white : styles.gray,
-      },
-    },
-  )
+  })
 }
 
-export const CartView = createView({
+export const CartPage = createPage({
   name: 'cart',
   view: (model, state) => {
     return Layout({
       model,
       children: [
-        Stack(
-          [
+        Stack({
+          gap: 1,
+          children: [
             Breadcrumbs('cart'),
             !model.cart?.items.length
               ? Text('Your cart is empty', { style: styles.gray })
@@ -102,8 +101,7 @@ export const CartView = createView({
                   ),
                 ),
           ],
-          { gap: 1 },
-        ),
+        }),
       ],
     })
   },
@@ -152,7 +150,7 @@ export const CartView = createView({
         break
 
       case 'escape':
-        return { message: { type: 'app:navigate', view: 'shop' } }
+        return { message: { type: 'app:navigate', page: 'shop' } }
     }
   },
 })

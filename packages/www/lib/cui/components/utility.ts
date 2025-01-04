@@ -19,10 +19,11 @@ export function Spacer(options: SpacerOptions = {}): Component {
 export function Center(nodes: LayoutNode[], width?: number): Component {
   return (parentContext) => {
     const context = { width: width ?? parentContext.width }
-    return Flex(nodes, {
+    return Flex({
       justify: 'center',
       align: 'center',
       width: context.width,
+      children: nodes,
     })(context)
   }
 }

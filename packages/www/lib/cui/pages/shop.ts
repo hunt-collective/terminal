@@ -1,6 +1,6 @@
 import type Terminal from '@terminaldotshop/sdk'
 import type { Model } from '../app'
-import { createView, styles, formatPrice } from '../render'
+import { createPage, styles, formatPrice } from '../render'
 import { Box, Break, Flex, Stack, Text } from '../components'
 import { Layout } from '../layouts/base'
 
@@ -17,9 +17,10 @@ function ProductListItem(
     ? { ...styles.white, background: highlightColor }
     : styles.gray
 
-  return Box(Text(product.name, { style }), {
+  return Box({
     padding: { x: 2, y: 0 },
     style: isSelected ? { background: highlightColor } : undefined,
+    child: Text(product.name, { style }),
   })
 }
 
@@ -40,19 +41,19 @@ function ProductSection(
 }
 
 function QuantityControl(currentQuantity: number) {
-  return Flex(
-    [
+  return Flex({
+    gap: 1,
+    children: [
       Text('-', { style: styles.gray }),
       Text(currentQuantity.toString(), { style: styles.white }),
       Text('+', { style: styles.gray }),
     ],
-    { gap: 1 },
-  )
+  })
 }
 
 function SubscriptionButton() {
-  return Flex(
-    [
+  return Flex({
+    children: [
       Text('subscribe', {
         style: {
           color: 'white',
@@ -64,8 +65,8 @@ function SubscriptionButton() {
         style: styles.gray,
       }),
     ],
-    { gap: 1 },
-  )
+    gap: 1,
+  })
 }
 
 function ProductDetails(
@@ -78,11 +79,14 @@ function ProductDetails(
   const currentQuantity =
     cart?.items.find((i) => i.productVariantID === variant.id)?.quantity ?? 0
 
-  return Box(
-    Stack([
+  return Box({
+    padding: { x: 1, y: 0 },
+    width: detailsWidth,
+    child: Stack([
       Text(product.name, { style: styles.white }),
-      Stack(
-        [
+      Stack({
+        gap: 1,
+        children: [
           Text(variant.name, { style: styles.gray }),
           Text(formatPrice(variant.price), {
             style: { color: highlightColor },
@@ -95,14 +99,9 @@ function ProductDetails(
             ? SubscriptionButton()
             : QuantityControl(currentQuantity),
         ],
-        { gap: 1 },
-      ),
+      }),
     ]),
-    {
-      padding: { x: 1, y: 0 },
-      width: detailsWidth,
-    },
-  )
+  })
 }
 
 function updateSelectedProduct(model: Model, previous: boolean) {
@@ -113,7 +112,7 @@ function updateSelectedProduct(model: Model, previous: boolean) {
   return Math.max(0, Math.min(next, model.products.length - 1))
 }
 
-export const ShopView = createView({
+export const ShopPage = createPage({
   name: 'shop',
   view: (model, state) => {
     const gap = 2
@@ -149,10 +148,12 @@ export const ShopView = createView({
     return Layout({
       model,
       children: [
-        Flex(
-          [
-            Stack(
-              [
+        Flex({
+          gap,
+          children: [
+            Stack({
+              width: listWidth,
+              children: [
                 ProductSection(
                   'featured',
                   featured,
@@ -169,8 +170,7 @@ export const ShopView = createView({
                   highlightColor,
                 ),
               ],
-              { width: listWidth },
-            ),
+            }),
             ProductDetails(
               selectedProduct,
               model.cart,
@@ -178,8 +178,7 @@ export const ShopView = createView({
               highlightColor,
             ),
           ],
-          { gap },
-        ),
+        }),
       ],
     })
   },

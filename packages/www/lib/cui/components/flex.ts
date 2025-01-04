@@ -2,9 +2,10 @@ import {
   createSpanningLine,
   normalizeNode,
   type AlignItems,
+  type Children,
   type Component,
   type JustifyContent,
-  type LayoutNode,
+  type ParentProps,
   type StyledLine,
 } from '../render'
 
@@ -15,11 +16,13 @@ export type FlexOptions = {
   width?: number
 }
 
-export function Flex(
-  nodes: LayoutNode[],
-  options: FlexOptions = {},
-): Component {
+interface PropsWithOptions extends ParentProps, FlexOptions {}
+
+export function Flex(props: PropsWithOptions | Children): Component {
   return (parentContext) => {
+    const nodes = Array.isArray(props) ? props : props.children
+    const options: FlexOptions = Array.isArray(props) ? {} : props
+
     const { justify = 'start', align = 'start', gap = 0 } = options
     const width =
       options.width ?? (justify === 'between' ? parentContext.width : undefined)

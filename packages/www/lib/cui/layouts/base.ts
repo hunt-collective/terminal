@@ -9,14 +9,12 @@ interface Props extends ParentProps {
 }
 
 export function Layout({ children, model }: Props): Component {
-  return Stack(
-    [
+  return Stack({
+    gap: 1,
+    children: [
       Header({ model }),
-      Stack(children, { minHeight: model.dimensions.height }),
-      Footer({ view: model.view }),
+      Stack({ children, minHeight: model.dimensions.height }),
+      Footer({ page: model.page }),
     ],
-    {
-      gap: 1,
-    },
-  )
+  })
 }

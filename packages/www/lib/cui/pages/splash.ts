@@ -1,12 +1,12 @@
 import { Delay } from '../events'
-import { createView } from '../render'
+import { createPage } from '../render'
 import { Stack, Text, Center, Spacer, Flex } from '../components'
 
 export type SplashState = {
   cursorVisible: boolean
 }
 
-export const SplashView = createView({
+export const SplashPage = createPage({
   name: 'splash',
   init: () => {
     return async () => {

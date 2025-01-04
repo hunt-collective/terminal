@@ -8,43 +8,48 @@ interface Props extends ComponentProps {
 }
 
 export function Header(props: Props): Component {
-  return Box(
-    Flex(
-      [
-        Flex(
-          [
+  return Box({
+    padding: { x: 2 },
+    style: { background: '#1e1e1e', padding: '7px 0px' },
+    child: Flex({
+      justify: 'between',
+      gap: 1,
+      children: [
+        Flex({
+          gap: 5,
+          children: [
             Text('terminal', { style: styles.white }),
-            Flex(
-              [
+            Flex({
+              gap: 1,
+              children: [
                 Text('s', { style: styles.white }),
                 Text('shop', {
                   style: {
-                    color: props.model.view === 'shop' ? 'white' : 'gray',
+                    color: props.model.page === 'shop' ? 'white' : 'gray',
                   },
                 }),
               ],
-              { gap: 1 },
-            ),
-            Flex(
-              [
+            }),
+            Flex({
+              gap: 1,
+              children: [
                 Text('a', { style: styles.white }),
                 Text('account', {
                   style: {
-                    color: props.model.view === 'account' ? 'white' : 'gray',
+                    color: props.model.page === 'account' ? 'white' : 'gray',
                   },
                 }),
               ],
-              { gap: 1 },
-            ),
+            }),
           ],
-          { gap: 5 },
-        ),
-        Flex(
-          [
+        }),
+        Flex({
+          gap: 1,
+          children: [
             Text('c', { style: styles.white }),
             Text('cart', {
               style: {
-                color: props.model.view === 'cart' ? 'white' : 'gray',
+                color: props.model.page === 'cart' ? 'white' : 'gray',
               },
             }),
             Text(`$ ${(props.model.cart?.subtotal ?? 0) / 100}`, {
@@ -55,14 +60,8 @@ export function Header(props: Props): Component {
               { style: { color: 'gray' } },
             ),
           ],
-          { gap: 1 },
-        ),
+        }),
       ],
-      { justify: 'between', gap: 1 },
-    ),
-    {
-      padding: { x: 2 },
-      style: { background: '#1e1e1e', padding: '7px 0px' },
-    },
-  )
+    }),
+  })
 }

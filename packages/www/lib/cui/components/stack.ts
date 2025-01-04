@@ -1,24 +1,27 @@
 import {
   type AlignItems,
-  type LayoutNode,
   type Component,
   normalizeNode,
   createSpanningLine,
   type StyledLine,
+  type ParentProps,
+  type Children,
 } from '../render'
 
-export type StackOptions = {
+type StackOptions = {
   gap?: number
   width?: number
   minHeight?: number
   align?: AlignItems
 }
 
-export function Stack(
-  nodes: LayoutNode[],
-  options: StackOptions = {},
-): Component {
+interface PropsWithOptions extends ParentProps, StackOptions {}
+
+export function Stack(props: PropsWithOptions | Children): Component {
   return (parentContext) => {
+    const nodes = Array.isArray(props) ? props : props.children
+    const options: StackOptions = Array.isArray(props) ? {} : props
+
     const width = options.width ?? parentContext.width
     const context = { width }
     const { gap = 0, align = 'start' } = options
