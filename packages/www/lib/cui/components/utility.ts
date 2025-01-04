@@ -1,4 +1,4 @@
-import type { Component, LayoutNode } from '../render'
+import type { Children, Component, ParentProps } from '../render'
 import { Flex } from './flex'
 import { Text } from './text'
 
@@ -16,9 +16,15 @@ export function Spacer(options: SpacerOptions = {}): Component {
   }
 }
 
-export function Center(nodes: LayoutNode[], width?: number): Component {
+type CenterOptions = { width?: number }
+interface CenterPropsWithOptions extends ParentProps, CenterOptions {}
+
+export function Center(props: CenterPropsWithOptions | Children): Component {
   return (parentContext) => {
-    const context = { width: width ?? parentContext.width }
+    const nodes = Array.isArray(props) ? props : props.children
+    const options: CenterOptions = Array.isArray(props) ? {} : props
+
+    const context = { width: options.width ?? parentContext.width }
     return Flex({
       justify: 'center',
       align: 'center',
