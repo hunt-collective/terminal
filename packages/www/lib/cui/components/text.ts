@@ -7,7 +7,7 @@ export type TextOptions = {
 }
 
 export function Text(content: string, options: TextOptions = {}): Component {
-  return (_model, parentContext) => {
+  return (parentContext) => {
     const maxWidth = options.maxWidth ?? parentContext.width
     const { style, pad } = options
 

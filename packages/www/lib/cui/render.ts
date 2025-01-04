@@ -14,16 +14,17 @@ export type StyledLine =
     }
   | undefined
 
-// Layout context to track parent dimensions
 export type LayoutContext = {
   width?: number
 }
 
-// A Component is a function that takes a context and returns StyledLine[]
-export type Component = (model: Model, context: LayoutContext) => StyledLine[]
-
-// Core types for the layout system
 export type LayoutNode = Component | StyledLine[] | StyledText | string
+
+export type Component = (context: LayoutContext) => StyledLine[]
+export interface ComponentProps {}
+export interface ParentProps extends ComponentProps {
+  children: LayoutNode[]
+}
 
 export type JustifyContent = 'start' | 'center' | 'end' | 'between'
 export type AlignItems = 'start' | 'center' | 'end'
@@ -73,7 +74,7 @@ export function createView<
         model,
         state,
       )
-      return component(model, { width: model.dimensions.width })
+      return component({ width: model.dimensions.width })
     },
   } satisfies View
 }

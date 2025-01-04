@@ -7,7 +7,7 @@ export type SpacerOptions = {
 }
 
 export function Spacer(options: SpacerOptions = {}): Component {
-  return (_model, parentContext) => {
+  return (parentContext) => {
     const { size = 1 } = options
     const width = parentContext.width
     return Array(size).fill({
@@ -17,34 +17,34 @@ export function Spacer(options: SpacerOptions = {}): Component {
 }
 
 export function Center(nodes: LayoutNode[], width?: number): Component {
-  return (model, parentContext) => {
+  return (parentContext) => {
     const context = { width: width ?? parentContext.width }
     return Flex(nodes, {
       justify: 'center',
       align: 'center',
       width: context.width,
-    })(model, context)
+    })(context)
   }
 }
 
 export function Title(content: string): Component {
-  return (model, parentContext) => {
+  return (parentContext) => {
     return Text(content.toUpperCase(), {
       style: { color: 'white', 'font-weight': 'bold' },
-    })(model, parentContext)
+    })(parentContext)
   }
 }
 
 export function Subtitle(content: string): Component {
-  return (model, parentContext) => {
+  return (parentContext) => {
     return Text(content, {
       style: { color: 'gray', 'font-style': 'italic' },
-    })(model, parentContext)
+    })(parentContext)
   }
 }
 
 export function Break(): Component {
-  return (_model, parentContext) => {
+  return (parentContext) => {
     const width = parentContext.width
     return [
       {

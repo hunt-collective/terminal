@@ -146,39 +146,42 @@ export const ShopView = createView({
         highlightColor = '#FF5C00'
     }
 
-    return Layout(
-      Flex(
-        [
-          Stack(
-            [
-              ProductSection(
-                'featured',
-                featured,
-                state.selected,
-                model.products,
-                highlightColor,
-              ),
-              Break(),
-              ProductSection(
-                'staples',
-                staples,
-                state.selected,
-                model.products,
-                highlightColor,
-              ),
-            ],
-            { width: listWidth },
-          ),
-          ProductDetails(
-            selectedProduct,
-            model.cart,
-            detailsWidth,
-            highlightColor,
-          ),
-        ],
-        { gap },
-      ),
-    )
+    return Layout({
+      model,
+      children: [
+        Flex(
+          [
+            Stack(
+              [
+                ProductSection(
+                  'featured',
+                  featured,
+                  state.selected,
+                  model.products,
+                  highlightColor,
+                ),
+                Break(),
+                ProductSection(
+                  'staples',
+                  staples,
+                  state.selected,
+                  model.products,
+                  highlightColor,
+                ),
+              ],
+              { width: listWidth },
+            ),
+            ProductDetails(
+              selectedProduct,
+              model.cart,
+              detailsWidth,
+              highlightColor,
+            ),
+          ],
+          { gap },
+        ),
+      ],
+    })
   },
   update: (msg, model) => {
     if (msg.type !== 'browser:keydown') return

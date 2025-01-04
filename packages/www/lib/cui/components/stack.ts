@@ -18,7 +18,7 @@ export function Stack(
   nodes: LayoutNode[],
   options: StackOptions = {},
 ): Component {
-  return (model, parentContext) => {
+  return (parentContext) => {
     const width = options.width ?? parentContext.width
     const context = { width }
     const { gap = 0, align = 'start' } = options
@@ -27,7 +27,7 @@ export function Stack(
 
     nodes.forEach((node, index) => {
       // Convert node to component and evaluate it with our context
-      const nodeLines = normalizeNode(node)(model, context)
+      const nodeLines = normalizeNode(node)(context)
 
       nodeLines.forEach((line) => {
         if (!line) {

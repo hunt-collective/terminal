@@ -33,7 +33,7 @@ const defaultBorderChars = {
 }
 
 export function Box(node: LayoutNode, options: BoxOptions = {}): Component {
-  return (model, parentContext) => {
+  return (parentContext) => {
     const width = options.width ?? parentContext.width
     const { border = false, borderStyle = {} } = options
 
@@ -59,7 +59,7 @@ export function Box(node: LayoutNode, options: BoxOptions = {}): Component {
     const childContext = { width: availableWidth }
 
     // Convert node to component and evaluate it with our child context
-    let lines = normalizeNode(node)(model, childContext)
+    let lines = normalizeNode(node)(childContext)
 
     if (availableWidth) {
       lines = lines.map((line) => {

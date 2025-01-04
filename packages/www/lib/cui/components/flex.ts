@@ -19,16 +19,14 @@ export function Flex(
   nodes: LayoutNode[],
   options: FlexOptions = {},
 ): Component {
-  return (model, parentContext) => {
+  return (parentContext) => {
     const { justify = 'start', align = 'start', gap = 0 } = options
     const width =
       options.width ?? (justify === 'between' ? parentContext.width : undefined)
     const context = { width }
 
     // Convert nodes to components and evaluate them
-    const componentLines = nodes.map((node) =>
-      normalizeNode(node)(model, context),
-    )
+    const componentLines = nodes.map((node) => normalizeNode(node)(context))
     const maxLines = Math.max(...componentLines.map((lines) => lines.length))
     const result: StyledLine[] = []
 

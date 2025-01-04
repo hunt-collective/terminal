@@ -88,21 +88,24 @@ function CartItem(
 export const CartView = createView({
   name: 'cart',
   view: (model, state) => {
-    return Layout(
-      Stack(
-        [
-          Breadcrumbs('cart'),
-          !model.cart?.items.length
-            ? Text('Your cart is empty', { style: styles.gray })
-            : Stack(
-                model.cart.items.map((item, index) =>
-                  CartItem(item, index === state.selected, model),
+    return Layout({
+      model,
+      children: [
+        Stack(
+          [
+            Breadcrumbs('cart'),
+            !model.cart?.items.length
+              ? Text('Your cart is empty', { style: styles.gray })
+              : Stack(
+                  model.cart.items.map((item, index) =>
+                    CartItem(item, index === state.selected, model),
+                  ),
                 ),
-              ),
-        ],
-        { gap: 1 },
-      ),
-    )
+          ],
+          { gap: 1 },
+        ),
+      ],
+    })
   },
   update: (msg, model) => {
     if (msg.type !== 'browser:keydown') return
