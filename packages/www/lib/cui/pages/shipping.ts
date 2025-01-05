@@ -6,6 +6,7 @@ import { CheckoutLayout } from '../layouts/checkout'
 
 export type ShippingState = {
   selected: number
+  view: 'form' | 'list'
 }
 
 function updateSelectedItem(model: Model, previous: boolean) {
@@ -49,6 +50,29 @@ function Address(address: Terminal.Address, selected: boolean) {
   )
 }
 
+export const ShippingForm = (model: Model, state: ShippingState) => {
+  return Center('Not implemented, yet')
+}
+
+export const ShippingList = (model: Model, state: ShippingState) =>
+  !model.cart?.items.length
+    ? Text('You have no addresses', styles.gray)
+    : Stack([
+        ...model.addresses.map((item, index) =>
+          Address(item, index === state.selected),
+        ),
+        Box(Center('add new address'), {
+          padding: { x: 1, y: 0 },
+          border: true,
+          borderStyle: {
+            color:
+              state.selected === model.addresses.length
+                ? styles.white
+                : styles.gray,
+          },
+        }),
+      ])
+
 export const ShippingPage = createPage({
   name: 'shipping',
   view: (model, state) => {
@@ -56,23 +80,9 @@ export const ShippingPage = createPage({
       model,
       current: 'shipping',
       children: [
-        !model.cart?.items.length
-          ? Text('You have no addresses', styles.gray)
-          : Stack([
-              ...model.addresses.map((item, index) =>
-                Address(item, index === state.selected),
-              ),
-              Box(Center('add new address'), {
-                padding: { x: 1, y: 0 },
-                border: true,
-                borderStyle: {
-                  color:
-                    state.selected === model.addresses.length
-                      ? styles.white
-                      : styles.gray,
-                },
-              }),
-            ]),
+        state.view === 'list'
+          ? ShippingList(model, state)
+          : ShippingForm(model, state),
       ],
     })
   },
@@ -80,8 +90,9 @@ export const ShippingPage = createPage({
     if (msg.type !== 'browser:keydown') return
 
     const { key } = msg.event
-    const items = model.cart?.items || []
-    const selectedItem = items[model.state.cart.selected]
+    const addresses = model.addresses || []
+    const selectedAddress = addresses[model.state.shipping.selected]
+    const addNewAddress = model.state.shipping.selected === addresses.length
 
     switch (key.toLowerCase()) {
       case 'arrowdown':
@@ -96,6 +107,10 @@ export const ShippingPage = createPage({
         return { message: { type: 'app:navigate', page: 'cart' } }
 
       case 'enter':
+        if (addNewAddress) {
+          model.state.shipping.view = 'form'
+          return { state: model.state.shipping }
+        }
         return { message: { type: 'app:navigate', page: 'payment' } }
     }
   },

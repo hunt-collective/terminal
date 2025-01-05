@@ -73,6 +73,7 @@ export class App {
           selected: 0,
         },
         shipping: {
+          view: 'list',
           selected: 0,
         },
       },
