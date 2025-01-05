@@ -1,34 +1,27 @@
+import { ParentComponent } from '../component'
 import {
   type AlignItems,
-  type Component,
   normalizeNode,
   createSpanningLine,
   type StyledLine,
-  type ParentProps,
-  type Children,
 } from '../render'
 
-type StackOptions = {
+type StackProps = {
   gap?: number
   width?: number
   minHeight?: number
   align?: AlignItems
 }
 
-interface PropsWithOptions extends ParentProps, StackOptions {}
-
-export function Stack(props: PropsWithOptions | Children): Component {
+export const Stack = ParentComponent<StackProps>((props) => {
   return (parentContext) => {
-    const nodes = Array.isArray(props) ? props : props.children
-    const options: StackOptions = Array.isArray(props) ? {} : props
-
-    const width = options.width ?? parentContext.width
+    const width = props.width ?? parentContext.width
     const context = { width }
-    const { gap = 0, align = 'start' } = options
+    const { gap = 0, align = 'start' } = props
 
     const lines: StyledLine[] = []
 
-    nodes.forEach((node, index) => {
+    props.children.forEach((node, index) => {
       // Convert node to component and evaluate it with our context
       const nodeLines = normalizeNode(node)(context)
 
@@ -54,15 +47,15 @@ export function Stack(props: PropsWithOptions | Children): Component {
       })
 
       // Add gap if not last item
-      if (index < nodes.length - 1 && gap > 0) {
+      if (index < props.children.length - 1 && gap > 0) {
         for (let i = 0; i < gap; i++) {
           lines.push({ texts: [{ text: '' }], pad: width })
         }
       }
     })
 
-    if (options.minHeight && lines.length < options.minHeight) {
-      const delta = options.minHeight - lines.length
+    if (props.minHeight && lines.length < props.minHeight) {
+      const delta = props.minHeight - lines.length
       for (let i = 0; i < delta; i++) {
         lines.push({ texts: [{ text: '' }], pad: width })
       }
@@ -70,4 +63,4 @@ export function Stack(props: PropsWithOptions | Children): Component {
 
     return lines
   }
-}
+})

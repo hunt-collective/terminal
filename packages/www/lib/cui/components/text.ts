@@ -1,15 +1,14 @@
-import type { Component } from '../render'
+import { ContentComponent } from '../component'
 
-export type TextOptions = {
-  style?: object
+export type TextProps = {
   pad?: number
   maxWidth?: number
 }
 
-export function Text(content: string, options: TextOptions = {}): Component {
+export const Text = ContentComponent<TextProps>((content, props) => {
   return (parentContext) => {
-    const maxWidth = options.maxWidth ?? parentContext.width
-    const { style, pad } = options
+    const maxWidth = props.maxWidth ?? parentContext.width
+    const { style, pad } = props
 
     if (!maxWidth) {
       return [
@@ -36,7 +35,7 @@ export function Text(content: string, options: TextOptions = {}): Component {
       ],
     }))
   }
-}
+})
 
 // Helper to wrap text into lines
 function wrapText(text: string, maxWidth: number): string[] {

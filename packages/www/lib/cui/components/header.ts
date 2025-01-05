@@ -1,13 +1,13 @@
 import { styles } from '../render'
 import { Box, Flex, Text } from './'
-import type { Component, ComponentProps } from '../render'
 import type { Model } from '../app'
+import { Component } from '../component'
 
-interface Props extends ComponentProps {
+interface HeaderProps {
   model: Model
 }
 
-export function Header(props: Props): Component {
+export const Header = Component<HeaderProps>((props) => {
   return Box({
     padding: { x: 2 },
     style: { background: '#1e1e1e', padding: '7px 0px' },
@@ -64,4 +64,4 @@ export function Header(props: Props): Component {
       ],
     }),
   })
-}
+})

@@ -1,14 +1,14 @@
-import type { Component, ParentProps } from '../render'
 import { Stack } from '../components'
 import { Footer } from '../components/footer'
 import { Header } from '../components/header'
 import type { Model } from '../app'
+import { ParentComponent } from '../component'
 
-interface Props extends ParentProps {
+interface LayoutProps {
   model: Model
 }
 
-export function Layout({ children, model }: Props): Component {
+export const Layout = ParentComponent<LayoutProps>(({ children, model }) => {
   return Stack({
     gap: 1,
     children: [
@@ -17,4 +17,4 @@ export function Layout({ children, model }: Props): Component {
       Footer({ page: model.page }),
     ],
   })
-}
+})

@@ -1,35 +1,30 @@
+import { ParentComponent } from '../component'
 import {
   createSpanningLine,
   normalizeNode,
   type AlignItems,
-  type Children,
-  type Component,
   type JustifyContent,
-  type ParentProps,
   type StyledLine,
 } from '../render'
 
-export type FlexOptions = {
+export type FlexProps = {
   gap?: number
   justify?: JustifyContent
   align?: AlignItems
   width?: number
 }
 
-interface PropsWithOptions extends ParentProps, FlexOptions {}
-
-export function Flex(props: PropsWithOptions | Children): Component {
+export const Flex = ParentComponent<FlexProps>((props) => {
   return (parentContext) => {
-    const nodes = Array.isArray(props) ? props : props.children
-    const options: FlexOptions = Array.isArray(props) ? {} : props
-
-    const { justify = 'start', align = 'start', gap = 0 } = options
+    const { justify = 'start', align = 'start', gap = 0 } = props
     const width =
-      options.width ?? (justify === 'between' ? parentContext.width : undefined)
+      props.width ?? (justify === 'between' ? parentContext.width : undefined)
     const context = { width }
 
     // Convert nodes to components and evaluate them
-    const componentLines = nodes.map((node) => normalizeNode(node)(context))
+    const componentLines = props.children.map((node) =>
+      normalizeNode(node)(context),
+    )
     const maxLines = Math.max(...componentLines.map((lines) => lines.length))
     const result: StyledLine[] = []
 
@@ -115,4 +110,4 @@ export function Flex(props: PropsWithOptions | Children): Component {
 
     return result
   }
-}
+})

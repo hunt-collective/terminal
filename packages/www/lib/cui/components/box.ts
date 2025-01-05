@@ -1,15 +1,10 @@
-import {
-  normalizeNode,
-  type Component,
-  type LayoutNode,
-  type StyledLine,
-} from '../render'
+import { ContainerComponent } from '../component'
+import { normalizeNode, type StyledLine } from '../render'
 
-type BoxOptions = {
+type BoxProps = {
   padding?: number | { x?: number; y?: number }
   width?: number
   border?: boolean
-  style?: object
   borderStyle?: {
     color?: object
     chars?: {
@@ -32,25 +27,16 @@ const defaultBorderChars = {
   vertical: '│',
 }
 
-interface PropsWithOptions extends BoxOptions {
-  child: LayoutNode
-}
-
-export function Box(props: PropsWithOptions | LayoutNode): Component {
+export const Box = ContainerComponent<BoxProps>((props) => {
   return (parentContext) => {
-    const node =
-      typeof props === 'string' ? props : 'child' in props ? props.child : props
-    const options: BoxOptions =
-      typeof props === 'string' ? {} : 'child' in props ? props : {}
-
-    const width = options.width ?? parentContext.width
-    const { border = false, borderStyle = {} } = options
+    const width = props.width ?? parentContext.width
+    const { border = false, borderStyle = {} } = props
 
     // Handle padding options
     const padding =
-      typeof options.padding === 'number'
-        ? { x: options.padding, y: options.padding }
-        : { x: options.padding?.x ?? 0, y: options.padding?.y ?? 0 }
+      typeof props.padding === 'number'
+        ? { x: props.padding, y: props.padding }
+        : { x: props.padding?.x ?? 0, y: props.padding?.y ?? 0 }
 
     const chars = {
       ...defaultBorderChars,
@@ -68,7 +54,7 @@ export function Box(props: PropsWithOptions | LayoutNode): Component {
     const childContext = { width: availableWidth }
 
     // Convert node to component and evaluate it with our child context
-    let lines = normalizeNode(node)(childContext)
+    let lines = normalizeNode(props.child)(childContext)
 
     if (availableWidth) {
       lines = lines.map((line) => {
@@ -114,7 +100,7 @@ export function Box(props: PropsWithOptions | LayoutNode): Component {
                 Math.max(0, contentWidth + padding.x * 2),
               ) +
               chars.topRight,
-            style: { ...options.style, ...borderColor },
+            style: { ...props.style, ...borderColor },
           },
         ],
       })
@@ -127,21 +113,21 @@ export function Box(props: PropsWithOptions | LayoutNode): Component {
           ? [
               {
                 text: chars.vertical,
-                style: { ...options.style, ...borderColor },
+                style: { ...props.style, ...borderColor },
               },
               {
                 text: ' '.repeat(Math.max(0, contentWidth + padding.x * 2)),
-                style: options.style,
+                style: props.style,
               },
               {
                 text: chars.vertical,
-                style: { ...options.style, ...borderColor },
+                style: { ...props.style, ...borderColor },
               },
             ]
           : [
               {
                 text: ' '.repeat(Math.max(0, fullWidth)),
-                style: options.style,
+                style: props.style,
               },
             ],
       })
@@ -174,22 +160,22 @@ export function Box(props: PropsWithOptions | LayoutNode): Component {
             ? [
                 {
                   text: chars.vertical,
-                  style: { ...options.style, ...borderColor },
+                  style: { ...props.style, ...borderColor },
                 },
               ]
             : []),
-          { text: horizontalPad, style: options.style },
+          { text: horizontalPad, style: props.style },
           ...line.texts.map((t) => ({
             ...t,
-            style: { ...options.style, ...t.style },
+            style: { ...props.style, ...t.style },
           })),
-          { text: ' '.repeat(remainingSpace), style: options.style },
-          { text: horizontalPad, style: options.style },
+          { text: ' '.repeat(remainingSpace), style: props.style },
+          { text: horizontalPad, style: props.style },
           ...(border
             ? [
                 {
                   text: chars.vertical,
-                  style: { ...options.style, ...borderColor },
+                  style: { ...props.style, ...borderColor },
                 },
               ]
             : []),
@@ -228,4 +214,4 @@ export function Box(props: PropsWithOptions | LayoutNode): Component {
 
     return resultLines
   }
-}
+})

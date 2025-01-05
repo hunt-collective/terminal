@@ -1,5 +1,6 @@
 import type { Command, Message } from './events'
 import type { Model } from './app'
+import type { Component } from './component'
 
 export type StyledText = {
   text: string
@@ -18,14 +19,7 @@ export type LayoutContext = {
   width?: number
 }
 
-export type LayoutNode = Component | StyledLine[] | StyledText | string
-export type Children = LayoutNode[]
-
-export type Component = (context: LayoutContext) => StyledLine[]
-export interface ComponentProps {}
-export interface ParentProps extends ComponentProps {
-  children: LayoutNode[]
-}
+export type Node = Component | StyledLine[] | StyledText | string
 
 export type JustifyContent = 'start' | 'center' | 'end' | 'between'
 export type AlignItems = 'start' | 'center' | 'end'
@@ -130,7 +124,7 @@ export function combineLines(lines: StyledLine[]): {
 }
 
 // Helper to normalize nodes into Components
-export function normalizeNode(node: LayoutNode): Component {
+export function normalizeNode(node: Node): Component {
   if (typeof node === 'function') {
     return node
   }

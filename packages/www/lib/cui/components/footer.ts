@@ -1,12 +1,12 @@
 import type { Model } from '../app'
-import type { Component, ComponentProps } from '../render'
+import { Component } from '../component'
 import { Box, Stack, Text, Center } from '../components'
 
-interface Props extends ComponentProps {
+interface FooterProps {
   page: Model['page']
 }
 
-export function Footer(props: Props): Component {
+export const Footer = Component<FooterProps>((props) => {
   let footerText = ''
   switch (props.page) {
     case 'shop':
@@ -44,4 +44,4 @@ export function Footer(props: Props): Component {
       }),
     ]),
   ])
-}
+})

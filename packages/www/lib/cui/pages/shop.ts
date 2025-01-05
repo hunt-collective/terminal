@@ -53,6 +53,7 @@ function QuantityControl(currentQuantity: number) {
 
 function SubscriptionButton() {
   return Flex({
+    gap: 1,
     children: [
       Text('subscribe', {
         style: {
@@ -65,7 +66,6 @@ function SubscriptionButton() {
         style: styles.gray,
       }),
     ],
-    gap: 1,
   })
 }
 
