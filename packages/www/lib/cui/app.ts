@@ -5,13 +5,23 @@ import { ShopPage, type ShopState } from './pages/shop'
 import { CartPage, type CartState } from './pages/cart'
 import { SplashPage, type SplashState } from './pages/splash'
 import { combineLines, type Page } from './render'
+import { ShippingPage, type ShippingState } from './pages/shipping'
 
 export type Model = {
-  page: 'shop' | 'cart' | 'account' | 'splash'
+  page:
+    | 'shop'
+    | 'cart'
+    | 'account'
+    | 'splash'
+    | 'shipping'
+    | 'payment'
+    | 'confirm'
+    | 'final'
   dimensions: { width: number; height: number }
   client: () => Promise<Terminal>
   cart: Terminal.Cart | null
   products: Terminal.Product[]
+  addresses: Terminal.Address[]
   updates: {
     cart?: number
   }
@@ -19,6 +29,7 @@ export type Model = {
     splash: SplashState
     shop: ShopState
     cart: CartState
+    shipping: ShippingState
   }
 }
 
@@ -49,6 +60,7 @@ export class App {
       },
       cart: null,
       products: [],
+      addresses: [],
       updates: {},
       state: {
         splash: {
@@ -58,6 +70,9 @@ export class App {
           selected: 0,
         },
         cart: {
+          selected: 0,
+        },
+        shipping: {
           selected: 0,
         },
       },
@@ -102,13 +117,14 @@ export class App {
     const dataPromise = Promise.all([
       client.product.list().then((r) => r.data),
       client.cart.get().then((r) => r.data),
+      client.address.list().then((r) => r.data),
     ])
 
     // Ensure splash shows for at least 3 seconds
     const timerPromise = new Promise((resolve) => setTimeout(resolve, 3000))
 
     // Wait for both data and minimum splash time
-    const [products, cart] = await Promise.all([
+    const [products, cart, addresses] = await Promise.all([
       dataPromise,
       timerPromise,
     ]).then(([data]) => data)
@@ -118,6 +134,7 @@ export class App {
       ...this.model,
       page: 'shop',
       products,
+      addresses,
       cart,
       state: {
         ...this.model.state,
@@ -199,7 +216,7 @@ export class App {
     }
 
     // Forward to current view's update function
-    const view = this.getCurrentView()
+    const view = this.getCurrentPage()
     if (view.update) {
       const result = view.update(msg, this.model)
 
@@ -233,7 +250,7 @@ export class App {
     this.render()
   }
 
-  private getCurrentView(): Page {
+  private getCurrentPage(): Page {
     switch (this.model.page) {
       case 'shop':
         return ShopPage
@@ -241,20 +258,21 @@ export class App {
         return CartPage
       case 'splash':
         return SplashPage
-      case 'account':
-        return ShopPage
-      // throw new Error('Account view not implemented')
+      case 'shipping':
+        return ShippingPage
+      default:
+        throw new Error(`${this.model.page} page not implemented`)
     }
   }
 
   render() {
-    const { view } = this.getCurrentView()
+    const { view } = this.getCurrentPage()
     const { text, styles } = combineLines(view(this.model))
-    if (this.last === text) return
+    if (this.last === text + JSON.stringify(styles)) return
 
     console.clear()
     console.log(text, ...styles)
-    this.last = text
+    this.last = text + JSON.stringify(styles)
   }
 }
 

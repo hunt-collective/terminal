@@ -26,7 +26,7 @@ func (m model) ShopSwitch() (model, tea.Cmd) {
 
 	if len(m.products) > 1 {
 		m.state.footer.commands = append(
-			[]footerCommand{{key: "↑↓", value: "products"}},
+			[]footerCommand{{key: "↑/↓", value: "products"}},
 			m.state.footer.commands...,
 		)
 	}

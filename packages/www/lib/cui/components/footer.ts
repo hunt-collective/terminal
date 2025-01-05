@@ -1,22 +1,30 @@
 import type { Model } from '../app'
 import { Component } from '../component'
-import { Box, Stack, Text, Center } from '../components'
+import { Box, Stack, Text, Center, Flex } from '../components'
+import { styles } from '../render'
 
 interface FooterProps {
   page: Model['page']
 }
 
 export const Footer = Component<FooterProps>((props) => {
-  let footerText = ''
+  let parts: { hint: string; text: string }[] = []
   switch (props.page) {
     case 'shop':
-      footerText = '↕ products   +/- qty   c cart   q quit'
+      parts = [
+        { hint: '↑/↓', text: 'products' },
+        { hint: '+/-', text: 'qty' },
+        { hint: 'c', text: 'cart' },
+        { hint: 'q', text: 'quit' },
+      ]
       break
     case 'cart':
-      footerText = '↕ items   +/- qty   esc back'
-      break
-    case 'account':
-      footerText = 'esc back'
+      parts = [
+        { hint: 'esc', text: 'back' },
+        { hint: '↑/↓', text: 'items' },
+        { hint: '+/-', text: 'qty' },
+        { hint: 'c', text: 'checkout' },
+      ]
       break
   }
 
@@ -29,19 +37,23 @@ export const Footer = Component<FooterProps>((props) => {
       },
       child: Center([
         Text('free shipping on US orders over $40', {
-          style: {
-            color: 'gray',
-          },
+          style: styles.gray,
         }),
       ]),
     }),
-    Center([
-      Text(footerText, {
-        style: {
-          color: '#666',
-          'font-family': 'monospace',
-        },
+    Center(
+      Flex({
+        gap: 3,
+        children: parts.map((part) =>
+          Flex({
+            gap: 1,
+            children: [
+              Text(part.hint, { style: styles.white }),
+              Text(part.text, { style: styles.gray }),
+            ],
+          }),
+        ),
       }),
-    ]),
+    ),
   ])
 })

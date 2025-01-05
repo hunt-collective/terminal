@@ -2,13 +2,11 @@ import type Terminal from '@terminaldotshop/sdk'
 import type { Model } from '../app'
 import { createPage, styles, formatPrice } from '../render'
 import { Box, Flex, Stack, Text } from '../components'
-import { Layout } from '../layouts/base'
+import { CheckoutLayout } from '../layouts/checkout'
 
 export type CartState = {
   selected: number
 }
-
-type CheckoutStep = 'cart' | 'shipping' | 'payment' | 'confirmation'
 
 function updateSelectedItem(model: Model, previous: boolean) {
   let next: number
@@ -27,19 +25,6 @@ function updateSelectedItem(model: Model, previous: boolean) {
   }
 
   return next
-}
-
-function Breadcrumbs(currentStep: CheckoutStep) {
-  const steps: CheckoutStep[] = ['cart', 'shipping', 'payment', 'confirmation']
-  return Flex({
-    gap: 1,
-    children: steps.flatMap((step, index) => [
-      Text(step, {
-        style: step === currentStep ? styles.white : styles.gray,
-      }),
-      index < steps.length - 1 ? Text('/', { style: styles.gray }) : '',
-    ]),
-  })
 }
 
 function CartItem(
@@ -64,21 +49,19 @@ function CartItem(
       Flex({
         justify: 'between',
         children: [
-          Text(product.name, {
-            style: selected ? styles.white : styles.gray,
-          }),
+          Text(product.name, selected ? styles.white : styles.gray),
           Flex({
             children: [
-              Text(selected ? '-' : ' ', { style: styles.gray }),
-              Text(item.quantity.toString(), { style: styles.white }),
-              Text(selected ? '+' : ' ', { style: styles.gray }),
-              Text(formatPrice(item.subtotal), { style: styles.gray }),
+              Text(selected ? '-' : ' ', styles.gray),
+              Text(item.quantity.toString(), styles.white),
+              Text(selected ? '+' : ' ', styles.gray),
+              Text(formatPrice(item.subtotal), styles.gray),
             ],
             gap: 1,
           }),
         ],
       }),
-      variant ? Text(variant.name, { style: styles.gray }) : '',
+      variant ? Text(variant.name, styles.gray) : '',
     ]),
   })
 }
@@ -86,22 +69,17 @@ function CartItem(
 export const CartPage = createPage({
   name: 'cart',
   view: (model, state) => {
-    return Layout({
+    return CheckoutLayout({
       model,
+      current: 'cart',
       children: [
-        Stack({
-          gap: 1,
-          children: [
-            Breadcrumbs('cart'),
-            !model.cart?.items.length
-              ? Text('Your cart is empty', { style: styles.gray })
-              : Stack(
-                  model.cart.items.map((item, index) =>
-                    CartItem(item, index === state.selected, model),
-                  ),
-                ),
-          ],
-        }),
+        !model.cart?.items.length
+          ? Text('Your cart is empty', styles.gray)
+          : Stack(
+              model.cart.items.map((item, index) =>
+                CartItem(item, index === state.selected, model),
+              ),
+            ),
       ],
     })
   },
@@ -151,6 +129,10 @@ export const CartPage = createPage({
 
       case 'escape':
         return { message: { type: 'app:navigate', page: 'shop' } }
+
+      case 'c':
+      case 'enter':
+        return { message: { type: 'app:navigate', page: 'shipping' } }
     }
   },
 })
