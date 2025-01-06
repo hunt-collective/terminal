@@ -16,10 +16,6 @@ export type StyledLine =
     }
   | undefined
 
-export type LayoutContext = {
-  width?: number
-}
-
 export type Node = Component | StyledLine[] | StyledText | string
 
 export type JustifyContent = 'start' | 'center' | 'end' | 'between'

@@ -11,8 +11,12 @@ export interface ParentProps extends BaseProps {
   children: Node[]
 }
 
+export type ComponentContext = {
+  width?: number
+}
+
 // Core component type definition
-export type Component = (context: { width?: number }) => StyledLine[]
+export type Component = (context: ComponentContext) => StyledLine[]
 
 // Helper type for creating component-specific props with no children
 export type ComponentProps<P = {}> = P & BaseProps
