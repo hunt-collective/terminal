@@ -19,7 +19,7 @@ export const Flex = ParentComponent<FlexProps>((props) => {
     const { justify = 'start', align = 'start', gap = 0 } = props
     const width =
       props.width ?? (justify === 'between' ? parentContext.width : undefined)
-    const context = { width }
+    const context = { ...parentContext, width }
 
     // Convert nodes to components and evaluate them
     const componentLines = props.children.map((node) =>

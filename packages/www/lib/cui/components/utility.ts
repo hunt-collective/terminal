@@ -19,7 +19,10 @@ export function Spacer(options: SpacerOptions = {}): Component {
 type CenterProps = { width?: number }
 export const Center = ParentComponent<CenterProps>((props) => {
   return (parentContext) => {
-    const context = { width: props.width ?? parentContext.width }
+    const context = {
+      ...parentContext,
+      width: props.width ?? parentContext.width,
+    }
     return Flex({
       justify: 'center',
       align: 'center',
@@ -30,21 +33,17 @@ export const Center = ParentComponent<CenterProps>((props) => {
 })
 
 export function Title(content: string): Component {
-  return (parentContext) => {
-    return Text(content.toUpperCase(), {
-      color: 'white',
-      fontWeight: 'bold',
-    })(parentContext)
-  }
+  return Text(content.toUpperCase(), {
+    color: 'white',
+    fontWeight: 'bold',
+  })
 }
 
 export function Subtitle(content: string): Component {
-  return (parentContext) => {
-    return Text(content, {
-      color: 'gray',
-      fontStyle: 'italic',
-    })(parentContext)
-  }
+  return Text(content, {
+    color: 'gray',
+    fontStyle: 'italic',
+  })
 }
 
 export function Break(): Component {

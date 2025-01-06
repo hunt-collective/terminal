@@ -16,7 +16,7 @@ type StackProps = {
 export const Stack = ParentComponent<StackProps>((props) => {
   return (parentContext) => {
     const width = props.width ?? parentContext.width
-    const context = { width }
+    const context = { ...parentContext, width }
     const { gap = 0, align = 'start' } = props
 
     const lines: StyledLine[] = []

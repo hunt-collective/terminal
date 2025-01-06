@@ -1,4 +1,4 @@
-import { ParentComponent } from '../component'
+import { mergeStyles, ParentComponent } from '../component'
 
 export type TextProps = {
   pad?: number
@@ -15,7 +15,8 @@ export const Text = ParentComponent<TextProps>((props) => {
       throw new Error('Text component only accepts a string')
 
     const maxWidth = props.maxWidth ?? parentContext.width
-    const { style, pad } = props
+    const { pad } = props
+    const style = mergeStyles(parentContext.parentStyle, props.style)
 
     if (!maxWidth) {
       return [

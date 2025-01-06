@@ -33,13 +33,13 @@ function Address(address: Terminal.Address, selected: boolean) {
     Stack(
       [
         Text(address.name, selected ? styles.white : styles.gray),
-        Text(address.street1, styles.gray),
+        Text(address.street1),
         Flex([
-          Text(address.city + ',', styles.gray),
-          Text(address.province + ',', styles.gray),
-          Text(address.country, styles.gray),
+          Text(address.city + ','),
+          Text(address.province + ','),
+          Text(address.country),
         ]),
-        Text(address.zip, styles.gray),
+        Text(address.zip),
       ],
       styles.gray,
     ),

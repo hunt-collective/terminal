@@ -54,7 +54,7 @@ export const Box = ParentComponent<BoxProps>((props) => {
       ? width - padding.x * 2 - borderWidth
       : undefined
 
-    const childContext = { width: availableWidth }
+    const childContext = { ...parentContext, width: availableWidth }
 
     // Convert node to component and evaluate it with our child context
     let lines = normalizeNode(props.children[0])(childContext)

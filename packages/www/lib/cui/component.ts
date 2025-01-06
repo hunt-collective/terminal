@@ -13,6 +13,7 @@ export interface ParentProps extends BaseProps {
 
 export type ComponentContext = {
   width?: number
+  parentStyle?: Style
 }
 
 // Core component type definition
@@ -40,11 +41,28 @@ function normalizeChildren(children: Node | Node[] | undefined): Node[] {
   return [children]
 }
 
+// Merge parent and component styles, with component styles taking precedence
+export function mergeStyles(
+  parentStyle?: Style,
+  componentStyle?: Style,
+): Style | undefined {
+  if (!parentStyle) return componentStyle
+  if (!componentStyle) return parentStyle
+  return { ...parentStyle, ...componentStyle }
+}
+
 // Helper to create a component that doesn't accept children
 export function Component<P>(
   render: (props: ComponentProps<P>) => Component,
 ): (props: ComponentProps<P>) => Component {
-  return render
+  return (props) => (context: ComponentContext) => {
+    const mergedStyle = mergeStyles(context.parentStyle, props.style)
+    const childContext = {
+      ...context,
+      parentStyle: mergedStyle,
+    }
+    return render(props)(childContext)
+  }
 }
 
 export function ParentComponent<P>(
@@ -66,10 +84,18 @@ export function ParentComponent<P>(
 
     if (args.length === 1) {
       if (typeof args[0] === 'object' && 'children' in args[0]) {
-        return render({
-          ...args[0],
-          children: normalizeChildren(args[0].children),
-        })
+        const props = args[0]
+        return (context: ComponentContext) => {
+          const mergedStyle = mergeStyles(context.parentStyle, props.style)
+          const childContext = {
+            ...context,
+            parentStyle: mergedStyle,
+          }
+          return render({
+            ...props,
+            children: normalizeChildren(props.children),
+          })(childContext)
+        }
       }
 
       return render({
@@ -79,6 +105,13 @@ export function ParentComponent<P>(
 
     const children = normalizeChildren(args[0])
     const props = isStyleObject(args[1]) ? { style: args[1] } : args[1]
-    return render({ ...props, children })
+    return (context: ComponentContext) => {
+      const mergedStyle = mergeStyles(context.parentStyle, props.style)
+      const childContext = {
+        ...context,
+        parentStyle: mergedStyle,
+      }
+      return render({ ...props, children })(childContext)
+    }
   }
 }
