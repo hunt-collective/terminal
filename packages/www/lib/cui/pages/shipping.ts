@@ -30,16 +30,19 @@ function updateSelectedItem(model: Model, previous: boolean) {
 
 function Address(address: Terminal.Address, selected: boolean) {
   return Box(
-    Stack([
-      Text(address.name, selected ? styles.white : styles.gray),
-      Text(address.street1, styles.gray),
-      Flex([
-        Text(address.city + ',', styles.gray),
-        Text(address.province + ',', styles.gray),
-        Text(address.country, styles.gray),
-      ]),
-      Text(address.zip, styles.gray),
-    ]),
+    Stack(
+      [
+        Text(address.name, selected ? styles.white : styles.gray),
+        Text(address.street1, styles.gray),
+        Flex([
+          Text(address.city + ',', styles.gray),
+          Text(address.province + ',', styles.gray),
+          Text(address.country, styles.gray),
+        ]),
+        Text(address.zip, styles.gray),
+      ],
+      styles.gray,
+    ),
     {
       padding: { x: 1, y: 0 },
       border: true,

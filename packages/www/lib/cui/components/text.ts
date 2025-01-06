@@ -1,12 +1,19 @@
-import { ContentComponent } from '../component'
+import { ParentComponent } from '../component'
 
 export type TextProps = {
   pad?: number
   maxWidth?: number
 }
 
-export const Text = ContentComponent<TextProps>((content, props) => {
+export const Text = ParentComponent<TextProps>((props) => {
   return (parentContext) => {
+    if (props.children.length > 1)
+      throw new Error('Text component only accepts a single child')
+
+    const content = props.children[0]
+    if (typeof content !== 'string')
+      throw new Error('Text component only accepts a string')
+
     const maxWidth = props.maxWidth ?? parentContext.width
     const { style, pad } = props
 

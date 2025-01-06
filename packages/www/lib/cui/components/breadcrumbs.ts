@@ -11,10 +11,8 @@ export function Breadcrumbs({ steps, current }: BreadcrumbsProps) {
   return Flex({
     gap: 1,
     children: steps.flatMap((step, index) => [
-      Text(step, {
-        style: step === current ? styles.white : styles.gray,
-      }),
-      index < steps.length - 1 ? Text('/', { style: styles.gray }) : '',
+      Text(step, step === current ? styles.white : styles.gray),
+      index < steps.length - 1 ? Text('/', styles.gray) : '',
     ]),
   })
 }

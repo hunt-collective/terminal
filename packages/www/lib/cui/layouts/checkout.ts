@@ -13,18 +13,16 @@ export const CheckoutLayout = ParentComponent<CheckoutLayoutProps>(
   ({ children, model, current }) => {
     return Layout({
       model,
-      children: [
-        Stack({
-          gap: 1,
-          children: [
-            Breadcrumbs({
-              current,
-              steps: ['cart', 'shipping', 'payment', 'confirmation'],
-            }),
-            ...children,
-          ],
-        }),
-      ],
+      children: Stack({
+        gap: 1,
+        children: [
+          Breadcrumbs({
+            current,
+            steps: ['cart', 'shipping', 'payment', 'confirmation'],
+          }),
+          ...children,
+        ],
+      }),
     })
   },
 )

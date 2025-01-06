@@ -20,7 +20,7 @@ function ProductListItem(
   return Box({
     padding: { x: 2, y: 0 },
     style: isSelected ? { background: highlightColor } : undefined,
-    child: Text(product.name, { style }),
+    children: Text(product.name, { style }),
   })
 }
 
@@ -44,9 +44,9 @@ function QuantityControl(currentQuantity: number) {
   return Flex({
     gap: 1,
     children: [
-      Text('-', { style: styles.gray }),
-      Text(currentQuantity.toString(), { style: styles.white }),
-      Text('+', { style: styles.gray }),
+      Text('-', styles.gray),
+      Text(currentQuantity.toString(), styles.white),
+      Text('+', styles.gray),
     ],
   })
 }
@@ -56,15 +56,11 @@ function SubscriptionButton() {
     gap: 1,
     children: [
       Text('subscribe', {
-        style: {
-          color: 'white',
-          background: '#ff4800',
-          padding: '0px 5px',
-        },
+        color: 'white',
+        background: '#ff4800',
+        padding: '0px 5px',
       }),
-      Text('enter', {
-        style: styles.gray,
-      }),
+      Text('enter', styles.gray),
     ],
   })
 }
@@ -82,7 +78,7 @@ function ProductDetails(
   return Box({
     padding: { x: 1, y: 0 },
     width: detailsWidth,
-    child: Stack([
+    children: Stack([
       Text(product.name, { style: styles.white }),
       Stack({
         gap: 1,

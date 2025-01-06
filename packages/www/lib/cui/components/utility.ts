@@ -32,7 +32,8 @@ export const Center = ParentComponent<CenterProps>((props) => {
 export function Title(content: string): Component {
   return (parentContext) => {
     return Text(content.toUpperCase(), {
-      style: { color: 'white', 'font-weight': 'bold' },
+      color: 'white',
+      fontWeight: 'bold',
     })(parentContext)
   }
 }
@@ -40,7 +41,8 @@ export function Title(content: string): Component {
 export function Subtitle(content: string): Component {
   return (parentContext) => {
     return Text(content, {
-      style: { color: 'gray', 'font-style': 'italic' },
+      color: 'gray',
+      fontStyle: 'italic',
     })(parentContext)
   }
 }

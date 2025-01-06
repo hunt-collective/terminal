@@ -45,7 +45,7 @@ function CartItem(
     borderStyle: {
       color: selected ? styles.white : styles.gray,
     },
-    child: Stack([
+    children: Stack([
       Flex({
         justify: 'between',
         children: [

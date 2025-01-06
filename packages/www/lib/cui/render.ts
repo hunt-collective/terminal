@@ -1,10 +1,11 @@
 import type { Command, Message } from './events'
 import type { Model } from './app'
 import type { Component } from './component'
+import { styleObjectToString, type Style } from './style'
 
 export type StyledText = {
   text: string
-  style?: object
+  style?: Style
   pad?: number
 }
 
@@ -24,7 +25,7 @@ export type Node = Component | StyledLine[] | StyledText | string
 export type JustifyContent = 'start' | 'center' | 'end' | 'between'
 export type AlignItems = 'start' | 'center' | 'end'
 
-export const styles = {
+export const styles: Record<string, Style> = {
   white: { color: 'white' },
   gray: { color: '#666' },
   orange: { color: '#ff4800' },
@@ -85,12 +86,6 @@ export function formatPrice(price: number): string {
   return `$${(price / 100).toFixed(2)}`
 }
 
-function formatStyle(style: object): string {
-  return Object.entries(style)
-    .map(([key, value]) => `${key}: ${value};`)
-    .join(' ')
-}
-
 export function combineLines(lines: StyledLine[]): {
   text: string
   styles: string[]
@@ -110,7 +105,7 @@ export function combineLines(lines: StyledLine[]): {
     texts.forEach((p) => {
       const style = p.style ?? {}
       lineText += '%c'
-      combinedStyles.push(formatStyle(style))
+      combinedStyles.push(styleObjectToString(style))
       lineText += pad(p.text, p.pad ?? 0)
     })
 

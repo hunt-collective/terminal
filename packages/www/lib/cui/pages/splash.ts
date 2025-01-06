@@ -22,16 +22,12 @@ export const SplashPage = createPage({
       Center([
         Flex([
           Text(logoText, {
-            style: {
-              'font-family': 'monospace',
-              color: 'white',
-            },
+            fontFamily: 'monospace',
+            color: 'white',
           }),
           Text(state?.cursorVisible ? cursor : ' ', {
-            style: {
-              'font-family': 'monospace',
-              color: '#FF6600',
-            },
+            fontFamily: 'monospace',
+            color: '#FF6600',
           }),
         ]),
       ]),

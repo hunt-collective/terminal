@@ -29,17 +29,11 @@ export const Footer = Component<FooterProps>((props) => {
   }
 
   return Stack([
-    Box({
-      style: {
-        'border-bottom': '1px solid #666',
-        'padding-top': '10px',
-        'padding-bottom': '10px',
-      },
-      child: Center([
-        Text('free shipping on US orders over $40', {
-          style: styles.gray,
-        }),
-      ]),
+    Box(Center(Text('free shipping on US orders over $40', styles.gray)), {
+      display: 'inline-block',
+      borderBottom: '1px solid #666',
+      paddingTop: '10px',
+      paddingBottom: '10px',
     }),
     Center(
       Flex({
@@ -48,8 +42,8 @@ export const Footer = Component<FooterProps>((props) => {
           Flex({
             gap: 1,
             children: [
-              Text(part.hint, { style: styles.white }),
-              Text(part.text, { style: styles.gray }),
+              Text(part.hint, styles.white),
+              Text(part.text, styles.gray),
             ],
           }),
         ),

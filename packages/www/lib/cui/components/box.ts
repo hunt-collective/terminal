@@ -1,4 +1,4 @@
-import { ContainerComponent } from '../component'
+import { ParentComponent } from '../component'
 import { normalizeNode, type StyledLine } from '../render'
 
 type BoxProps = {
@@ -27,8 +27,11 @@ const defaultBorderChars = {
   vertical: '│',
 }
 
-export const Box = ContainerComponent<BoxProps>((props) => {
+export const Box = ParentComponent<BoxProps>((props) => {
   return (parentContext) => {
+    if (props.children.length > 1)
+      throw new Error('Box can only have one child')
+
     const width = props.width ?? parentContext.width
     const { border = false, borderStyle = {} } = props
 
@@ -54,7 +57,7 @@ export const Box = ContainerComponent<BoxProps>((props) => {
     const childContext = { width: availableWidth }
 
     // Convert node to component and evaluate it with our child context
-    let lines = normalizeNode(props.child)(childContext)
+    let lines = normalizeNode(props.children[0])(childContext)
 
     if (availableWidth) {
       lines = lines.map((line) => {

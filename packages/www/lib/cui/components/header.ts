@@ -11,33 +11,29 @@ export const Header = Component<HeaderProps>((props) => {
   return Box({
     padding: { x: 2 },
     style: { background: '#1e1e1e', padding: '7px 0px' },
-    child: Flex({
+    children: Flex({
       justify: 'between',
       gap: 1,
       children: [
         Flex({
           gap: 5,
           children: [
-            Text('terminal', { style: styles.white }),
+            Text('terminal', styles.white),
             Flex({
               gap: 1,
               children: [
-                Text('s', { style: styles.white }),
+                Text('s', styles.white),
                 Text('shop', {
-                  style: {
-                    color: props.model.page === 'shop' ? 'white' : 'gray',
-                  },
+                  color: props.model.page === 'shop' ? 'white' : 'gray',
                 }),
               ],
             }),
             Flex({
               gap: 1,
               children: [
-                Text('a', { style: styles.white }),
+                Text('a', styles.white),
                 Text('account', {
-                  style: {
-                    color: props.model.page === 'account' ? 'white' : 'gray',
-                  },
+                  color: props.model.page === 'account' ? 'white' : 'gray',
                 }),
               ],
             }),
@@ -46,18 +42,14 @@ export const Header = Component<HeaderProps>((props) => {
         Flex({
           gap: 1,
           children: [
-            Text('c', { style: styles.white }),
+            Text('c', styles.white),
             Text('cart', {
-              style: {
-                color: props.model.page === 'cart' ? 'white' : 'gray',
-              },
+              color: props.model.page === 'cart' ? 'white' : 'gray',
             }),
-            Text(`$ ${(props.model.cart?.subtotal ?? 0) / 100}`, {
-              style: styles.white,
-            }),
+            Text(`$ ${(props.model.cart?.subtotal ?? 0) / 100}`, styles.white),
             Text(
               `[${props.model.cart?.items.reduce((acc, item) => acc + item.quantity, 0) ?? 0}]`,
-              { style: { color: 'gray' } },
+              styles.gray,
             ),
           ],
         }),
