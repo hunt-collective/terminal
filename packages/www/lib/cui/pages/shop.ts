@@ -67,7 +67,7 @@ function SubscriptionButton() {
 
 function ProductDetails(
   product: Terminal.Product,
-  cart: Terminal.Cart | null,
+  cart: Terminal.Cart | undefined,
   detailsWidth: number,
   highlightColor: string,
 ) {
@@ -229,6 +229,9 @@ export const ShopPage = createPage({
           }
         }
         break
+
+      case 'enter':
+        return { message: { type: 'app:navigate', page: 'cart' } }
     }
   },
 })

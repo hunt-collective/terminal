@@ -11,8 +11,9 @@ export const Text = ParentComponent<TextProps>((props) => {
       throw new Error('Text component only accepts a single child')
 
     const content = props.children[0]
-    if (typeof content !== 'string')
+    if (content !== undefined && typeof content !== 'string') {
       throw new Error('Text component only accepts a string')
+    }
 
     const maxWidth = props.maxWidth ?? parentContext.width
     const { pad } = props

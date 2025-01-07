@@ -17,9 +17,11 @@ export type Model = {
     | 'payment'
     | 'confirm'
     | 'final'
+  focusLocked: boolean
   dimensions: { width: number; height: number }
   client: () => Promise<Terminal>
-  cart: Terminal.Cart | null
+  profile?: Terminal.Profile
+  cart?: Terminal.Cart
   products: Terminal.Product[]
   addresses: Terminal.Address[]
   updates: {
@@ -47,6 +49,7 @@ export class App {
     // Start with splash view while loading data
     this.model = {
       page: 'splash',
+      focusLocked: false,
       dimensions: { width: 75, height: 20 },
       client: async () => {
         const token = await getCurrentToken()
@@ -58,7 +61,6 @@ export class App {
         })
         return client
       },
-      cart: null,
       products: [],
       addresses: [],
       updates: {},
@@ -75,6 +77,7 @@ export class App {
         shipping: {
           view: 'list',
           selected: 0,
+          busy: false,
         },
       },
     }
@@ -90,6 +93,11 @@ export class App {
       )
         return
 
+      // Forward keyboard events to current view
+      this.handleMsg({ type: 'browser:keydown', event: e })
+
+      if (this.model.focusLocked) return
+
       // Global navigation shortcuts
       switch (e.key.toLowerCase()) {
         case 's':
@@ -98,24 +106,26 @@ export class App {
         case 'c':
           this.handleMsg({ type: 'app:navigate', page: 'cart' })
           return
-        case 'a':
-          this.handleMsg({ type: 'app:navigate', page: 'account' })
-          return
+        // case 'a':
+        //   this.handleMsg({ type: 'app:navigate', page: 'account' })
+        //   return
       }
-
-      // Forward other keyboard events to current view
-      this.handleMsg({ type: 'browser:keydown', event: e })
     })
   }
 
   private async initialize() {
     const cmd = SplashPage.init?.(this.model)
-    if (cmd) cmd().then(this.handleMsg.bind(this))
+    if (cmd) {
+      cmd().then((r) =>
+        (Array.isArray(r) ? r : [r]).forEach(this.handleMsg.bind(this)),
+      )
+    }
 
     const client = await this.model.client()
 
     // Load data in parallel with splash animation
     const dataPromise = Promise.all([
+      client.profile.me().then((r) => r.data),
       client.product.list().then((r) => r.data),
       client.cart.get().then((r) => r.data),
       client.address.list().then((r) => r.data),
@@ -125,7 +135,7 @@ export class App {
     const timerPromise = new Promise((resolve) => setTimeout(resolve, 3000))
 
     // Wait for both data and minimum splash time
-    const [products, cart, addresses] = await Promise.all([
+    const [profile, products, cart, addresses] = await Promise.all([
       dataPromise,
       timerPromise,
     ]).then(([data]) => data)
@@ -134,9 +144,10 @@ export class App {
     this.model = {
       ...this.model,
       page: 'shop',
+      profile,
+      cart,
       products,
       addresses,
-      cart,
       state: {
         ...this.model.state,
         shop: {
@@ -154,6 +165,19 @@ export class App {
       case 'app:navigate':
         this.model.page = msg.page
         break
+
+      case 'app:focus-locked':
+        this.model.focusLocked = true
+        break
+
+      case 'app:focus-released':
+        this.model.focusLocked = false
+        break
+
+      case 'cart:updated': {
+        this.model.cart = msg.cart
+        break
+      }
 
       case 'cart:quantity-updated': {
         try {
@@ -244,7 +268,11 @@ export class App {
 
       // Handle any commands
       if (result?.command) {
-        result.command().then(this.handleMsg.bind(this))
+        result
+          .command()
+          .then((r) =>
+            (Array.isArray(r) ? r : [r]).forEach(this.handleMsg.bind(this)),
+          )
       }
     }
 

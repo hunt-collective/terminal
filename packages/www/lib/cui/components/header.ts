@@ -30,10 +30,15 @@ export const Header = Component<HeaderProps>((props) => {
             }),
             Flex({
               gap: 1,
+              style: { textDecoration: 'line-through' },
               children: [
                 Text('a', styles.white),
                 Text('account', {
                   color: props.model.page === 'account' ? 'white' : 'gray',
+                }),
+                Text('(PRs welcome)', {
+                  ...styles.gray,
+                  textDecoration: 'unset',
                 }),
               ],
             }),

@@ -30,7 +30,6 @@ export const Footer = Component<FooterProps>((props) => {
 
   return Stack([
     Box(Center(Text('free shipping on US orders over $40', styles.gray)), {
-      display: 'inline-block',
       borderBottom: '1px solid #666',
       paddingTop: '10px',
       paddingBottom: '10px',

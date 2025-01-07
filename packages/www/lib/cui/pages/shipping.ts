@@ -3,11 +3,58 @@ import type { Model } from '../app'
 import { createPage, styles } from '../render'
 import { Box, Center, Flex, Stack, Text } from '../components'
 import { CheckoutLayout } from '../layouts/checkout'
+import {
+  Form,
+  handleFormUpdate,
+  type FieldConfig,
+  type FormState,
+} from '../components/form'
 
 export type ShippingState = {
   selected: number
   view: 'form' | 'list'
+  busy: boolean
+  form?: FormState<Terminal.AddressCreateParams>
 }
+
+const shippingFields: FieldConfig<Terminal.AddressCreateParams> = {
+  name: { label: 'name', required: true },
+  street1: { label: 'street 1', required: true },
+  street2: { label: 'street 2' },
+  city: { label: 'city', required: true },
+  province: { label: 'state', required: true },
+  country: { label: 'country', required: true },
+  phone: { label: 'phone' },
+  zip: {
+    label: 'postal code',
+    required: true,
+    validate: (value) => {
+      const zipRegex = /^\d{5}(-\d{4})?$/
+      return {
+        valid: zipRegex.test(value),
+        message: !zipRegex.test(value)
+          ? 'Enter a valid ZIP code (e.g. 12345 or 12345-6789)'
+          : undefined,
+      }
+    },
+  },
+}
+
+const initialFormState: (
+  model: Model,
+) => FormState<Terminal.AddressCreateParams> = (model) => ({
+  values: {
+    name: model.profile?.user.name || '',
+    street1: '',
+    street2: '',
+    city: '',
+    province: '',
+    country: '',
+    phone: '',
+    zip: '',
+  },
+  errors: {},
+})
 
 function updateSelectedItem(model: Model, previous: boolean) {
   let next: number
@@ -54,7 +101,14 @@ function Address(address: Terminal.Address, selected: boolean) {
 }
 
 export const ShippingForm = (model: Model, state: ShippingState) => {
-  return Center('Not implemented, yet')
+  const form = state.form || initialFormState(model)
+
+  return Form({
+    fields: shippingFields,
+    state: form,
+    width: model.dimensions.width,
+    columns: 2,
+  })
 }
 
 export const ShippingList = (model: Model, state: ShippingState) =>
@@ -82,15 +136,55 @@ export const ShippingPage = createPage({
     return CheckoutLayout({
       model,
       current: 'shipping',
-      children: [
-        state.view === 'list'
-          ? ShippingList(model, state)
-          : ShippingForm(model, state),
-      ],
+      children: state.busy
+        ? Text('calculating shipping costs...', styles.gray)
+        : [
+            state.view === 'list'
+              ? ShippingList(model, state)
+              : ShippingForm(model, state),
+          ],
     })
   },
   update: (msg, model) => {
     if (msg.type !== 'browser:keydown') return
+
+    // Form view handling
+    if (model.state.shipping.view === 'form') {
+      const formUpdate = handleFormUpdate(
+        msg,
+        model.state.shipping.form || initialFormState(model),
+        shippingFields,
+      )
+
+      if (formUpdate) {
+        if (!formUpdate.focusedField) {
+          // Form was submitted or cancelled
+          if (
+            !formUpdate.errors ||
+            Object.keys(formUpdate.errors).length === 0
+          ) {
+            // Form was successfully submitted
+            return {
+              state: {
+                view: 'list' as const,
+                form: undefined,
+              },
+              message: { type: 'app:focus-released' },
+            }
+          }
+
+          // Form has validation errors
+          return {
+            state: { form: formUpdate },
+          }
+        }
+
+        // Normal form update
+        return {
+          state: { form: formUpdate },
+        }
+      }
+    }
 
     const { key } = msg.event
     const addresses = model.addresses || []
@@ -111,10 +205,23 @@ export const ShippingPage = createPage({
 
       case 'enter':
         if (addNewAddress) {
-          model.state.shipping.view = 'form'
-          return { state: model.state.shipping }
+          return {
+            state: { view: 'form' as const, form: initialFormState(model) },
+            message: { type: 'app:focus-locked' },
+          }
         }
-        return { message: { type: 'app:navigate', page: 'payment' } }
+        return {
+          state: { busy: true },
+          command: async () => {
+            const client = await model.client()
+            await client.cart.setAddress({ addressID: selectedAddress.id })
+            const cart = await client.cart.get().then((r) => r.data)
+            return [
+              { type: 'cart:updated', cart },
+              { type: 'app:navigate', page: 'payment' },
+            ]
+          },
+        }
     }
   },
 })
