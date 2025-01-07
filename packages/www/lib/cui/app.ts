@@ -3,9 +3,11 @@ import { getCurrentToken, API_URL, callback, auth } from './auth'
 import { type Message } from './events'
 import { ShopPage, type ShopState } from './pages/shop'
 import { CartPage, type CartState } from './pages/cart'
-import { SplashPage, type SplashState } from './pages/splash'
+import { SplashPage } from './pages/splash'
 import { combineLines, type Page } from './render'
 import { ShippingPage, type ShippingState } from './pages/shipping'
+import { type Component } from './component'
+import { setRenderCallback } from './hooks'
 
 export type Model = {
   page:
@@ -28,7 +30,6 @@ export type Model = {
     cart?: number
   }
   state: {
-    splash: SplashState
     shop: ShopState
     cart: CartState
     shipping: ShippingState
@@ -46,7 +47,6 @@ export class App {
   }
 
   private constructor() {
-    // Start with splash view while loading data
     this.model = {
       page: 'splash',
       focusLocked: false,
@@ -65,9 +65,6 @@ export class App {
       addresses: [],
       updates: {},
       state: {
-        splash: {
-          cursorVisible: true,
-        },
         shop: {
           selected: 0,
         },
@@ -81,6 +78,9 @@ export class App {
         },
       },
     }
+
+    // Register render callback for hooks
+    setRenderCallback(this.render.bind(this))
 
     this.render()
 
@@ -106,38 +106,21 @@ export class App {
         case 'c':
           this.handleMsg({ type: 'app:navigate', page: 'cart' })
           return
-        // case 'a':
-        //   this.handleMsg({ type: 'app:navigate', page: 'account' })
-        //   return
       }
     })
   }
 
   private async initialize() {
-    const cmd = SplashPage.init?.(this.model)
-    if (cmd) {
-      cmd().then((r) =>
-        (Array.isArray(r) ? r : [r]).forEach(this.handleMsg.bind(this)),
-      )
-    }
-
     const client = await this.model.client()
 
-    // Load data in parallel with splash animation
-    const dataPromise = Promise.all([
-      client.profile.me().then((r) => r.data),
-      client.product.list().then((r) => r.data),
-      client.cart.get().then((r) => r.data),
-      client.address.list().then((r) => r.data),
-    ])
-
     // Ensure splash shows for at least 3 seconds
-    const timerPromise = new Promise((resolve) => setTimeout(resolve, 3000))
+    const splashPromise = new Promise((resolve) => setTimeout(resolve, 3000))
+    const dataPromise = client.view.init().then((r) => r.data)
 
     // Wait for both data and minimum splash time
-    const [profile, products, cart, addresses] = await Promise.all([
+    const { profile, products, cart, addresses } = await Promise.all([
       dataPromise,
-      timerPromise,
+      splashPromise,
     ]).then(([data]) => data)
 
     // Switch to shop view with loaded data
@@ -240,14 +223,14 @@ export class App {
       }
     }
 
-    // Forward to current view's update function
-    const view = this.getCurrentPage()
-    if (view.update) {
-      const result = view.update(msg, this.model)
+    // Forward to current view's update function if it exists
+    const page = this.getCurrentPage()
+    if ('update' in page && page.update) {
+      const result = page.update(msg, this.model)
 
       // Apply local state updates if any
       if (result?.state) {
-        const viewName = view.name as keyof Model['state']
+        const viewName = page.name as keyof Model['state']
         this.model.state = {
           ...this.model.state,
           [viewName]: {
@@ -279,14 +262,14 @@ export class App {
     this.render()
   }
 
-  private getCurrentPage(): Page {
+  private getCurrentPage(): Page | Component {
     switch (this.model.page) {
       case 'shop':
         return ShopPage
       case 'cart':
         return CartPage
       case 'splash':
-        return SplashPage
+        return SplashPage(this.model)
       case 'shipping':
         return ShippingPage
       default:
@@ -295,13 +278,19 @@ export class App {
   }
 
   render() {
-    const { view } = this.getCurrentPage()
-    const { text, styles } = combineLines(view(this.model))
-    if (this.last === text + JSON.stringify(styles)) return
+    const page = this.getCurrentPage()
+    const lines =
+      'view' in page
+        ? page.view(this.model)
+        : page({ width: this.model.dimensions.width })
+    const { text, styles } = combineLines(lines)
+    const key = text + JSON.stringify(styles)
+
+    if (key === this.last) return
 
     console.clear()
     console.log(text, ...styles)
-    this.last = text + JSON.stringify(styles)
+    this.last = key
   }
 }
 
@@ -326,16 +315,4 @@ export class App {
   const app = await App.create()
   // @ts-expect-error
   window.app = app
-
-  // TODO: implement these
-  // Object.defineProperties(window, {
-  //   s: { get: () => app?.render() },
-  //   c: { get: () => app?.navigate('cart') },
-  //   a: { get: () => app?.render() },
-  //   q: { get: () => app?.render() },
-  //   j: { get: () => app?.moveSelection('down') },
-  //   k: { get: () => app?.moveSelection('up') },
-  //   h: { get: () => app?.updateQuantity(-1) },
-  //   l: { get: () => app?.updateQuantity(1) },
-  // })
 })()

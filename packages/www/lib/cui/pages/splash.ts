@@ -1,48 +1,38 @@
-import { Delay } from '../events'
-import { createPage } from '../render'
 import { Stack, Text, Center, Spacer, Flex } from '../components'
+import { useState, useEffect } from '../hooks'
+import { Component } from '../component'
 
-export type SplashState = {
-  cursorVisible: boolean
+type SplashProps = {
+  dimensions: { height: number }
 }
 
-export const SplashPage = createPage({
-  name: 'splash',
-  init: () => {
-    return async () => {
-      return { type: 'splash:blink' }
-    }
-  },
-  view: (model, state) => {
-    const cursor = '█'
-    const logoText = 'terminal'
+export const SplashPage = Component<SplashProps>((props) => {
+  const [cursorVisible, setCursorVisible] = useState(true)
 
-    return Stack([
-      Spacer({ size: Math.floor(model.dimensions.height / 2) - 1 }),
-      Center([
-        Flex([
-          Text(logoText, {
-            fontFamily: 'monospace',
-            color: 'white',
-          }),
-          Text(state?.cursorVisible ? cursor : ' ', {
-            fontFamily: 'monospace',
-            color: '#FF6600',
-          }),
-        ]),
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCursorVisible((visible) => !visible)
+    }, 700)
+    return () => clearInterval(interval)
+  })
+
+  const cursor = '█'
+  const logoText = 'terminal'
+
+  return Stack([
+    Spacer({ size: Math.floor(props.dimensions.height / 2) - 1 }),
+    Center([
+      Flex([
+        Text(logoText, {
+          fontFamily: 'monospace',
+          color: 'white',
+        }),
+        Text(cursorVisible ? cursor : ' ', {
+          fontFamily: 'monospace',
+          color: '#FF6600',
+        }),
       ]),
-      Spacer({ size: Math.floor(model.dimensions.height / 2) }),
-    ])
-  },
-  update: (msg, model) => {
-    switch (msg.type) {
-      case 'splash:blink':
-        return {
-          state: { cursorVisible: !model.state.splash.cursorVisible },
-          command: Delay(700, () => {
-            return { type: 'splash:blink' }
-          }),
-        }
-    }
-  },
+    ]),
+    Spacer({ size: Math.floor(props.dimensions.height / 2) }),
+  ])
 })
