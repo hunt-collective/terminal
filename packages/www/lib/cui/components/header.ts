@@ -1,13 +1,11 @@
 import { styles } from '../render'
 import { Box, Flex, Text } from './'
-import type { Model } from '../app'
+import { ModelContext } from '../app'
 import { Component } from '../component'
 
-interface HeaderProps {
-  model: Model
-}
+export const Header = Component(() => {
+  const [model] = ModelContext.useContext()
 
-export const Header = Component<HeaderProps>((props) => {
   return Box({
     padding: { x: 2 },
     style: { background: '#1e1e1e', padding: '7px 0px' },
@@ -24,7 +22,7 @@ export const Header = Component<HeaderProps>((props) => {
               children: [
                 Text('s', styles.white),
                 Text('shop', {
-                  color: props.model.page === 'shop' ? 'white' : 'gray',
+                  color: model?.page === 'shop' ? 'white' : 'gray',
                 }),
               ],
             }),
@@ -34,7 +32,7 @@ export const Header = Component<HeaderProps>((props) => {
               children: [
                 Text('a', styles.white),
                 Text('account', {
-                  color: props.model.page === 'account' ? 'white' : 'gray',
+                  color: model?.page === 'account' ? 'white' : 'gray',
                 }),
                 Text('(PRs welcome)', {
                   ...styles.gray,
@@ -49,11 +47,11 @@ export const Header = Component<HeaderProps>((props) => {
           children: [
             Text('c', styles.white),
             Text('cart', {
-              color: props.model.page === 'cart' ? 'white' : 'gray',
+              color: model?.page === 'cart' ? 'white' : 'gray',
             }),
-            Text(`$ ${(props.model.cart?.subtotal ?? 0) / 100}`, styles.white),
+            Text(`$ ${(model?.cart?.subtotal ?? 0) / 100}`, styles.white),
             Text(
-              `[${props.model.cart?.items.reduce((acc, item) => acc + item.quantity, 0) ?? 0}]`,
+              `[${model?.cart?.items.reduce((acc, item) => acc + item.quantity, 0) ?? 0}]`,
               styles.gray,
             ),
           ],

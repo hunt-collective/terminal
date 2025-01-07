@@ -8,6 +8,7 @@ import { combineLines, type Page } from './render'
 import { ShippingPage, type ShippingState } from './pages/shipping'
 import { type Component } from './component'
 import { setRenderCallback } from './hooks'
+import { createContext } from './context'
 
 export type Model = {
   page:
@@ -35,6 +36,8 @@ export type Model = {
     shipping: ShippingState
   }
 }
+
+export const ModelContext = createContext<Model>()
 
 export class App {
   private model: Model
@@ -78,6 +81,8 @@ export class App {
         },
       },
     }
+
+    ModelContext.Provider(this.model)
 
     // Register render callback for hooks
     setRenderCallback(this.render.bind(this))
@@ -138,6 +143,8 @@ export class App {
         },
       },
     }
+
+    ModelContext.useContext()[1](this.model)
 
     this.render()
   }
@@ -269,7 +276,7 @@ export class App {
       case 'cart':
         return CartPage
       case 'splash':
-        return SplashPage(this.model)
+        return SplashPage()
       case 'shipping':
         return ShippingPage
       default:

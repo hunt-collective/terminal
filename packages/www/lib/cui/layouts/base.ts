@@ -12,9 +12,9 @@ export const Layout = ParentComponent<LayoutProps>(({ children, model }) => {
   return Stack({
     gap: 1,
     children: [
-      Header({ model }),
+      Header(),
       Stack({ children, minHeight: model.dimensions.height }),
-      Footer({ page: model.page }),
+      Footer(),
     ],
   })
 })

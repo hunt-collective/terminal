@@ -1,15 +1,13 @@
-import type { Model } from '../app'
+import { ModelContext } from '../app'
 import { Component } from '../component'
 import { Box, Stack, Text, Center, Flex } from '../components'
 import { styles } from '../render'
 
-interface FooterProps {
-  page: Model['page']
-}
+export const Footer = Component(() => {
+  const [model] = ModelContext.useContext()
 
-export const Footer = Component<FooterProps>((props) => {
   let parts: { hint: string; text: string }[] = []
-  switch (props.page) {
+  switch (model!.page) {
     case 'shop':
       parts = [
         { hint: '↑/↓', text: 'products' },
