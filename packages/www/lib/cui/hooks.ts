@@ -1,4 +1,3 @@
-// Global state for hooks
 const states = new Map<number, any[]>()
 const effects = new Map<number, Array<() => void | (() => void)>>()
 let currentComponent = 0
@@ -57,10 +56,21 @@ export function useEffect(effect: () => void | (() => void)) {
   }
 }
 
-export function useKeydown(key: string, handler: () => void) {
+export function useKeydown(
+  keys: KeyboardEvent['key'] | KeyboardEvent['key'][],
+  handler: () => void,
+) {
   useEffect(() => {
+    const keyArray = Array.isArray(keys) ? keys : [keys]
     const listener = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === key.toLowerCase()) {
+      if (
+        document.activeElement instanceof HTMLInputElement ||
+        document.activeElement instanceof HTMLTextAreaElement ||
+        document.activeElement instanceof HTMLSpanElement
+      )
+        return
+
+      if (keyArray.some((k) => e.key.toLowerCase() === k.toLowerCase())) {
         handler()
       }
     }
@@ -70,7 +80,6 @@ export function useKeydown(key: string, handler: () => void) {
 }
 
 let renderCallback: (() => void) | null = null
-
 export function setRenderCallback(callback: () => void) {
   renderCallback = callback
 }
