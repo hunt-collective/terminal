@@ -3,9 +3,14 @@ import { styles, formatPrice } from '../render'
 import { Box, Break, Flex, Stack, Text } from '../components'
 import { Layout } from '../layouts/base'
 import { Component } from '../component'
-import { useState, useKeydown } from '../hooks'
+import {
+  useState,
+  useKeydown,
+  useProducts,
+  useCart,
+  useUpdateCartItem,
+} from '../hooks'
 import { useRouter } from '../router'
-import { ModelContext } from '../app'
 
 function ProductListItem(
   product: Terminal.Product,
@@ -39,16 +44,34 @@ function ProductSection(
   ])
 }
 
-function QuantityControl({ currentQuantity }: { currentQuantity: number }) {
-  return Flex({
-    gap: 1,
-    children: [
-      Text('-', styles.gray),
-      Text(currentQuantity.toString(), styles.white),
-      Text('+', styles.gray),
-    ],
-  })
-}
+export const QuantityControl = Component<{ item: Terminal.Cart.Item }>(
+  ({ item }) => {
+    const { mutate: updateItem } = useUpdateCartItem()
+
+    useKeydown(['ArrowRight', 'l', '+'], () => {
+      updateItem({
+        variantId: item.productVariantID,
+        quantity: item.quantity + 1,
+      })
+    })
+
+    useKeydown(['ArrowLeft', 'h', '-'], () => {
+      updateItem({
+        variantId: item.productVariantID,
+        quantity: Math.max(0, item.quantity - 1),
+      })
+    })
+
+    return Flex({
+      gap: 1,
+      children: [
+        Text('-', styles.gray),
+        Text(item.quantity.toString(), styles.white),
+        Text('+', styles.gray),
+      ],
+    })
+  },
+)
 
 function SubscriptionButton() {
   return Flex({
@@ -76,8 +99,12 @@ function ProductDetails({
   highlightColor: string
 }) {
   const variant = product.variants[0]
-  const currentQuantity =
-    cart?.items.find((i) => i.productVariantID === variant.id)?.quantity ?? 0
+  const item = cart?.items.find((i) => i.productVariantID === variant.id) ?? {
+    id: '',
+    productVariantID: variant.id,
+    quantity: 0,
+    subtotal: 0,
+  }
 
   return Box({
     padding: { x: 1, y: 0 },
@@ -97,7 +124,7 @@ function ProductDetails({
           }),
           product.subscription === 'required'
             ? SubscriptionButton()
-            : QuantityControl({ currentQuantity }),
+            : QuantityControl({ item }),
         ],
       }),
     ]),
@@ -124,53 +151,30 @@ function getHighlightColor(productName: string): string {
 export const ShopPage = Component(() => {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const { navigate } = useRouter()
+  const { data: products } = useProducts()
+  const { data: cart } = useCart()
 
-  const [model] = ModelContext.useContext()
-  const updateCartQuantity = (variantId: string, quantity: number) => {}
+  if (!products || !cart) return Text('loading...')
 
   useKeydown(['ArrowDown', 'j'], () => {
-    setSelectedIndex((prev) => Math.min(prev + 1, model.products.length - 1))
+    setSelectedIndex((prev) => Math.min(prev + 1, products.length - 1))
   })
 
   useKeydown(['ArrowUp', 'k'], () => {
     setSelectedIndex((prev) => Math.max(prev - 1, 0))
   })
 
-  useKeydown(['ArrowRight', 'l', '+'], () => {
-    const product = model.products[selectedIndex]
-    const variant = product?.variants[0]
-    if (variant) {
-      const currentQty =
-        model.cart?.items.find((i) => i.productVariantID === variant.id)
-          ?.quantity ?? 0
-      updateCartQuantity(variant.id, currentQty + 1)
-    }
-  })
-
-  useKeydown(['ArrowLeft', 'h', '-'], () => {
-    const product = model.products[selectedIndex]
-    const variant = product?.variants[0]
-    if (variant) {
-      const currentQty =
-        model.cart?.items.find((i) => i.productVariantID === variant.id)
-          ?.quantity ?? 0
-      if (currentQty > 0) {
-        updateCartQuantity(variant.id, currentQty - 1)
-      }
-    }
-  })
-
-  useKeydown('enter', () => navigate('cart'))
+  useKeydown(['enter'], () => navigate('cart'))
 
   const gap = 2
-  const third = Math.floor(model.dimensions.width / 3)
+  // const third = Math.floor(model.dimensions.width / 3)
+  const third = Math.floor(75 / 3)
   const listWidth = third
   const detailsWidth = third * 2 - gap
 
-  const featured = model.products.filter((p) => p.tags?.featured === 'true')
-  const staples = model.products.filter((p) => p.tags?.featured !== 'true')
-  const products = model.products
-  const selectedProduct = model.products[selectedIndex]
+  const featured = products.filter((p) => p.tags?.featured === 'true')
+  const staples = products.filter((p) => p.tags?.featured !== 'true')
+  const selectedProduct = products[selectedIndex]
   const highlightColor = selectedProduct
     ? getHighlightColor(selectedProduct.name)
     : '#FF5C00'
@@ -201,7 +205,7 @@ export const ShopPage = Component(() => {
         }),
         ProductDetails({
           product: selectedProduct,
-          cart: model.cart,
+          cart: cart,
           width: detailsWidth,
           highlightColor,
         }),

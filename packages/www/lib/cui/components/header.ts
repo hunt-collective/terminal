@@ -2,10 +2,10 @@ import { styles } from '../render'
 import { Box, Flex, Text } from './'
 import { Component } from '../component'
 import { useRouter } from '../router'
-import { ModelContext } from '../app'
+import { useCart } from '../hooks'
 
 export const Header = Component(() => {
-  const [model] = ModelContext.useContext()
+  const { data: cart } = useCart()
   const router = useRouter()
 
   return Box({
@@ -51,9 +51,9 @@ export const Header = Component(() => {
             Text('cart', {
               color: router.route === 'cart' ? 'white' : 'gray',
             }),
-            Text(`$ ${(model?.cart?.subtotal ?? 0) / 100}`, styles.white),
+            Text(`$ ${(cart?.subtotal ?? 0) / 100}`, styles.white),
             Text(
-              `[${model?.cart?.items.reduce((acc, item) => acc + item.quantity, 0) ?? 0}]`,
+              `[${cart?.items.reduce((acc, item) => acc + item.quantity, 0) ?? 0}]`,
               styles.gray,
             ),
           ],

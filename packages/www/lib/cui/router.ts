@@ -19,7 +19,7 @@ interface RouterContextValue {
 export const RouterContext = createContext<RouterContextValue>()
 
 export function createRouter() {
-  const [route, setRoute] = useState<Route>('splash')
+  const [route, setRoute] = useState<Route>('shop')
   const navigate = (to: Route) => {
     setRoute(to)
   }

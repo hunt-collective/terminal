@@ -1,5 +1,5 @@
 import Terminal from '@terminaldotshop/sdk'
-import { getCurrentToken, API_URL, callback, auth } from './auth'
+import { callback, getToken } from './auth'
 import { type Message } from './events'
 import { ShopPage } from './pages/shop'
 import { CartPage, type CartState } from './pages/cart'
@@ -10,6 +10,7 @@ import { type Component } from './component'
 import { setRenderCallback } from './hooks'
 import { createContext } from './context'
 import { App as Root } from './root'
+import { initializeTerminal } from './terminal'
 
 export type Model = {
   page:
@@ -23,7 +24,6 @@ export type Model = {
     | 'final'
   focusLocked: boolean
   dimensions: { width: number; height: number }
-  client: () => Promise<Terminal>
   profile?: Terminal.Profile
   cart?: Terminal.Cart
   products: Terminal.Product[]
@@ -54,16 +54,6 @@ export class App {
       page: 'splash',
       focusLocked: false,
       dimensions: { width: 75, height: 20 },
-      client: async () => {
-        const token = await getCurrentToken()
-        if (!token) throw new Error('No access token available')
-
-        const client = new Terminal({
-          bearerToken: token,
-          baseURL: API_URL,
-        })
-        return client
-      },
       products: [],
       addresses: [],
       updates: {},
@@ -174,20 +164,20 @@ export class App {
           const now = Date.now()
           this.model.updates.cart = now
 
-          this.model
-            .client()
-            .then((client) =>
-              client.cart.setItem({
-                productVariantID: msg.variantId,
-                quantity: msg.quantity,
-              }),
-            )
-            .then((response) => {
-              if (this.model.updates.cart === now) {
-                this.model.cart = response.data
-                this.render()
-              }
-            })
+          // this.model
+          //   .client()
+          //   .then((client) =>
+          //     client.cart.setItem({
+          //       productVariantID: msg.variantId,
+          //       quantity: msg.quantity,
+          //     }),
+          //   )
+          //   .then((response) => {
+          //     if (this.model.updates.cart === now) {
+          //       this.model.cart = response.data
+          //       this.render()
+          //     }
+          //   })
         } catch {}
         break
       }
@@ -271,12 +261,13 @@ export class App {
     await callback(code, state)
   }
 
-  const token = await auth()
+  const token = await getToken()
   if (!token) {
     console.error('Sign in to access the console shop')
     return
   }
 
+  await initializeTerminal()
   // Create app instance
   const app = await App.create()
   // @ts-expect-error

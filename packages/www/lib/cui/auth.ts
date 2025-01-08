@@ -15,7 +15,6 @@ export const client = createClient({
 export const API_URL = apiUrl
 
 let accessToken: string | undefined = undefined
-let initializing = true
 
 // Cache DOM elements
 const loginBtn = document.getElementById('login-btn')!
@@ -33,8 +32,10 @@ function updateAuthUI() {
 }
 
 export async function getToken() {
+  updateAuthUI()
   const refresh = localStorage.getItem('refresh')
   if (!refresh) return
+
   const next = await client.refresh(refresh, {
     access: accessToken,
   })
@@ -86,21 +87,6 @@ export async function callback(code: string, state: string) {
     }
     window.location.replace('/')
   }
-}
-
-export async function auth() {
-  const token = await getToken()
-  if (token) accessToken = token
-  updateAuthUI()
-  return accessToken
-}
-
-export async function getCurrentToken() {
-  if (initializing) {
-    initializing = false
-    return auth()
-  }
-  return accessToken
 }
 
 // Initialize event listeners

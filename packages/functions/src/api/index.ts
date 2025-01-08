@@ -47,7 +47,7 @@ const auth: MiddlewareHandler = async (c, next) => {
     if (bearerToken?.startsWith("trm_")) {
       const token = await Api.Personal.fromToken(bearerToken);
       if (!token)
-        throw new VisibleError("input", "auth.invalid", "Invalid bearer token");
+        throw new VisibleError("auth", "auth.invalid", "Invalid bearer token");
       return ActorContext.with(
         {
           type: "user",
@@ -65,7 +65,7 @@ const auth: MiddlewareHandler = async (c, next) => {
 
     const result = await client.verify(subjects, bearerToken!);
     if (result.err)
-      throw new VisibleError("input", "auth.invalid", "Invalid bearer token");
+      throw new VisibleError("auth", "auth.invalid", "Invalid bearer token");
     if (result.subject.type === "user") {
       return ActorContext.with(
         {

@@ -1,7 +1,8 @@
 const states = new Map<number, any[]>()
 const effects = new Map<number, Array<() => void | (() => void)>>()
-let currentComponent = 0
-let hookIndex = 0
+
+export let currentComponent = 0
+export let hookIndex = 0
 
 export function useState<T>(
   initial: T | (() => T),
@@ -56,29 +57,6 @@ export function useEffect(effect: () => void | (() => void)) {
   }
 }
 
-export function useKeydown(
-  keys: KeyboardEvent['key'] | KeyboardEvent['key'][],
-  handler: () => void,
-) {
-  useEffect(() => {
-    const keyArray = Array.isArray(keys) ? keys : [keys]
-    const listener = (e: KeyboardEvent) => {
-      if (
-        document.activeElement instanceof HTMLInputElement ||
-        document.activeElement instanceof HTMLTextAreaElement ||
-        document.activeElement instanceof HTMLSpanElement
-      )
-        return
-
-      if (keyArray.some((k) => e.key.toLowerCase() === k.toLowerCase())) {
-        handler()
-      }
-    }
-    window.addEventListener('keydown', listener)
-    return () => window.removeEventListener('keydown', listener)
-  })
-}
-
 let renderCallback: (() => void) | null = null
 export function setRenderCallback(callback: () => void) {
   renderCallback = callback
@@ -96,3 +74,11 @@ export function prepareForRender(id: number) {
   currentComponent = id
   hookIndex = 0
 }
+
+export * from './use-keydown'
+export * from './use-query'
+export * from './use-mutation'
+export * from './use-cart'
+export * from './use-profile'
+export * from './use-products'
+export * from './use-addresses'

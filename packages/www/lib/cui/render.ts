@@ -79,7 +79,7 @@ export function pad(str: string | undefined, length: number): string {
 }
 
 export function formatPrice(price: number): string {
-  return `$${(price / 100).toFixed(2)}`
+  return `$${price / 100}`
 }
 
 export function combineLines(lines: StyledLine[]): {
