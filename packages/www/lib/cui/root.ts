@@ -33,8 +33,8 @@ export const App = Component(() => {
       return ShopPage()
     case 'cart':
       return CartPage()
-    // case 'shipping':
-    //   return ShippingPage.view()
+    case 'shipping':
+      return ShippingPage()
     default:
       throw new Error(`${route} page not implemented`)
   }

@@ -1,10 +1,13 @@
 import { useEffect, currentComponent, hookIndex } from '.'
 
-const keydownHandlers = new Map<string, () => void>()
+const keydownHandlers = new Map<string, (event: KeyboardEvent) => void>()
 
 export function useKeydown(
-  keysOrHandler: KeyboardEvent['key'] | KeyboardEvent['key'][] | (() => void),
-  maybeHandler?: () => void,
+  keysOrHandler:
+    | KeyboardEvent['key']
+    | KeyboardEvent['key'][]
+    | ((event: KeyboardEvent) => void),
+  maybeHandler?: (event: KeyboardEvent) => void,
 ) {
   const currentHookIndex = hookIndex
   const handlerId = `${currentComponent}-${currentHookIndex}`
@@ -35,7 +38,7 @@ export function useKeydown(
       ) {
         const currentHandler = keydownHandlers.get(handlerId)
         if (currentHandler) {
-          currentHandler()
+          currentHandler(e)
         }
       }
     }

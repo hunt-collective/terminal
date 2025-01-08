@@ -1,7 +1,10 @@
-import type { Command, Message } from './events'
-import type { Model } from './app'
 import type { Component } from './component'
 import { styleObjectToString, type Style } from './style'
+
+export const dimensions = {
+  width: 75,
+  height: 20,
+}
 
 export type StyledText = {
   text: string
@@ -25,50 +28,6 @@ export const styles: Record<string, Style> = {
   white: { color: 'white' },
   gray: { color: '#666' },
   orange: { color: '#ff4800' },
-}
-
-export type UpdateResult<T> =
-  | {
-      state?: Partial<T> // Direct local state updates
-      message?: Message | Message[] // Messages for global state changes
-      command?: Command // Side effects
-    }
-  | undefined
-
-export interface Page {
-  name: string
-  init?: (model: Model) => Command | undefined
-  update?: (msg: Message, model: Model) => UpdateResult<any>
-  view: (model: Model) => StyledLine[]
-}
-
-export function createPage<
-  T extends keyof Model['state'] | (string & {}),
->(options: {
-  name: T
-  init?: (model: Model) => Command | undefined
-  view: T extends keyof Model['state']
-    ? (model: Model, state: Model['state'][T]) => Component
-    : (model: Model) => Component
-  update?: (
-    msg: Message,
-    model: Model,
-  ) => UpdateResult<T extends keyof Model['state'] ? Model['state'][T] : never>
-}) {
-  return {
-    ...options,
-    view: (model) => {
-      const state =
-        options.name in model.state
-          ? model.state[options.name as keyof Model['state']]
-          : undefined
-      const component = ((model, state) => options.view(model, state as any))(
-        model,
-        state,
-      )
-      return component({ width: model.dimensions.width })
-    },
-  } satisfies Page
 }
 
 export function pad(str: string | undefined, length: number): string {

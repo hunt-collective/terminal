@@ -1,21 +1,11 @@
 import type Terminal from '@terminaldotshop/sdk'
-import type { Model } from '../app'
-import { createPage, styles } from '../render'
+import { Component } from '../component'
 import { Box, Center, Flex, Stack, Text } from '../components'
 import { CheckoutLayout } from '../layouts/checkout'
-import {
-  Form,
-  handleFormUpdate,
-  type FieldConfig,
-  type FormState,
-} from '../components/form'
-
-export type ShippingState = {
-  selected: number
-  view: 'form' | 'list'
-  busy: boolean
-  form?: FormState<Terminal.AddressCreateParams>
-}
+import { Form, type FieldConfig, type FormState } from '../components/form'
+import { styles } from '../render'
+import { useState, useKeydown, useCart, useAddresses } from '../hooks'
+import { useRouter } from '../router'
 
 const shippingFields: FieldConfig<Terminal.AddressCreateParams> = {
   name: { label: 'name', required: true },
@@ -40,187 +30,115 @@ const shippingFields: FieldConfig<Terminal.AddressCreateParams> = {
   },
 }
 
-const initialFormState: (
-  model: Model,
-) => FormState<Terminal.AddressCreateParams> = (model) => ({
-  values: {
-    name: model.profile?.user.name || '',
-    street1: '',
-    street2: '',
-    city: '',
-    province: '',
-    country: '',
-    phone: '',
-    zip: '',
-  },
-  errors: {},
+const AddressItem = Component<{
+  address: Terminal.Address
+  selected: boolean
+}>((props) => {
+  return Box({
+    padding: { x: 1, y: 0 },
+    border: true,
+    borderStyle: {
+      color: props.selected ? styles.white : styles.gray,
+    },
+    children: Stack([
+      Text(props.address.name, props.selected ? styles.white : styles.gray),
+      Text(props.address.street1, styles.gray),
+      Flex({
+        gap: 1,
+        children: [
+          Text(props.address.city + ',', styles.gray),
+          Text(props.address.province + ',', styles.gray),
+          Text(props.address.country, styles.gray),
+        ],
+      }),
+      Text(props.address.zip, styles.gray),
+    ]),
+  })
 })
 
-function updateSelectedItem(model: Model, previous: boolean) {
-  let next: number
-  if (previous) {
-    next = model.state.shipping.selected - 1
-  } else {
-    next = model.state.shipping.selected + 1
-  }
-
-  if (next < 0) {
-    next = 0
-  }
-  const max = model.addresses?.length ?? 0
-  if (next > max) {
-    next = max
-  }
-
-  return next
-}
-
-function Address(address: Terminal.Address, selected: boolean) {
-  return Box(
-    Stack(
-      [
-        Text(address.name, selected ? styles.white : styles.gray),
-        Text(address.street1),
-        Flex([
-          Text(address.city + ','),
-          Text(address.province + ','),
-          Text(address.country),
-        ]),
-        Text(address.zip),
-      ],
-      styles.gray,
-    ),
-    {
-      padding: { x: 1, y: 0 },
-      border: true,
-      borderStyle: {
-        color: selected ? styles.white : styles.gray,
-      },
+export const ShippingPage = Component(() => {
+  const { navigate } = useRouter()
+  const { data: addresses } = useAddresses()
+  const { data: cart } = useCart()
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const [isFormView, setIsFormView] = useState(false)
+  const [formState, setFormState] = useState<
+    FormState<Terminal.AddressCreateParams>
+  >({
+    values: {
+      name: '',
+      street1: '',
+      street2: '',
+      city: '',
+      province: '',
+      country: '',
+      phone: '',
+      zip: '',
     },
-  )
-}
-
-export const ShippingForm = (model: Model, state: ShippingState) => {
-  const form = state.form || initialFormState(model)
-
-  return Form({
-    fields: shippingFields,
-    state: form,
-    width: model.dimensions.width,
-    columns: 2,
+    errors: {},
   })
-}
 
-export const ShippingList = (model: Model, state: ShippingState) =>
-  !model.cart?.items.length
-    ? Text('You have no addresses', styles.gray)
-    : Stack([
-        ...model.addresses.map((item, index) =>
-          Address(item, index === state.selected),
-        ),
-        Box(Center('add new address'), {
-          padding: { x: 1, y: 0 },
-          border: true,
-          borderStyle: {
-            color:
-              state.selected === model.addresses.length
-                ? styles.white
-                : styles.gray,
-          },
-        }),
-      ])
+  if (!addresses || !cart) return Text('Loading...', styles.gray)
 
-export const ShippingPage = createPage({
-  name: 'shipping',
-  view: (model, state) => {
-    return CheckoutLayout({
-      current: 'shipping',
-      children: state.busy
-        ? Text('calculating shipping costs...', styles.gray)
-        : [
-            state.view === 'list'
-              ? ShippingList(model, state)
-              : ShippingForm(model, state),
-          ],
+  // Navigation in list view
+  if (!isFormView) {
+    useKeydown(['ArrowDown', 'j'], () => {
+      setSelectedIndex((prev) => Math.min(prev + 1, addresses.length))
     })
-  },
-  update: (msg, model) => {
-    if (msg.type !== 'browser:keydown') return
 
-    // Form view handling
-    if (model.state.shipping.view === 'form') {
-      const formUpdate = handleFormUpdate(
-        msg,
-        model.state.shipping.form || initialFormState(model),
-        shippingFields,
-      )
+    useKeydown(['ArrowUp', 'k'], () => {
+      setSelectedIndex((prev) => Math.max(0, prev - 1))
+    })
 
-      if (formUpdate) {
-        if (!formUpdate.focusedField) {
-          // Form was submitted or cancelled
-          if (
-            !formUpdate.errors ||
-            Object.keys(formUpdate.errors).length === 0
-          ) {
-            // Form was successfully submitted
-            return {
-              state: {
-                view: 'list' as const,
-                form: undefined,
-              },
-              message: { type: 'app:focus-released' },
-            }
-          }
-
-          // Form has validation errors
-          return {
-            state: { form: formUpdate },
-          }
-        }
-
-        // Normal form update
-        return {
-          state: { form: formUpdate },
-        }
+    useKeydown('Enter', () => {
+      if (selectedIndex === addresses.length) {
+        setIsFormView(true)
+      } else {
+        // TODO: Set shipping address and navigate to payment
+        navigate('payment')
       }
-    }
+    })
 
-    const { key } = msg.event
-    const addresses = model.addresses || []
-    const selectedAddress = addresses[model.state.shipping.selected]
-    const addNewAddress = model.state.shipping.selected === addresses.length
+    useKeydown('Escape', () => navigate('cart'))
+  }
 
-    switch (key.toLowerCase()) {
-      case 'arrowdown':
-      case 'j':
-        return { state: { selected: updateSelectedItem(model, false) } }
-
-      case 'arrowup':
-      case 'k':
-        return { state: { selected: updateSelectedItem(model, true) } }
-
-      case 'escape':
-        return { message: { type: 'app:navigate', page: 'cart' } }
-
-      case 'enter':
-        if (addNewAddress) {
-          return {
-            state: { view: 'form' as const, form: initialFormState(model) },
-            message: { type: 'app:focus-locked' },
-          }
-        }
-        return {
-          state: { busy: true },
-          command: async () => {
-            const client = await model.client()
-            await client.cart.setAddress({ addressID: selectedAddress.id })
-            const cart = await client.cart.get().then((r) => r.data)
-            return [
-              { type: 'cart:updated', cart },
-              { type: 'app:navigate', page: 'payment' },
-            ]
-          },
-        }
-    }
-  },
+  return CheckoutLayout({
+    current: 'shipping',
+    children: [
+      isFormView
+        ? Form({
+            fields: shippingFields,
+            state: formState,
+            columns: 2,
+            columnGap: 2,
+            onChange: (newState) => setFormState(newState),
+            onSubmit: () => {
+              // TODO: Create address and navigate to payment
+              setIsFormView(false)
+            },
+            onCancel: () => setIsFormView(false),
+          })
+        : Stack({
+            gap: 1,
+            children: [
+              ...addresses.map((address, index) =>
+                AddressItem({
+                  address,
+                  selected: index === selectedIndex,
+                }),
+              ),
+              Box(Center(Text('add new address', styles.gray)), {
+                padding: { x: 1, y: 0 },
+                border: true,
+                borderStyle: {
+                  color:
+                    selectedIndex === addresses.length
+                      ? styles.white
+                      : styles.gray,
+                },
+              }),
+            ],
+          }),
+    ],
+  })
 })

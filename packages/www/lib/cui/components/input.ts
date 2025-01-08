@@ -2,6 +2,7 @@ import { Component } from '../component'
 import { Box, Break, Flex, Stack, Text } from './'
 import { styles } from '../render'
 import type { Style } from '../style'
+import { useKeydown } from '../hooks'
 
 export type ValidationResult = {
   valid: boolean
@@ -16,7 +17,8 @@ export type InputProps = {
   style?: Style
   error?: string
   validate?: (value: string) => ValidationResult
-  onChange?: (value: string) => void
+  onChange?: (value: string, error?: string) => void
+  onFocusChange?: (focused: boolean) => void
 }
 
 export const Input = Component<InputProps>((props) => {
@@ -26,14 +28,45 @@ export const Input = Component<InputProps>((props) => {
     label,
     placeholder = '',
     error,
-    // style,
+    validate,
+    onChange,
+    onFocusChange,
   } = props
 
-  // Show placeholder if no value and not focused
   const displayValue = value || (!focused ? placeholder : '')
-
-  // Cursor styling - only show when focused
   const cursor = focused ? '█' : ' '
+
+  if (focused) {
+    useKeydown((event: KeyboardEvent) => {
+      if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
+        const newValue = value + event.key
+        let newError: string | undefined
+
+        if (validate) {
+          const result = validate(newValue)
+          if (!result.valid) {
+            newError = result.message
+          }
+        }
+
+        onChange?.(newValue, newError)
+      } else if (event.key === 'Backspace') {
+        const newValue = value.slice(0, -1)
+        let newError: string | undefined
+
+        if (validate) {
+          const result = validate(newValue)
+          if (!result.valid) {
+            newError = result.message
+          }
+        }
+
+        onChange?.(newValue, newError)
+      } else if (event.key === 'Escape') {
+        onFocusChange?.(false)
+      }
+    })
+  }
 
   const inputContent = Box({
     padding: { x: 1 },
@@ -60,39 +93,3 @@ export const Input = Component<InputProps>((props) => {
 
   return Stack([...labelContent, inputContent, ...errorContent])
 })
-
-// Helper function to handle input events
-export function handleInputEvent(
-  event: KeyboardEvent,
-  value: string,
-  onChange?: (value: string) => void,
-  validate?: (value: string) => ValidationResult,
-): { value: string; error?: string } {
-  let newValue = value
-  let error: string | undefined
-
-  // Handle character input
-  if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
-    newValue = value + event.key
-  }
-
-  // Handle backspace
-  else if (event.key === 'Backspace') {
-    newValue = value.slice(0, -1)
-  }
-
-  // Run validation if provided
-  // if (validate) {
-  //   const result = validate(newValue)
-  //   if (!result.valid) {
-  //     error = result.message
-  //   }
-  // }
-
-  // Call onChange handler if provided
-  if (onChange && newValue !== value) {
-    onChange(newValue)
-  }
-
-  return { value: newValue, error }
-}

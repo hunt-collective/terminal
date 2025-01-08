@@ -1,10 +1,9 @@
 import { Stack, Text, Center, Spacer, Flex } from '../components'
 import { useState, useEffect } from '../hooks'
 import { Component } from '../component'
-import { ModelContext } from '../app'
+import { dimensions } from '../render'
 
 export const SplashPage = Component(() => {
-  const [model] = ModelContext.useContext()
   const [cursorVisible, setCursorVisible] = useState(true)
 
   useEffect(() => {
@@ -18,7 +17,7 @@ export const SplashPage = Component(() => {
   const logoText = 'terminal'
 
   return Stack([
-    Spacer({ size: Math.floor(model.dimensions.height / 2) - 1 }),
+    Spacer({ size: Math.floor(dimensions.height / 2) - 1 }),
     Center([
       Flex([
         Text(logoText, {
@@ -31,6 +30,6 @@ export const SplashPage = Component(() => {
         }),
       ]),
     ]),
-    Spacer({ size: Math.floor(model.dimensions.height / 2) }),
+    Spacer({ size: Math.floor(dimensions.height / 2) }),
   ])
 })

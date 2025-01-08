@@ -1,8 +1,8 @@
 import { Component } from '../component'
 import { Stack } from './stack'
 import { Flex } from './flex'
-import { handleInputEvent, Input, type ValidationResult } from './input'
-import { type Message } from '../events'
+import { Input, type ValidationResult } from './input'
+import { useKeydown, useState } from '../hooks'
 
 export type FieldConfig<T extends Record<string, any>> = {
   [K in keyof T]: {
@@ -14,7 +14,6 @@ export type FieldConfig<T extends Record<string, any>> = {
 }
 
 export type FormState<T extends Record<string, any>> = {
-  focusedField?: keyof T
   values: T
   errors: Partial<Record<keyof T, string>>
 }
@@ -25,6 +24,9 @@ type FormProps<T extends Record<string, any>> = {
   width?: number
   columns?: number
   columnGap?: number
+  onChange?: (state: FormState<T>) => void
+  onSubmit?: (state: FormState<T>) => void
+  onCancel?: () => void
 }
 
 function validateRequired(label: string, value: string): ValidationResult {
@@ -35,9 +37,73 @@ function validateRequired(label: string, value: string): ValidationResult {
 }
 
 export const Form = Component<FormProps<any>>((props) => {
-  const { fields, state, columns = 1, columnGap = 2 } = props
+  const {
+    fields,
+    state,
+    columns = 1,
+    columnGap = 2,
+    onChange,
+    onSubmit,
+    onCancel,
+  } = props
+  const [focusedField, setFocusedField] = useState<string | undefined>(
+    Object.keys(fields)[0],
+  )
 
-  const focusedField = state.focusedField || Object.keys(fields)[0]
+  useKeydown('Tab', (e: KeyboardEvent) => {
+    if (!focusedField) {
+      setFocusedField(Object.keys(fields)[0])
+      return
+    }
+
+    const fieldKeys = Object.keys(fields)
+    const currentIndex = fieldKeys.indexOf(focusedField)
+    const delta = e.shiftKey ? -1 : 1
+    const nextIndex =
+      (currentIndex + delta + fieldKeys.length) % fieldKeys.length
+    const nextField = fieldKeys[nextIndex]
+    setFocusedField(nextField)
+  })
+
+  useKeydown('Enter', () => {
+    if (!focusedField) return
+
+    const errors: Partial<Record<string, string>> = {}
+    let hasErrors = false
+
+    Object.entries(fields).forEach(([key, config]) => {
+      const value = state.values[key]?.toString() || ''
+      const validate = config.required
+        ? (value: string) => {
+            const required = validateRequired(config.label ?? key, value)
+            if (!required.valid) return required
+            return config.validate ? config.validate(value) : { valid: true }
+          }
+        : config.validate
+
+      if (validate) {
+        const result = validate(value)
+        if (!result.valid) {
+          errors[key] = result.message || 'invalid value'
+          hasErrors = true
+        }
+      }
+    })
+
+    if (hasErrors) {
+      onChange?.({ ...state, errors })
+    } else {
+      onSubmit?.(state)
+    }
+  })
+
+  useKeydown('Escape', () => {
+    if (focusedField) {
+      setFocusedField(undefined)
+    } else {
+      onCancel?.()
+    }
+  })
 
   // Calculate column widths
   const totalGapWidth = (columns - 1) * columnGap
@@ -79,104 +145,18 @@ export const Form = Component<FormProps<any>>((props) => {
             focused: focusedField === key,
             error: state.errors[key],
             validate,
+            onChange: (value, error) => {
+              onChange?.({
+                values: { ...state.values, [key]: value },
+                errors: { ...state.errors, [key]: error },
+              })
+            },
+            onFocusChange: (focused) => {
+              setFocusedField(focused ? key : undefined)
+            },
           })
         }),
       }),
     ),
   })
 })
-
-export function handleFormUpdate<T extends Record<string, any>>(
-  msg: Message,
-  state: FormState<T>,
-  fields: FieldConfig<T>,
-): FormState<T> | undefined {
-  if (msg.type !== 'browser:keydown') return
-
-  msg.event.preventDefault()
-
-  const { key } = msg.event
-  const fieldKeys = Object.keys(fields) as (keyof T)[]
-  const currentField = state.focusedField || fieldKeys[0]
-
-  switch (key.toLowerCase()) {
-    case 'tab': {
-      if (!currentField) return { ...state, focusedField: fieldKeys[0] }
-
-      const currentIndex = fieldKeys.indexOf(currentField)
-      const delta = msg.event.shiftKey ? -1 : 1
-      const nextIndex =
-        (currentIndex + delta + fieldKeys.length) % fieldKeys.length
-      const nextField = fieldKeys[nextIndex]
-
-      return { ...state, focusedField: nextField }
-    }
-
-    case 'escape':
-      if (currentField) {
-        return { ...state, focusedField: undefined }
-      }
-      break
-
-    case 'enter': {
-      const errors: Partial<Record<keyof T, string>> = {}
-      let hasErrors = false
-
-      fieldKeys.forEach((key) => {
-        const config = fields[key]
-        const value = state.values[key]?.toString() || ''
-        const validate = config.required
-          ? (value: string) => {
-              const required = validateRequired(
-                config.label ?? (key as string),
-                value,
-              )
-              if (!required.valid) return required
-              return config.validate ? config.validate(value) : { valid: true }
-            }
-          : config.validate
-
-        if (validate) {
-          const result = validate(value)
-          if (!result.valid) {
-            errors[key] = result.message || 'invalid value'
-            hasErrors = true
-          }
-        }
-      })
-
-      if (hasErrors) {
-        return { ...state, errors }
-      }
-
-      return { ...state, focusedField: undefined, errors: {} }
-    }
-
-    default: {
-      if (currentField) {
-        const config = fields[currentField]
-        const currentValue = state.values[currentField]?.toString() || ''
-        const validate = config.required
-          ? (value: string) => {
-              const required = validateRequired(config.label ?? key, value)
-              if (!required.valid) return required
-              return config.validate ? config.validate(value) : { valid: true }
-            }
-          : config.validate
-
-        const { value, error } = handleInputEvent(
-          msg.event,
-          currentValue,
-          undefined,
-          validate,
-        )
-
-        return {
-          ...state,
-          values: { ...state.values, [currentField]: value },
-          errors: { ...state.errors, [currentField]: error },
-        }
-      }
-    }
-  }
-}
