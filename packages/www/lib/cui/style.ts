@@ -142,13 +142,6 @@ const isValidStyleProperty = (property: string, value: any): boolean => {
     return typeof value === 'string' && colorRegex.test(value)
   }
 
-  const isValidSize = (value: string): boolean => {
-    // Checks for valid CSS size values (px, em, rem, %, vh, vw, etc.)
-    const sizeRegex =
-      /^(-?\d*\.?\d+)(px|em|rem|%|vh|vw|vmin|vmax|ch|ex|cm|mm|in|pt|pc)?$/
-    return typeof value === 'string' && (value === '0' || sizeRegex.test(value))
-  }
-
   switch (property) {
     case 'color':
     case 'backgroundColor':
@@ -163,7 +156,7 @@ const isValidStyleProperty = (property: string, value: any): boolean => {
     case 'fontSize':
     case 'lineHeight':
     case 'wordSpacing':
-      return typeof value === 'string' && isValidSize(value)
+      return typeof value === 'string'
 
     case 'fontWeight':
       return (
