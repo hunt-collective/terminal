@@ -3,6 +3,7 @@ import { Stack } from './stack'
 import { Flex } from './flex'
 import { Input, type ValidationResult } from './input'
 import { useKeydown, useState } from '../hooks'
+import { dimensions } from '../render'
 
 export type FieldConfig<T extends Record<string, any>> = {
   [K in keyof T]: {
@@ -40,6 +41,7 @@ export const Form = Component<FormProps<any>>((props) => {
   const {
     fields,
     state,
+    width = dimensions.width,
     columns = 1,
     columnGap = 2,
     onChange,
@@ -107,8 +109,8 @@ export const Form = Component<FormProps<any>>((props) => {
 
   // Calculate column widths
   const totalGapWidth = (columns - 1) * columnGap
-  const columnWidth = props.width
-    ? Math.floor((props.width - totalGapWidth) / columns)
+  const columnWidth = width
+    ? Math.floor((width - totalGapWidth) / columns)
     : undefined
 
   // Distribute fields evenly across columns
@@ -123,6 +125,7 @@ export const Form = Component<FormProps<any>>((props) => {
 
   return Flex({
     gap: columnGap,
+    width: props.width,
     children: columnFields.map((fieldsInColumn) =>
       Stack({
         gap: 1,

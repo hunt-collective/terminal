@@ -102,19 +102,19 @@ func (m model) UpdateSelected(previous bool) (model, tea.Cmd) {
 }
 
 func (m model) reorderProducts() model {
-	var featured, staples []terminal.Product
+	var featured, originals []terminal.Product
 
-	// Split into featured and staples while maintaining relative order within each category
+	// Split into featured and originals while maintaining relative order within each category
 	for _, p := range m.products {
 		if val, exists := p.Tags["featured"]; !exists || val != "true" {
-			staples = append(staples, p)
+			originals = append(originals, p)
 		} else {
 			featured = append(featured, p)
 		}
 	}
 
-	// Combine featured first, then staples
-	m.products = append(featured, staples...)
+	// Combine featured first, then originals
+	m.products = append(featured, originals...)
 
 	// Reset selection to avoid any out-of-bounds issues
 	if len(m.products) > 0 {
@@ -160,9 +160,9 @@ func (m model) ShopView() string {
 	// Only consider section header widths if we have featured products
 	if featuredCount > 0 {
 		featuredHeader := "~ featured ~"
-		staplesHeader := "~ staples ~"
+		originalsHeader := "~ originals ~"
 		headerWidth := lipgloss.Width(featuredHeader)
-		if w := lipgloss.Width(staplesHeader); w > headerWidth {
+		if w := lipgloss.Width(originalsHeader); w > headerWidth {
 			headerWidth = w
 		}
 		if headerWidth > menuWidth {
@@ -240,8 +240,8 @@ func (m model) ShopView() string {
 
 		if featuredCount < len(m.products) {
 			products.WriteString("\n")
-			// Staples section
-			products.WriteString(sectionHeader.Render("~ staples ~"))
+			// Originals section
+			products.WriteString(sectionHeader.Render("~ originals ~"))
 			products.WriteString("\n")
 
 			for i := featuredCount; i < len(m.products); i++ {

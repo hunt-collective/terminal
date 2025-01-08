@@ -171,7 +171,7 @@ export const ShopPage = Component(() => {
   const detailsWidth = third * 2 - gap
 
   const featured = products.filter((p) => p.tags?.featured === 'true')
-  const staples = products.filter((p) => p.tags?.featured !== 'true')
+  const originals = products.filter((p) => p.tags?.featured !== 'true')
   const selectedProduct = products[selectedIndex]
   const highlightColor = selectedProduct
     ? getHighlightColor(selectedProduct.name)
@@ -193,8 +193,8 @@ export const ShopPage = Component(() => {
             ),
             Break(),
             ProductSection(
-              'staples',
-              staples,
+              'originals',
+              originals,
               selectedIndex,
               products,
               highlightColor,
