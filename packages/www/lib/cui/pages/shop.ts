@@ -1,12 +1,11 @@
 import type Terminal from '@terminaldotshop/sdk'
-import type { Model } from '../app'
-import { createPage, styles, formatPrice } from '../render'
+import { styles, formatPrice } from '../render'
 import { Box, Break, Flex, Stack, Text } from '../components'
 import { Layout } from '../layouts/base'
-
-export type ShopState = {
-  selected: number
-}
+import { Component } from '../component'
+import { useState, useKeydown } from '../hooks'
+import { useRouter } from '../router'
+import { ModelContext } from '../app'
 
 function ProductListItem(
   product: Terminal.Product,
@@ -40,7 +39,7 @@ function ProductSection(
   ])
 }
 
-function QuantityControl(currentQuantity: number) {
+function QuantityControl({ currentQuantity }: { currentQuantity: number }) {
   return Flex({
     gap: 1,
     children: [
@@ -57,7 +56,7 @@ function SubscriptionButton() {
     children: [
       Text('subscribe', {
         color: 'white',
-        background: '#ff4800',
+        background: '#FF4800',
         padding: '0px 5px',
       }),
       Text('enter', styles.gray),
@@ -65,19 +64,24 @@ function SubscriptionButton() {
   })
 }
 
-function ProductDetails(
-  product: Terminal.Product,
-  cart: Terminal.Cart | undefined,
-  detailsWidth: number,
-  highlightColor: string,
-) {
+function ProductDetails({
+  product,
+  cart,
+  width,
+  highlightColor,
+}: {
+  product: Terminal.Product
+  cart: Terminal.Cart | undefined
+  width: number
+  highlightColor: string
+}) {
   const variant = product.variants[0]
   const currentQuantity =
     cart?.items.find((i) => i.productVariantID === variant.id)?.quantity ?? 0
 
   return Box({
     padding: { x: 1, y: 0 },
-    width: detailsWidth,
+    width,
     children: Stack([
       Text(product.name, { style: styles.white }),
       Stack({
@@ -89,149 +93,119 @@ function ProductDetails(
           }),
           Text(product.description, {
             style: styles.gray,
-            maxWidth: detailsWidth - 2,
+            maxWidth: width - 2,
           }),
           product.subscription === 'required'
             ? SubscriptionButton()
-            : QuantityControl(currentQuantity),
+            : QuantityControl({ currentQuantity }),
         ],
       }),
     ]),
   })
 }
 
-function updateSelectedProduct(model: Model, previous: boolean) {
-  const next = previous
-    ? model.state.shop.selected - 1
-    : model.state.shop.selected + 1
-
-  return Math.max(0, Math.min(next, model.products.length - 1))
+function getHighlightColor(productName: string): string {
+  switch (productName) {
+    case 'segfault':
+      return '#169FC1'
+    case 'dark mode':
+      return '#118B39'
+    case '[object Object]':
+      return '#F5BB1D'
+    case '404':
+      return '#D53C81'
+    case 'artisan':
+      return '#EB4432'
+    default:
+      return '#FF5C00'
+  }
 }
 
-export const ShopPage = createPage({
-  name: 'shop',
-  view: (model, state) => {
-    const gap = 2
-    const third = Math.floor(model.dimensions.width / 3)
-    const listWidth = third
-    const detailsWidth = third * 2 - gap
+export const ShopPage = Component(() => {
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const { navigate } = useRouter()
 
-    const featured = model.products.filter((p) => p.tags?.featured === 'true')
-    const staples = model.products.filter((p) => p.tags?.featured !== 'true')
-    const selectedProduct = model.products[state.selected]
+  const [model] = ModelContext.useContext()
+  const updateCartQuantity = (variantId: string, quantity: number) => {}
 
-    let highlightColor = 'orange'
-    switch (selectedProduct.name) {
-      case 'segfault':
-        highlightColor = '#169FC1'
-        break
-      case 'dark mode':
-        highlightColor = '#118B39'
-        break
-      case '[object Object]':
-        highlightColor = '#F5BB1D'
-        break
-      case '404':
-        highlightColor = '#D53C81'
-        break
-      case 'artisan':
-        highlightColor = '#EB4432'
-        break
-      default:
-        highlightColor = '#FF5C00'
+  useKeydown(['ArrowDown', 'j'], () => {
+    setSelectedIndex((prev) => Math.min(prev + 1, model.products.length - 1))
+  })
+
+  useKeydown(['ArrowUp', 'k'], () => {
+    setSelectedIndex((prev) => Math.max(prev - 1, 0))
+  })
+
+  useKeydown(['ArrowRight', 'l', '+'], () => {
+    const product = model.products[selectedIndex]
+    const variant = product?.variants[0]
+    if (variant) {
+      const currentQty =
+        model.cart?.items.find((i) => i.productVariantID === variant.id)
+          ?.quantity ?? 0
+      updateCartQuantity(variant.id, currentQty + 1)
     }
+  })
 
-    return Layout({
-      model,
+  useKeydown(['ArrowLeft', 'h', '-'], () => {
+    const product = model.products[selectedIndex]
+    const variant = product?.variants[0]
+    if (variant) {
+      const currentQty =
+        model.cart?.items.find((i) => i.productVariantID === variant.id)
+          ?.quantity ?? 0
+      if (currentQty > 0) {
+        updateCartQuantity(variant.id, currentQty - 1)
+      }
+    }
+  })
+
+  useKeydown('enter', () => navigate('cart'))
+
+  const gap = 2
+  const third = Math.floor(model.dimensions.width / 3)
+  const listWidth = third
+  const detailsWidth = third * 2 - gap
+
+  const featured = model.products.filter((p) => p.tags?.featured === 'true')
+  const staples = model.products.filter((p) => p.tags?.featured !== 'true')
+  const products = model.products
+  const selectedProduct = model.products[selectedIndex]
+  const highlightColor = selectedProduct
+    ? getHighlightColor(selectedProduct.name)
+    : '#FF5C00'
+
+  return Layout(
+    Flex({
+      gap,
       children: [
-        Flex({
-          gap,
+        Stack({
+          width: listWidth,
           children: [
-            Stack({
-              width: listWidth,
-              children: [
-                ProductSection(
-                  'featured',
-                  featured,
-                  state.selected,
-                  model.products,
-                  highlightColor,
-                ),
-                Break(),
-                ProductSection(
-                  'staples',
-                  staples,
-                  state.selected,
-                  model.products,
-                  highlightColor,
-                ),
-              ],
-            }),
-            ProductDetails(
-              selectedProduct,
-              model.cart,
-              detailsWidth,
+            ProductSection(
+              'featured',
+              featured,
+              selectedIndex,
+              products,
+              highlightColor,
+            ),
+            Break(),
+            ProductSection(
+              'staples',
+              staples,
+              selectedIndex,
+              products,
               highlightColor,
             ),
           ],
         }),
+        ProductDetails({
+          product: selectedProduct,
+          cart: model.cart,
+          width: detailsWidth,
+          highlightColor,
+        }),
       ],
-    })
-  },
-  update: (msg, model) => {
-    if (msg.type !== 'browser:keydown') return
-
-    const { key } = msg.event
-    const product = model.products[model.state.shop.selected]
-    const variant = product?.variants[0]
-
-    switch (key.toLowerCase()) {
-      case 'arrowdown':
-      case 'j':
-        return { state: { selected: updateSelectedProduct(model, false) } }
-
-      case 'arrowup':
-      case 'k':
-        return { state: { selected: updateSelectedProduct(model, true) } }
-
-      case 'arrowright':
-      case 'l':
-      case '+':
-        if (variant) {
-          const currentQty =
-            model.cart?.items.find((i) => i.productVariantID === variant.id)
-              ?.quantity ?? 0
-          return {
-            message: {
-              type: 'cart:quantity-updated',
-              variantId: variant.id,
-              quantity: currentQty + 1,
-            },
-          }
-        }
-        break
-
-      case 'arrowleft':
-      case 'h':
-      case '-':
-        if (variant) {
-          const currentQty =
-            model.cart?.items.find((i) => i.productVariantID === variant.id)
-              ?.quantity ?? 0
-          if (currentQty > 0) {
-            return {
-              message: {
-                type: 'cart:quantity-updated',
-                variantId: variant.id,
-                quantity: currentQty - 1,
-              },
-            }
-          }
-        }
-        break
-
-      case 'enter':
-        return { message: { type: 'app:navigate', page: 'cart' } }
-    }
-  },
+    }),
+  )
 })

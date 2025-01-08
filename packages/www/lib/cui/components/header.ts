@@ -1,10 +1,12 @@
 import { styles } from '../render'
 import { Box, Flex, Text } from './'
-import { ModelContext } from '../app'
 import { Component } from '../component'
+import { useRouter } from '../router'
+import { ModelContext } from '../app'
 
 export const Header = Component(() => {
   const [model] = ModelContext.useContext()
+  const router = useRouter()
 
   return Box({
     padding: { x: 2 },
@@ -22,7 +24,7 @@ export const Header = Component(() => {
               children: [
                 Text('s', styles.white),
                 Text('shop', {
-                  color: model?.page === 'shop' ? 'white' : 'gray',
+                  color: router.route === 'shop' ? 'white' : 'gray',
                 }),
               ],
             }),
@@ -32,7 +34,7 @@ export const Header = Component(() => {
               children: [
                 Text('a', styles.white),
                 Text('account', {
-                  color: model?.page === 'account' ? 'white' : 'gray',
+                  color: router.route === 'account' ? 'white' : 'gray',
                 }),
                 Text('(PRs welcome)', {
                   ...styles.gray,
@@ -47,7 +49,7 @@ export const Header = Component(() => {
           children: [
             Text('c', styles.white),
             Text('cart', {
-              color: model?.page === 'cart' ? 'white' : 'gray',
+              color: router.route === 'cart' ? 'white' : 'gray',
             }),
             Text(`$ ${(model?.cart?.subtotal ?? 0) / 100}`, styles.white),
             Text(

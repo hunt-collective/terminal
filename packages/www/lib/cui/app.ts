@@ -1,7 +1,7 @@
 import Terminal from '@terminaldotshop/sdk'
 import { getCurrentToken, API_URL, callback, auth } from './auth'
 import { type Message } from './events'
-import { ShopPage, type ShopState } from './pages/shop'
+import { ShopPage } from './pages/shop'
 import { CartPage, type CartState } from './pages/cart'
 import { SplashPage } from './pages/splash'
 import { combineLines, type Page } from './render'
@@ -9,6 +9,7 @@ import { ShippingPage, type ShippingState } from './pages/shipping'
 import { type Component } from './component'
 import { setRenderCallback } from './hooks'
 import { createContext } from './context'
+import { App as Root } from './root'
 
 export type Model = {
   page:
@@ -31,7 +32,6 @@ export type Model = {
     cart?: number
   }
   state: {
-    shop: ShopState
     cart: CartState
     shipping: ShippingState
   }
@@ -45,7 +45,7 @@ export class App {
 
   static async create(): Promise<App> {
     const app = new App()
-    await app.initialize()
+    app.render()
     return app
   }
 
@@ -68,9 +68,6 @@ export class App {
       addresses: [],
       updates: {},
       state: {
-        shop: {
-          selected: 0,
-        },
         cart: {
           selected: 0,
         },
@@ -104,49 +101,15 @@ export class App {
       if (this.model.focusLocked) return
 
       // Global navigation shortcuts
-      switch (e.key.toLowerCase()) {
-        case 's':
-          this.handleMsg({ type: 'app:navigate', page: 'shop' })
-          return
-        case 'c':
-          this.handleMsg({ type: 'app:navigate', page: 'cart' })
-          return
-      }
+      // switch (e.key.toLowerCase()) {
+      //   case 's':
+      //     this.handleMsg({ type: 'app:navigate', page: 'shop' })
+      //     return
+      //   case 'c':
+      //     this.handleMsg({ type: 'app:navigate', page: 'cart' })
+      //     return
+      // }
     })
-  }
-
-  private async initialize() {
-    const client = await this.model.client()
-
-    // Ensure splash shows for at least 3 seconds
-    const splashPromise = new Promise((resolve) => setTimeout(resolve, 3000))
-    const dataPromise = client.view.init().then((r) => r.data)
-
-    // Wait for both data and minimum splash time
-    const { profile, products, cart, addresses } = await Promise.all([
-      dataPromise,
-      splashPromise,
-    ]).then(([data]) => data)
-
-    // Switch to shop view with loaded data
-    this.model = {
-      ...this.model,
-      page: 'shop',
-      profile,
-      cart,
-      products,
-      addresses,
-      state: {
-        ...this.model.state,
-        shop: {
-          selected: products.findIndex((p) => p.tags?.featured === 'true') ?? 0,
-        },
-      },
-    }
-
-    ModelContext.useContext()[1](this.model)
-
-    this.render()
   }
 
   private handleMsg(msg: Message) {
@@ -272,7 +235,7 @@ export class App {
   private getCurrentPage(): Page | Component {
     switch (this.model.page) {
       case 'shop':
-        return ShopPage
+        return ShopPage()
       case 'cart':
         return CartPage
       case 'splash':
@@ -285,11 +248,7 @@ export class App {
   }
 
   render() {
-    const page = this.getCurrentPage()
-    const lines =
-      'view' in page
-        ? page.view(this.model)
-        : page({ width: this.model.dimensions.width })
+    const lines = Root()({ width: this.model.dimensions.width })
     const { text, styles } = combineLines(lines)
     const key = text + JSON.stringify(styles)
 

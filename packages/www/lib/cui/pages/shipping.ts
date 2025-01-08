@@ -134,7 +134,6 @@ export const ShippingPage = createPage({
   name: 'shipping',
   view: (model, state) => {
     return CheckoutLayout({
-      model,
       current: 'shipping',
       children: state.busy
         ? Text('calculating shipping costs...', styles.gray)

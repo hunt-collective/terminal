@@ -70,7 +70,6 @@ export const CartPage = createPage({
   name: 'cart',
   view: (model, state) => {
     return CheckoutLayout({
-      model,
       current: 'cart',
       children: [
         !model.cart?.items.length

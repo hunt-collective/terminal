@@ -1,13 +1,13 @@
-import { ModelContext } from '../app'
 import { Component } from '../component'
 import { Box, Stack, Text, Center, Flex } from '../components'
 import { styles } from '../render'
+import { useRouter } from '../router'
 
 export const Footer = Component(() => {
-  const [model] = ModelContext.useContext()
+  const router = useRouter()
 
   let parts: { hint: string; text: string }[] = []
-  switch (model!.page) {
+  switch (router.route) {
     case 'shop':
       parts = [
         { hint: '↑/↓', text: 'products' },
