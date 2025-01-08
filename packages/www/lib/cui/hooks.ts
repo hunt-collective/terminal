@@ -4,12 +4,11 @@ let currentComponent = 0
 let hookIndex = 0
 
 export function useState<T>(
-  initial: T,
+  initial: T | (() => T),
 ): [T, (valueOrFn: T | ((prev: T) => T)) => void] {
   const componentId = currentComponent
   const stateIndex = hookIndex++
 
-  // Initialize state array for this component if needed
   if (!states.has(componentId)) {
     states.set(componentId, [])
   }
@@ -17,7 +16,8 @@ export function useState<T>(
 
   // Initialize this state slot if needed
   if (state[stateIndex] === undefined) {
-    state[stateIndex] = initial
+    state[stateIndex] =
+      typeof initial === 'function' ? (initial as () => T)() : initial
   }
 
   const setValue = (valueOrFn: T | ((prev: T) => T)) => {
