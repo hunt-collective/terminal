@@ -31,8 +31,8 @@ export const App = Component(() => {
       return SplashPage()
     case 'shop':
       return ShopPage()
-    // case 'cart':
-    //   return CartPage.view()
+    case 'cart':
+      return CartPage()
     // case 'shipping':
     //   return ShippingPage.view()
     default:

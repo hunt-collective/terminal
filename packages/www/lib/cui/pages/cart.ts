@@ -1,44 +1,24 @@
-import type Terminal from '@terminaldotshop/sdk'
-import type { Model } from '../app'
-import { createPage, styles, formatPrice } from '../render'
-import { Box, Flex, Stack, Text } from '../components'
+import { Component } from '../component'
+import { Box, Stack, Text, Flex } from '../components'
+import { styles, formatPrice } from '../render'
+import {
+  useState,
+  useKeydown,
+  useCart,
+  useProducts,
+  useUpdateCartItem,
+} from '../hooks'
+import { useRouter } from '../router'
 import { CheckoutLayout } from '../layouts/checkout'
+import type Terminal from '@terminaldotshop/sdk'
+import { CartItemQuantity } from '../components/cart-item-quantity'
 
-export type CartState = {
-  selected: number
-}
-
-function updateSelectedItem(model: Model, previous: boolean) {
-  let next: number
-  if (previous) {
-    next = model.state.cart.selected - 1
-  } else {
-    next = model.state.cart.selected + 1
-  }
-
-  if (next < 0) {
-    next = 0
-  }
-  const max = (model.cart?.items.length ?? 0) - 1
-  if (next > max) {
-    next = max
-  }
-
-  return next
-}
-
-function CartItem(
-  item: Terminal.CartResource.Cart.Item,
-  selected: boolean,
-  model: Model,
-) {
-  const product = model.products.find((p) =>
-    p.variants.find((v) => v.id === item.productVariantID),
-  )
-  if (!product) return []
-
-  const variant = product.variants.find((v) => v.id === item.productVariantID)
-
+const CartItem = Component<{
+  item: Terminal.Cart.Item
+  product: Terminal.Product
+  variant: Terminal.ProductVariant
+  selected: boolean
+}>(({ item, product, variant, selected }) => {
   return Box({
     padding: { x: 1, y: 0 },
     border: true,
@@ -51,87 +31,88 @@ function CartItem(
         children: [
           Text(product.name, selected ? styles.white : styles.gray),
           Flex({
-            children: [
-              Text(selected ? '-' : ' ', styles.gray),
-              Text(item.quantity.toString(), styles.white),
-              Text(selected ? '+' : ' ', styles.gray),
-              Text(formatPrice(item.subtotal), styles.gray),
-            ],
             gap: 1,
+            children: [
+              CartItemQuantity({ item }),
+              Text(formatPrice(item.subtotal).padStart(5), {
+                style: styles.gray,
+              }),
+            ],
           }),
         ],
       }),
       variant ? Text(variant.name, styles.gray) : '',
     ]),
   })
-}
+})
 
-export const CartPage = createPage({
-  name: 'cart',
-  view: (model, state) => {
-    return CheckoutLayout({
-      current: 'cart',
-      children: [
-        !model.cart?.items.length
-          ? Text('Your cart is empty', styles.gray)
-          : Stack(
-              model.cart.items.map((item, index) =>
-                CartItem(item, index === state.selected, model),
-              ),
-            ),
-      ],
-    })
-  },
-  update: (msg, model) => {
-    if (msg.type !== 'browser:keydown') return
+export const CartPage = Component(() => {
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const { data: cart } = useCart()
+  const { data: products } = useProducts()
+  const { navigate } = useRouter()
+  const { mutate: updateItem } = useUpdateCartItem()
 
-    const { key } = msg.event
-    const items = model.cart?.items || []
-    const selectedItem = items[model.state.cart.selected]
+  if (!cart || !products) return Text('Loading...', styles.gray)
 
-    switch (key.toLowerCase()) {
-      case 'arrowdown':
-      case 'j':
-        return { state: { selected: updateSelectedItem(model, false) } }
+  useKeydown(['arrowdown', 'j'], () => {
+    setSelectedIndex((prev) =>
+      Math.min(prev + 1, Math.max(0, cart.items.length - 1)),
+    )
+  })
 
-      case 'arrowup':
-      case 'k':
-        return { state: { selected: updateSelectedItem(model, true) } }
+  useKeydown(['arrowup', 'k'], () => {
+    setSelectedIndex((prev) => Math.max(0, prev - 1))
+  })
 
-      case 'arrowright':
-      case 'l':
-      case '+':
-        if (selectedItem) {
-          return {
-            message: {
-              type: 'cart:quantity-updated',
-              variantId: selectedItem.productVariantID,
-              quantity: selectedItem.quantity + 1,
-            },
-          }
-        }
-        break
-
-      case 'arrowleft':
-      case 'h':
-      case '-':
-        if (selectedItem && selectedItem.quantity > 0) {
-          return {
-            message: {
-              type: 'cart:quantity-updated',
-              variantId: selectedItem.productVariantID,
-              quantity: selectedItem.quantity - 1,
-            },
-          }
-        }
-        break
-
-      case 'escape':
-        return { message: { type: 'app:navigate', page: 'shop' } }
-
-      case 'c':
-      case 'enter':
-        return { message: { type: 'app:navigate', page: 'shipping' } }
+  useKeydown(['arrowright', 'l', '+'], () => {
+    const item = cart.items[selectedIndex]
+    if (item) {
+      updateItem({
+        variantId: item.productVariantID,
+        quantity: item.quantity + 1,
+      })
     }
-  },
+  })
+
+  useKeydown(['arrowleft', 'h', '-'], () => {
+    const item = cart.items[selectedIndex]
+    if (item) {
+      updateItem({
+        variantId: item.productVariantID,
+        quantity: Math.max(0, item.quantity - 1),
+      })
+    }
+  })
+
+  useKeydown('escape', () => navigate('shop'))
+  useKeydown(['c', 'enter'], () => navigate('shipping'))
+
+  return CheckoutLayout({
+    current: 'cart',
+    children: [
+      !cart.items.length
+        ? Text('Your cart is empty', styles.gray)
+        : Stack(
+            cart.items.map((item, index) => {
+              const product = products.find((p) =>
+                p.variants.find((v) => v.id === item.productVariantID),
+              )
+              if (!product) return []
+
+              const variant = product.variants.find(
+                (v) => v.id === item.productVariantID,
+              )
+              if (!variant) return []
+
+              return CartItem({
+                item,
+                product,
+                variant,
+                selected: index === selectedIndex,
+              })
+            }),
+          ),
+    ],
+  })
 })

@@ -11,6 +11,7 @@ import {
   useUpdateCartItem,
 } from '../hooks'
 import { useRouter } from '../router'
+import { CartItemQuantity } from '../components/cart-item-quantity'
 
 function ProductListItem(
   product: Terminal.Product,
@@ -43,35 +44,6 @@ function ProductSection(
     }),
   ])
 }
-
-export const QuantityControl = Component<{ item: Terminal.Cart.Item }>(
-  ({ item }) => {
-    const { mutate: updateItem } = useUpdateCartItem()
-
-    useKeydown(['ArrowRight', 'l', '+'], () => {
-      updateItem({
-        variantId: item.productVariantID,
-        quantity: item.quantity + 1,
-      })
-    })
-
-    useKeydown(['ArrowLeft', 'h', '-'], () => {
-      updateItem({
-        variantId: item.productVariantID,
-        quantity: Math.max(0, item.quantity - 1),
-      })
-    })
-
-    return Flex({
-      gap: 1,
-      children: [
-        Text('-', styles.gray),
-        Text(item.quantity.toString(), styles.white),
-        Text('+', styles.gray),
-      ],
-    })
-  },
-)
 
 function SubscriptionButton() {
   return Flex({
@@ -124,7 +96,7 @@ function ProductDetails({
           }),
           product.subscription === 'required'
             ? SubscriptionButton()
-            : QuantityControl({ item }),
+            : CartItemQuantity({ item }),
         ],
       }),
     ]),
@@ -153,6 +125,7 @@ export const ShopPage = Component(() => {
   const { navigate } = useRouter()
   const { data: products } = useProducts()
   const { data: cart } = useCart()
+  const { mutate: updateItem } = useUpdateCartItem()
 
   if (!products || !cart) return Text('loading...')
 
@@ -164,10 +137,35 @@ export const ShopPage = Component(() => {
     setSelectedIndex((prev) => Math.max(prev - 1, 0))
   })
 
+  useKeydown(['ArrowRight', 'l', '+'], () => {
+    const product = products[selectedIndex]
+    if (product && product.subscription !== 'required') {
+      const variant = product.variants[0]
+      const item = cart.items.find((i) => i.productVariantID === variant.id)
+      updateItem({
+        variantId: variant.id,
+        quantity: (item?.quantity || 0) + 1,
+      })
+    }
+  })
+
+  useKeydown(['ArrowLeft', 'h', '-'], () => {
+    const product = products[selectedIndex]
+    if (product && product.subscription !== 'required') {
+      const variant = product.variants[0]
+      const item = cart.items.find((i) => i.productVariantID === variant.id)
+      if (item) {
+        updateItem({
+          variantId: variant.id,
+          quantity: Math.max(0, item.quantity - 1),
+        })
+      }
+    }
+  })
+
   useKeydown(['enter'], () => navigate('cart'))
 
   const gap = 2
-  // const third = Math.floor(model.dimensions.width / 3)
   const third = Math.floor(75 / 3)
   const listWidth = third
   const detailsWidth = third * 2 - gap

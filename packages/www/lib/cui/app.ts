@@ -2,7 +2,7 @@ import Terminal from '@terminaldotshop/sdk'
 import { callback, getToken } from './auth'
 import { type Message } from './events'
 import { ShopPage } from './pages/shop'
-import { CartPage, type CartState } from './pages/cart'
+import { CartPage } from './pages/cart'
 import { SplashPage } from './pages/splash'
 import { combineLines, type Page } from './render'
 import { ShippingPage, type ShippingState } from './pages/shipping'
@@ -32,7 +32,6 @@ export type Model = {
     cart?: number
   }
   state: {
-    cart: CartState
     shipping: ShippingState
   }
 }
@@ -58,9 +57,6 @@ export class App {
       addresses: [],
       updates: {},
       state: {
-        cart: {
-          selected: 0,
-        },
         shipping: {
           view: 'list',
           selected: 0,
@@ -121,66 +117,6 @@ export class App {
         this.model.cart = msg.cart
         break
       }
-
-      case 'cart:quantity-updated': {
-        try {
-          const product = this.model.products.find((p) =>
-            p.variants.find((v) => v.id === msg.variantId),
-          )
-          const variant = product?.variants.find((v) => v.id === msg.variantId)
-          if (!variant) return
-
-          const item = this.model.cart?.items.find(
-            (i) => i.productVariantID === variant?.id,
-          )
-          const newQuantity = Math.max(msg.quantity, 0)
-
-          // Optimistic update
-          if (item) {
-            item.quantity = newQuantity
-            item.subtotal = variant.price * newQuantity
-
-            if (item.quantity === 0) {
-              const index = this.model.cart?.items.indexOf(item) ?? 0
-              this.model.cart?.items.splice(index, 1)
-              this.model.state.cart.selected = Math.max(index - 1, 0)
-            }
-          } else if (this.model.cart) {
-            this.model.cart.items.push({
-              id: '',
-              productVariantID: variant.id,
-              quantity: newQuantity,
-              subtotal: variant.price * newQuantity,
-            })
-          }
-
-          if (this.model.cart) {
-            this.model.cart.subtotal = this.model.cart.items.reduce(
-              (acc, item) => acc + item.subtotal,
-              0,
-            )
-          }
-
-          const now = Date.now()
-          this.model.updates.cart = now
-
-          // this.model
-          //   .client()
-          //   .then((client) =>
-          //     client.cart.setItem({
-          //       productVariantID: msg.variantId,
-          //       quantity: msg.quantity,
-          //     }),
-          //   )
-          //   .then((response) => {
-          //     if (this.model.updates.cart === now) {
-          //       this.model.cart = response.data
-          //       this.render()
-          //     }
-          //   })
-        } catch {}
-        break
-      }
     }
 
     // Forward to current view's update function if it exists
@@ -227,7 +163,7 @@ export class App {
       case 'shop':
         return ShopPage()
       case 'cart':
-        return CartPage
+        return CartPage()
       case 'splash':
         return SplashPage()
       case 'shipping':
