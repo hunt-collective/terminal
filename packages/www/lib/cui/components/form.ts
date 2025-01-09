@@ -2,8 +2,9 @@ import { Component } from '../component'
 import { Stack } from './stack'
 import { Flex } from './flex'
 import { Input, type ValidationResult } from './input'
-import { useKeydown, useState } from '../hooks'
+import { useState } from '../hooks'
 import { dimensions } from '../render'
+import { useModalKeyboardHandlers } from '../keyboard'
 
 export type FieldConfig<T extends Record<string, any>> = {
   [K in keyof T]: {
@@ -48,28 +49,52 @@ export const Form = Component<FormProps<any>>((props) => {
     onSubmit,
     onCancel,
   } = props
+
   const [focusedField, setFocusedField] = useState<string | undefined>(
     Object.keys(fields)[0],
   )
 
-  useKeydown('Tab', (e: KeyboardEvent) => {
-    if (!focusedField) {
-      setFocusedField(Object.keys(fields)[0])
-      return
-    }
+  // Only register form-level handlers when no field is focused
+  if (!focusedField && onCancel) {
+    useModalKeyboardHandlers([
+      {
+        keys: ['Escape'],
+        handler: (e) => {
+          e.preventDefault()
+          onCancel()
+        },
+        stopPropagation: true,
+      },
+    ])
+  }
 
+  // Calculate column widths
+  const totalGapWidth = (columns - 1) * columnGap
+  const columnWidth = width
+    ? Math.floor((width - totalGapWidth) / columns)
+    : undefined
+
+  // Distribute fields evenly across columns
+  const fieldsArray = Object.entries(fields)
+  const fieldsPerColumn = Math.ceil(fieldsArray.length / columns)
+  const columnFields = Array.from({ length: columns }, (_, columnIndex) =>
+    fieldsArray.slice(
+      columnIndex * fieldsPerColumn,
+      (columnIndex + 1) * fieldsPerColumn,
+    ),
+  )
+
+  const handleTab = (currentField: string, shift: boolean) => {
     const fieldKeys = Object.keys(fields)
-    const currentIndex = fieldKeys.indexOf(focusedField)
-    const delta = e.shiftKey ? -1 : 1
+    const currentIndex = fieldKeys.indexOf(currentField)
+    const delta = shift ? -1 : 1
     const nextIndex =
       (currentIndex + delta + fieldKeys.length) % fieldKeys.length
     const nextField = fieldKeys[nextIndex]
     setFocusedField(nextField)
-  })
+  }
 
-  useKeydown('Enter', () => {
-    if (!focusedField) return
-
+  const handleEnter = () => {
     const errors: Partial<Record<string, string>> = {}
     let hasErrors = false
 
@@ -97,35 +122,11 @@ export const Form = Component<FormProps<any>>((props) => {
     } else {
       onSubmit?.(state)
     }
-  })
-
-  useKeydown('Escape', () => {
-    if (focusedField) {
-      setFocusedField(undefined)
-    } else {
-      onCancel?.()
-    }
-  })
-
-  // Calculate column widths
-  const totalGapWidth = (columns - 1) * columnGap
-  const columnWidth = width
-    ? Math.floor((width - totalGapWidth) / columns)
-    : undefined
-
-  // Distribute fields evenly across columns
-  const fieldsArray = Object.entries(fields)
-  const fieldsPerColumn = Math.ceil(fieldsArray.length / columns)
-  const columnFields = Array.from({ length: columns }, (_, columnIndex) =>
-    fieldsArray.slice(
-      columnIndex * fieldsPerColumn,
-      (columnIndex + 1) * fieldsPerColumn,
-    ),
-  )
+  }
 
   return Flex({
     gap: columnGap,
-    width: props.width,
+    width,
     children: columnFields.map((fieldsInColumn) =>
       Stack({
         gap: 1,
@@ -157,6 +158,14 @@ export const Form = Component<FormProps<any>>((props) => {
             onFocusChange: (focused) => {
               setFocusedField(focused ? key : undefined)
             },
+            parentHandlers:
+              focusedField === key
+                ? {
+                    Tab: (shift) => handleTab(key, shift),
+                    Enter: handleEnter,
+                    Escape: () => setFocusedField(undefined),
+                  }
+                : undefined,
           })
         }),
       }),

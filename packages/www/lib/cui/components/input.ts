@@ -2,7 +2,7 @@ import { Component } from '../component'
 import { Box, Break, Flex, Stack, Text } from './'
 import { styles } from '../render'
 import type { Style } from '../style'
-import { useKeydown } from '../hooks'
+import { useModalKeyboardHandlers } from '../keyboard'
 
 export type ValidationResult = {
   valid: boolean
@@ -19,6 +19,11 @@ export type InputProps = {
   validate?: (value: string) => ValidationResult
   onChange?: (value: string, error?: string) => void
   onFocusChange?: (focused: boolean) => void
+  parentHandlers?: {
+    Enter?: () => void
+    Tab?: (shift: boolean) => void
+    Escape?: () => void
+  }
 }
 
 export const Input = Component<InputProps>((props) => {
@@ -31,42 +36,98 @@ export const Input = Component<InputProps>((props) => {
     validate,
     onChange,
     onFocusChange,
+    parentHandlers,
   } = props
+
+  // Only register handlers when focused
+  if (focused) {
+    useModalKeyboardHandlers([
+      // Special key handlers
+      {
+        keys: ['Backspace'],
+        handler: (event: KeyboardEvent) => {
+          event.preventDefault()
+          const newValue = value.slice(0, -1)
+          let newError: string | undefined
+
+          if (validate) {
+            const result = validate(newValue)
+            if (!result.valid) {
+              newError = result.message
+            }
+          }
+
+          onChange?.(newValue, newError)
+        },
+        stopPropagation: true,
+      },
+      // Let parent handle Enter
+      {
+        keys: ['Enter'],
+        handler: (event: KeyboardEvent) => {
+          event.preventDefault()
+          if (parentHandlers?.Enter) {
+            parentHandlers.Enter()
+          }
+        },
+        stopPropagation: true,
+      },
+      // Let parent handle Tab
+      {
+        keys: ['Tab'],
+        handler: (event: KeyboardEvent) => {
+          event.preventDefault()
+          if (parentHandlers?.Tab) {
+            parentHandlers.Tab(event.shiftKey)
+          }
+        },
+        stopPropagation: true,
+      },
+      // Let parent handle Escape if provided
+      {
+        keys: ['Escape'],
+        handler: (event: KeyboardEvent) => {
+          event.preventDefault()
+          if (parentHandlers?.Escape) {
+            parentHandlers.Escape()
+          } else {
+            onFocusChange?.(false)
+          }
+        },
+        stopPropagation: true,
+      },
+      // Default handler for any printable character
+      {
+        handler: (event: KeyboardEvent) => {
+          if (
+            event.key.length === 1 &&
+            !event.ctrlKey &&
+            !event.metaKey &&
+            !event.altKey
+          ) {
+            event.preventDefault()
+
+            const newValue = value + event.key
+            let newError: string | undefined
+
+            if (validate) {
+              const result = validate(newValue)
+              if (!result.valid) {
+                newError = result.message
+              }
+            }
+
+            onChange?.(newValue, newError)
+          }
+        },
+        priority: 100,
+        stopPropagation: true,
+      },
+    ])
+  }
 
   const displayValue = value || (!focused ? placeholder : '')
   const cursor = focused ? '█' : ' '
-
-  if (focused) {
-    useKeydown((event: KeyboardEvent) => {
-      if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
-        const newValue = value + event.key
-        let newError: string | undefined
-
-        if (validate) {
-          const result = validate(newValue)
-          if (!result.valid) {
-            newError = result.message
-          }
-        }
-
-        onChange?.(newValue, newError)
-      } else if (event.key === 'Backspace') {
-        const newValue = value.slice(0, -1)
-        let newError: string | undefined
-
-        if (validate) {
-          const result = validate(newValue)
-          if (!result.valid) {
-            newError = result.message
-          }
-        }
-
-        onChange?.(newValue, newError)
-      } else if (event.key === 'Escape') {
-        onFocusChange?.(false)
-      }
-    })
-  }
 
   const inputContent = Box({
     padding: { x: 1 },

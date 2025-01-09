@@ -15,52 +15,37 @@ declare global {
 
 class Logger {
   private logs: LogEntry[] = []
-  private maxLogs: number = 1000
+  private maxLogs: number = 20 // Keep last 20 logs
 
   constructor() {
-    // Create debug window for viewing logs
-    const logWindow = window.open('', 'Debug Logs', 'width=800,height=600')
-    if (logWindow) {
-      logWindow.document.write('<pre id="logs"></pre>')
-      this.logWindow = logWindow
+    // Override console methods to capture logs
+    const originalConsole = { ...console }
+    console.debug = (...args) => {
+      originalConsole.debug(...args)
+      this.debug(args.join(' '))
+    }
+    console.error = (...args) => {
+      originalConsole.error(...args)
+      this.error(args.join(' '))
+    }
+    console.warn = (...args) => {
+      originalConsole.warn(...args)
+      this.warn(args.join(' '))
     }
   }
 
-  private logWindow: Window | null = null
-
   private add(level: LogLevel, message: string, data?: any) {
-    const entry: LogEntry = {
+    this.logs.push({
       timestamp: Date.now(),
       level,
       message,
       data,
-    }
+    })
 
-    this.logs.push(entry)
+    // Trim old logs
     if (this.logs.length > this.maxLogs) {
-      this.logs.shift()
+      this.logs = this.logs.slice(-this.maxLogs)
     }
-
-    this.updateDebugWindow()
-  }
-
-  private updateDebugWindow() {
-    if (!this.logWindow?.document) return
-
-    const pre = this.logWindow.document.getElementById('logs')
-    if (!pre) return
-
-    const formatted = this.logs
-      .map((entry) => {
-        const time = new Date(entry.timestamp).toISOString()
-        const data = entry.data
-          ? '\n' + JSON.stringify(entry.data, null, 2)
-          : ''
-        return `[${time}] ${entry.level.toUpperCase()}: ${entry.message}${data}`
-      })
-      .join('\n')
-
-    pre.textContent = formatted
   }
 
   debug(message: string, data?: any) {
@@ -81,11 +66,44 @@ class Logger {
 
   clear() {
     this.logs = []
-    this.updateDebugWindow()
   }
 
   getLogs(): LogEntry[] {
     return [...this.logs]
+  }
+
+  // Format logs for display
+  formatLogs(): string {
+    if (this.logs.length === 0) return ''
+
+    const formatTime = (timestamp: number) => {
+      const date = new Date(timestamp)
+      return date.toLocaleTimeString('en-US', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      })
+    }
+
+    const levelColors = {
+      debug: '\x1b[36m', // Cyan
+      info: '\x1b[32m', // Green
+      warn: '\x1b[33m', // Yellow
+      error: '\x1b[31m', // Red
+    }
+
+    return (
+      '\n\nLogs:\n' +
+      this.logs
+        .map((log) => {
+          const color = levelColors[log.level]
+          const time = formatTime(log.timestamp)
+          const data = log.data ? '\n' + JSON.stringify(log.data, null, 2) : ''
+          return `${color}[${time}] ${log.level.toUpperCase()}: ${log.message}${data}\x1b[0m`
+        })
+        .join('\n')
+    )
   }
 }
 

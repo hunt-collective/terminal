@@ -4,8 +4,10 @@ import { Box, Center, Flex, Stack, Text } from '../components'
 import { CheckoutLayout } from '../layouts/checkout'
 import { Form, type FieldConfig, type FormState } from '../components/form'
 import { styles } from '../render'
-import { useState, useKeydown, useCart, useAddresses } from '../hooks'
+import { useState, useCart, useAddresses } from '../hooks'
 import { useRouter } from '../router'
+import { useKeyboardHandlers } from '../keyboard'
+import { logger } from '../logging'
 
 const shippingFields: FieldConfig<Terminal.AddressCreateParams> = {
   name: { label: 'name', required: true },
@@ -80,27 +82,40 @@ export const ShippingPage = Component(() => {
 
   if (!addresses || !cart) return Text('Loading...', styles.gray)
 
-  // Navigation in list view
-  if (!isFormView) {
-    useKeydown(['ArrowDown', 'j'], () => {
-      setSelectedIndex((prev) => Math.min(prev + 1, addresses.length))
-    })
-
-    useKeydown(['ArrowUp', 'k'], () => {
-      setSelectedIndex((prev) => Math.max(0, prev - 1))
-    })
-
-    useKeydown('Enter', () => {
-      if (selectedIndex === addresses.length) {
-        setIsFormView(true)
-      } else {
-        // TODO: Set shipping address and navigate to payment
-        navigate('payment')
-      }
-    })
-
-    useKeydown('Escape', () => navigate('cart'))
-  }
+  // Only register keyboard handlers when NOT in form view
+  useKeyboardHandlers(
+    'shipping',
+    !isFormView
+      ? [
+          {
+            keys: ['ArrowDown', 'j'],
+            handler: () => {
+              setSelectedIndex((prev) => Math.min(prev + 1, addresses.length))
+            },
+          },
+          {
+            keys: ['ArrowUp', 'k'],
+            handler: () => {
+              setSelectedIndex((prev) => Math.max(0, prev - 1))
+            },
+          },
+          {
+            keys: ['Enter'],
+            handler: () => {
+              if (selectedIndex === addresses.length) {
+                setIsFormView(true)
+              } else {
+                navigate('payment')
+              }
+            },
+          },
+          {
+            keys: ['Escape'],
+            handler: () => navigate('cart'),
+          },
+        ]
+      : [],
+  )
 
   return CheckoutLayout({
     current: 'shipping',
@@ -111,12 +126,28 @@ export const ShippingPage = Component(() => {
             state: formState,
             columns: 2,
             columnGap: 2,
-            onChange: (newState) => setFormState(newState),
+            onChange: (newState) => {
+              setFormState(newState)
+            },
             onSubmit: () => {
-              // TODO: Create address and navigate to payment
               setIsFormView(false)
             },
-            onCancel: () => setIsFormView(false),
+            onCancel: () => {
+              setIsFormView(false)
+              setFormState({
+                values: {
+                  name: '',
+                  street1: '',
+                  street2: '',
+                  city: '',
+                  province: '',
+                  country: '',
+                  phone: '',
+                  zip: '',
+                },
+                errors: {},
+              })
+            },
           })
         : Stack({
             gap: 1,

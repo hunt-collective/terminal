@@ -75,7 +75,6 @@ export function prepareForRender(id: number) {
   hookIndex = 0
 }
 
-export * from './use-keydown'
 export * from './use-query'
 export * from './use-mutation'
 export * from './use-cart'

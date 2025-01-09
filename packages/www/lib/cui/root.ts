@@ -1,10 +1,18 @@
 import { Component } from './component'
 import { RouterContext, createRouter } from './router'
+import {
+  KeyboardContext,
+  initializeKeyboardManager,
+  useGlobalKeyboardHandlers,
+} from './keyboard'
 import { ShopPage } from './pages/shop'
 import { CartPage } from './pages/cart'
 import { SplashPage } from './pages/splash'
 import { ShippingPage } from './pages/shipping'
-import { useCart, useEffect, useKeydown, useProducts, useState } from './hooks'
+import { useCart, useEffect, useProducts, useState } from './hooks'
+
+const keyboardManager = initializeKeyboardManager()
+KeyboardContext.Provider(keyboardManager)
 
 export const App = Component(() => {
   const [delayed, setDelayed] = useState(false)
@@ -19,14 +27,27 @@ export const App = Component(() => {
     return () => clearTimeout(interval)
   })
 
-  // Global keyboard shortcuts
-  useKeydown('s', () => router.navigate('shop'))
-  useKeydown('c', () => router.navigate('cart'))
+  // Set route in keyboard manager
+  keyboardManager.setCurrentRoute(router.route)
+
+  useGlobalKeyboardHandlers([
+    {
+      keys: ['s'],
+      handler: () => {
+        router.navigate('shop')
+      },
+    },
+    {
+      keys: ['c'],
+      handler: () => {
+        router.navigate('cart')
+      },
+    },
+  ])
 
   if (!delayed || !products || !cart) return SplashPage()
 
-  const { route } = router
-  switch (route) {
+  switch (router.route) {
     case 'splash':
       return SplashPage()
     case 'shop':
@@ -36,6 +57,6 @@ export const App = Component(() => {
     case 'shipping':
       return ShippingPage()
     default:
-      throw new Error(`${route} page not implemented`)
+      throw new Error(`${router.route} page not implemented`)
   }
 })

@@ -3,15 +3,10 @@ import { styles, formatPrice } from '../render'
 import { Box, Break, Flex, Stack, Text } from '../components'
 import { Layout } from '../layouts/base'
 import { Component } from '../component'
-import {
-  useState,
-  useKeydown,
-  useProducts,
-  useCart,
-  useUpdateCartItem,
-} from '../hooks'
+import { useState, useProducts, useCart, useUpdateCartItem } from '../hooks'
 import { useRouter } from '../router'
 import { CartItemQuantity } from '../components/cart-item-quantity'
+import { useKeyboardHandlers } from '../keyboard'
 
 function ProductListItem(
   product: Terminal.Product,
@@ -122,48 +117,64 @@ function getHighlightColor(productName: string): string {
 
 export const ShopPage = Component(() => {
   const [selectedIndex, setSelectedIndex] = useState(0)
-  const { navigate } = useRouter()
+  const router = useRouter()
   const { data: products } = useProducts()
   const { data: cart } = useCart()
   const { mutate: updateItem } = useUpdateCartItem()
 
+  useKeyboardHandlers('shop', [
+    {
+      keys: ['ArrowDown', 'j'],
+      handler: () => {
+        if (!products) return
+        setSelectedIndex((prev) => Math.min(prev + 1, products.length - 1))
+      },
+    },
+    {
+      keys: ['ArrowUp', 'k'],
+      handler: () => {
+        setSelectedIndex((prev) => Math.max(0, prev - 1))
+      },
+    },
+    {
+      keys: ['ArrowRight', 'l', '+'],
+      handler: () => {
+        if (!products || !cart) return
+        const product = products[selectedIndex]
+        if (product && product.subscription !== 'required') {
+          const variant = product.variants[0]
+          const item = cart.items.find((i) => i.productVariantID === variant.id)
+          updateItem({
+            variantId: variant.id,
+            quantity: (item?.quantity || 0) + 1,
+          })
+        }
+      },
+    },
+    {
+      keys: ['ArrowLeft', 'h', '-'],
+      handler: () => {
+        if (!products || !cart) return
+        const product = products[selectedIndex]
+        if (product && product.subscription !== 'required') {
+          const variant = product.variants[0]
+          const item = cart.items.find((i) => i.productVariantID === variant.id)
+          if (item) {
+            updateItem({
+              variantId: variant.id,
+              quantity: Math.max(0, item.quantity - 1),
+            })
+          }
+        }
+      },
+    },
+    {
+      keys: ['Enter'],
+      handler: () => router.navigate('cart'),
+    },
+  ])
+
   if (!products || !cart) return Text('loading...')
-
-  useKeydown(['ArrowDown', 'j'], () => {
-    setSelectedIndex((prev) => Math.min(prev + 1, products.length - 1))
-  })
-
-  useKeydown(['ArrowUp', 'k'], () => {
-    setSelectedIndex((prev) => Math.max(prev - 1, 0))
-  })
-
-  useKeydown(['ArrowRight', 'l', '+'], () => {
-    const product = products[selectedIndex]
-    if (product && product.subscription !== 'required') {
-      const variant = product.variants[0]
-      const item = cart.items.find((i) => i.productVariantID === variant.id)
-      updateItem({
-        variantId: variant.id,
-        quantity: (item?.quantity || 0) + 1,
-      })
-    }
-  })
-
-  useKeydown(['ArrowLeft', 'h', '-'], () => {
-    const product = products[selectedIndex]
-    if (product && product.subscription !== 'required') {
-      const variant = product.variants[0]
-      const item = cart.items.find((i) => i.productVariantID === variant.id)
-      if (item) {
-        updateItem({
-          variantId: variant.id,
-          quantity: Math.max(0, item.quantity - 1),
-        })
-      }
-    }
-  })
-
-  useKeydown(['enter'], () => navigate('cart'))
 
   const gap = 2
   const third = Math.floor(75 / 3)

@@ -3,17 +3,12 @@ import { combineLines, dimensions } from './render'
 import { setRenderCallback } from './hooks'
 import { App as Root } from './root'
 import { initializeTerminal } from './terminal'
+import { logger } from './logging'
 
 export class App {
   private last: string = ''
 
-  static async create(): Promise<App> {
-    const app = new App()
-    app.render()
-    return app
-  }
-
-  private constructor() {
+  constructor() {
     // Register render callback for hooks
     setRenderCallback(this.render.bind(this))
     this.render()
@@ -27,7 +22,7 @@ export class App {
     if (key === this.last) return
 
     console.clear()
-    console.log(text, ...styles)
+    console.log(text + logger.formatLogs(), ...styles)
     this.last = key
   }
 }
@@ -51,7 +46,7 @@ export class App {
 
   await initializeTerminal()
   // Create app instance
-  const app = await App.create()
+  const app = new App()
   // @ts-expect-error
   window.app = app
 })()

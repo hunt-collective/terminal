@@ -1,17 +1,12 @@
 import { Component } from '../component'
 import { Box, Stack, Text, Flex } from '../components'
 import { styles, formatPrice } from '../render'
-import {
-  useState,
-  useKeydown,
-  useCart,
-  useProducts,
-  useUpdateCartItem,
-} from '../hooks'
+import { useState, useCart, useProducts, useUpdateCartItem } from '../hooks'
 import { useRouter } from '../router'
 import { CheckoutLayout } from '../layouts/checkout'
 import type Terminal from '@terminaldotshop/sdk'
 import { CartItemQuantity } from '../components/cart-item-quantity'
+import { useKeyboardHandlers } from '../keyboard'
 
 const CartItem = Component<{
   item: Terminal.Cart.Item
@@ -53,40 +48,59 @@ export const CartPage = Component(() => {
   const { navigate } = useRouter()
   const { mutate: updateItem } = useUpdateCartItem()
 
+  useKeyboardHandlers('cart', [
+    {
+      keys: ['ArrowDown', 'j'],
+      handler: () => {
+        if (!cart) return
+        setSelectedIndex((prev) =>
+          Math.min(prev + 1, Math.max(0, cart.items.length - 1)),
+        )
+      },
+    },
+    {
+      keys: ['ArrowUp', 'k'],
+      handler: () => {
+        setSelectedIndex((prev) => Math.max(0, prev - 1))
+      },
+    },
+    {
+      keys: ['+', 'ArrowRight', 'l'],
+      handler: () => {
+        if (!cart) return
+        const item = cart.items[selectedIndex]
+        if (item) {
+          updateItem({
+            variantId: item.productVariantID,
+            quantity: item.quantity + 1,
+          })
+        }
+      },
+    },
+    {
+      keys: ['-', 'ArrowLeft', 'h'],
+      handler: () => {
+        if (!cart) return
+        const item = cart.items[selectedIndex]
+        if (item) {
+          updateItem({
+            variantId: item.productVariantID,
+            quantity: Math.max(0, item.quantity - 1),
+          })
+        }
+      },
+    },
+    {
+      keys: ['Escape'],
+      handler: () => navigate('shop'),
+    },
+    {
+      keys: ['Enter', 'c'],
+      handler: () => navigate('shipping'),
+    },
+  ])
+
   if (!cart || !products) return Text('Loading...', styles.gray)
-
-  useKeydown(['arrowdown', 'j'], () => {
-    setSelectedIndex((prev) =>
-      Math.min(prev + 1, Math.max(0, cart.items.length - 1)),
-    )
-  })
-
-  useKeydown(['arrowup', 'k'], () => {
-    setSelectedIndex((prev) => Math.max(0, prev - 1))
-  })
-
-  useKeydown(['arrowright', 'l', '+'], () => {
-    const item = cart.items[selectedIndex]
-    if (item) {
-      updateItem({
-        variantId: item.productVariantID,
-        quantity: item.quantity + 1,
-      })
-    }
-  })
-
-  useKeydown(['arrowleft', 'h', '-'], () => {
-    const item = cart.items[selectedIndex]
-    if (item) {
-      updateItem({
-        variantId: item.productVariantID,
-        quantity: Math.max(0, item.quantity - 1),
-      })
-    }
-  })
-
-  useKeydown('escape', () => navigate('shop'))
-  useKeydown(['c', 'enter'], () => navigate('shipping'))
 
   return CheckoutLayout({
     current: 'cart',
