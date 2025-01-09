@@ -1,109 +1,100 @@
 import { createContext } from './context'
 import type { Route } from './router'
 
-type KeyHandler = (event: KeyboardEvent) => void
+type KeyHandler = (event: KeyboardEvent) => boolean | void
 
 interface HandlerRegistration {
   keys?: string[]
   handler: KeyHandler
-  priority?: number
-  stopPropagation?: boolean
 }
 
 interface KeyboardManager {
   currentRoute: Route | null
+  handlerStack: HandlerRegistration[][]
   setCurrentRoute(route: Route): void
   setRouteHandlers(route: Route, handlers: HandlerRegistration[]): void
-  setModalHandlers(handlers: HandlerRegistration[] | null): void
+  pushModalHandlers(handlers: HandlerRegistration[]): void
+  popModalHandlers(): void
   setGlobalHandlers(handlers: HandlerRegistration[]): void
-  getRouteHandlers: (route: Route) => HandlerRegistration[] | undefined
-  getModalHandlers: () => HandlerRegistration[] | null
-  getGlobalHandlers: () => HandlerRegistration[]
 }
 
 export const KeyboardContext = createContext<KeyboardManager>()
 
-// Single event handler function stored at module level
 let activeManager: KeyboardManager | null = null
+
 const handleKeyEvent = (event: KeyboardEvent) => {
+  if (
+    document.activeElement instanceof HTMLInputElement ||
+    document.activeElement instanceof HTMLTextAreaElement ||
+    (document.activeElement instanceof HTMLElement &&
+      document.activeElement.isContentEditable)
+  )
+    return
+
   const manager = activeManager
   if (!manager) return
 
-  // Priority order: Modal > Route > Global
-  const modalHandlers = manager.getModalHandlers()
-  const routeHandlers = manager.currentRoute
-    ? manager.getRouteHandlers(manager.currentRoute)
-    : null
-  const globalHandlers = manager.getGlobalHandlers()
-
-  // Process handlers in priority order, stopping if propagation is stopped
-  const processHandlers = (handlers: HandlerRegistration[]) => {
-    for (const { keys, handler, stopPropagation } of handlers) {
+  for (const handlers of manager.handlerStack) {
+    for (const { keys, handler } of handlers) {
       if (
         !keys ||
         keys.some((k) => k.toLowerCase() === event.key.toLowerCase())
       ) {
-        handler(event)
-        if (stopPropagation) return true
+        // If handler returns true, stop propagation
+        if (handler(event) === true) {
+          event.preventDefault()
+          return
+        }
       }
     }
-    return false
-  }
-
-  if (modalHandlers?.length) {
-    if (processHandlers(modalHandlers)) return
-  }
-
-  if (routeHandlers?.length) {
-    if (processHandlers(routeHandlers)) return
-  }
-
-  if (globalHandlers?.length) {
-    processHandlers(globalHandlers)
   }
 }
 
 function createManager(): KeyboardManager {
   const routeHandlers = new Map<Route, HandlerRegistration[]>()
   const globalHandlers: HandlerRegistration[] = []
-  let modalHandlers: HandlerRegistration[] | null = null
+  const modalStack: HandlerRegistration[][] = []
   let currentRoute: Route | null = null
 
-  return {
+  const manager: KeyboardManager = {
     get currentRoute() {
       return currentRoute
     },
 
+    get handlerStack() {
+      const stack = [...modalStack]
+      if (currentRoute) {
+        const routeHandlerList = routeHandlers.get(currentRoute)
+        if (routeHandlerList) stack.push(routeHandlerList)
+      }
+      if (globalHandlers.length) stack.push(globalHandlers)
+      return stack
+    },
+
     setCurrentRoute(route: Route) {
       currentRoute = route
-      modalHandlers = null // Clear modal handlers on route change
+      modalStack.length = 0 // Clear modal stack on route change
     },
 
     setRouteHandlers(route: Route, handlers: HandlerRegistration[]) {
       routeHandlers.set(route, handlers)
     },
 
-    setModalHandlers(handlers: HandlerRegistration[] | null) {
-      modalHandlers = handlers
+    pushModalHandlers(handlers: HandlerRegistration[]) {
+      modalStack.push(handlers)
+    },
+
+    popModalHandlers() {
+      modalStack.pop()
     },
 
     setGlobalHandlers(handlers: HandlerRegistration[]) {
       globalHandlers.length = 0
       globalHandlers.push(...handlers)
     },
-
-    getRouteHandlers(route: Route) {
-      return routeHandlers.get(route) || []
-    },
-
-    getModalHandlers() {
-      return modalHandlers || []
-    },
-
-    getGlobalHandlers() {
-      return globalHandlers
-    },
   }
+
+  return manager
 }
 
 export function initializeKeyboardManager(): KeyboardManager {
@@ -127,16 +118,15 @@ export function useKeyboardHandlers(
   manager.setRouteHandlers(route, handlers)
 }
 
-export function useModalKeyboardHandlers(
-  registrations: HandlerRegistration | HandlerRegistration[] | null,
+export function useModalHandlers(
+  registrations: HandlerRegistration | HandlerRegistration[],
 ) {
   const [manager] = KeyboardContext.useContext()
-  const handlers = registrations
-    ? Array.isArray(registrations)
-      ? registrations
-      : [registrations]
-    : null
-  manager.setModalHandlers(handlers)
+  const handlers = Array.isArray(registrations)
+    ? registrations
+    : [registrations]
+  manager.pushModalHandlers(handlers)
+  return () => manager.popModalHandlers()
 }
 
 export function useGlobalKeyboardHandlers(

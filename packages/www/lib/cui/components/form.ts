@@ -4,7 +4,7 @@ import { Flex } from './flex'
 import { Input, type ValidationResult } from './input'
 import { useState } from '../hooks'
 import { dimensions } from '../render'
-import { useModalKeyboardHandlers } from '../keyboard'
+import { useModalHandlers } from '../keyboard'
 
 export type FieldConfig<T extends Record<string, any>> = {
   [K in keyof T]: {
@@ -54,19 +54,69 @@ export const Form = Component<FormProps<any>>((props) => {
     Object.keys(fields)[0],
   )
 
-  // Only register form-level handlers when no field is focused
-  if (!focusedField && onCancel) {
-    useModalKeyboardHandlers([
-      {
-        keys: ['Escape'],
-        handler: (e) => {
-          e.preventDefault()
-          onCancel()
-        },
-        stopPropagation: true,
+  useModalHandlers([
+    {
+      keys: ['Tab'],
+      handler: (event) => {
+        if (!focusedField) return false
+        const fieldKeys = Object.keys(fields)
+        const currentIndex = fieldKeys.indexOf(focusedField)
+        const delta = event.shiftKey ? -1 : 1
+        const nextIndex =
+          (currentIndex + delta + fieldKeys.length) % fieldKeys.length
+        const nextField = fieldKeys[nextIndex]
+        setFocusedField(nextField)
+        return true
       },
-    ])
-  }
+    },
+    {
+      keys: ['Enter'],
+      handler: () => {
+        if (!focusedField) return false
+
+        const errors: Partial<Record<string, string>> = {}
+        let hasErrors = false
+
+        Object.entries(fields).forEach(([key, config]) => {
+          const value = state.values[key]?.toString() || ''
+          const validate = config.required
+            ? (value: string) => {
+                const required = validateRequired(config.label ?? key, value)
+                if (!required.valid) return required
+                return config.validate
+                  ? config.validate(value)
+                  : { valid: true }
+              }
+            : config.validate
+
+          if (validate) {
+            const result = validate(value)
+            if (!result.valid) {
+              errors[key] = result.message || 'invalid value'
+              hasErrors = true
+            }
+          }
+        })
+
+        if (hasErrors) {
+          onChange?.({ ...state, errors })
+        } else {
+          onSubmit?.(state)
+        }
+        return true
+      },
+    },
+    {
+      keys: ['Escape'],
+      handler: () => {
+        if (onCancel) {
+          onCancel()
+          return true
+        }
+        return false
+      },
+    },
+  ])
 
   // Calculate column widths
   const totalGapWidth = (columns - 1) * columnGap
@@ -83,46 +133,6 @@ export const Form = Component<FormProps<any>>((props) => {
       (columnIndex + 1) * fieldsPerColumn,
     ),
   )
-
-  const handleTab = (currentField: string, shift: boolean) => {
-    const fieldKeys = Object.keys(fields)
-    const currentIndex = fieldKeys.indexOf(currentField)
-    const delta = shift ? -1 : 1
-    const nextIndex =
-      (currentIndex + delta + fieldKeys.length) % fieldKeys.length
-    const nextField = fieldKeys[nextIndex]
-    setFocusedField(nextField)
-  }
-
-  const handleEnter = () => {
-    const errors: Partial<Record<string, string>> = {}
-    let hasErrors = false
-
-    Object.entries(fields).forEach(([key, config]) => {
-      const value = state.values[key]?.toString() || ''
-      const validate = config.required
-        ? (value: string) => {
-            const required = validateRequired(config.label ?? key, value)
-            if (!required.valid) return required
-            return config.validate ? config.validate(value) : { valid: true }
-          }
-        : config.validate
-
-      if (validate) {
-        const result = validate(value)
-        if (!result.valid) {
-          errors[key] = result.message || 'invalid value'
-          hasErrors = true
-        }
-      }
-    })
-
-    if (hasErrors) {
-      onChange?.({ ...state, errors })
-    } else {
-      onSubmit?.(state)
-    }
-  }
 
   return Flex({
     gap: columnGap,
@@ -155,17 +165,6 @@ export const Form = Component<FormProps<any>>((props) => {
                 errors: { ...state.errors, [key]: error },
               })
             },
-            onFocusChange: (focused) => {
-              setFocusedField(focused ? key : undefined)
-            },
-            parentHandlers:
-              focusedField === key
-                ? {
-                    Tab: (shift) => handleTab(key, shift),
-                    Enter: handleEnter,
-                    Escape: () => setFocusedField(undefined),
-                  }
-                : undefined,
           })
         }),
       }),

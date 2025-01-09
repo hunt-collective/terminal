@@ -7,14 +7,23 @@ import { logger } from './logging'
 
 export class App {
   private last: string = ''
+  private renderScheduled: boolean = false
 
   constructor() {
-    // Register render callback for hooks
-    setRenderCallback(this.render.bind(this))
+    setRenderCallback(this.scheduleRender.bind(this))
     this.render()
   }
 
-  render() {
+  private scheduleRender() {
+    if (this.renderScheduled) return
+    this.renderScheduled = true
+    requestAnimationFrame(() => {
+      this.render()
+      this.renderScheduled = false
+    })
+  }
+
+  private render() {
     const lines = Root()({ width: dimensions.width })
     const { text, styles } = combineLines(lines)
     const key = text + JSON.stringify(styles)
@@ -29,7 +38,6 @@ export class App {
 
 // Auto-initialize when script loads
 ;(async () => {
-  // Handle auth callback if present
   const hash = new URLSearchParams(location.search.slice(1))
   const code = hash.get('code')
   const state = hash.get('state')
@@ -45,7 +53,6 @@ export class App {
   }
 
   await initializeTerminal()
-  // Create app instance
   const app = new App()
   // @ts-expect-error
   window.app = app

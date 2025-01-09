@@ -7,7 +7,6 @@ import { styles } from '../render'
 import { useState, useCart, useAddresses } from '../hooks'
 import { useRouter } from '../router'
 import { useKeyboardHandlers } from '../keyboard'
-import { logger } from '../logging'
 
 const shippingFields: FieldConfig<Terminal.AddressCreateParams> = {
   name: { label: 'name', required: true },
@@ -80,42 +79,42 @@ export const ShippingPage = Component(() => {
     errors: {},
   })
 
-  if (!addresses || !cart) return Text('Loading...', styles.gray)
+  // Register route-level keyboard handlers
+  useKeyboardHandlers('shipping', [
+    {
+      keys: ['ArrowDown', 'j'],
+      handler: () => {
+        if (!addresses || isFormView) return
+        setSelectedIndex((prev) => Math.min(prev + 1, addresses.length))
+      },
+    },
+    {
+      keys: ['ArrowUp', 'k'],
+      handler: () => {
+        if (!addresses || isFormView) return
+        setSelectedIndex((prev) => Math.max(0, prev - 1))
+      },
+    },
+    {
+      keys: ['Enter'],
+      handler: () => {
+        if (!addresses || isFormView) return
+        if (selectedIndex === addresses.length) {
+          setIsFormView(true)
+        } else {
+          navigate('payment')
+        }
+      },
+    },
+    {
+      keys: ['Escape'],
+      handler: () => {
+        navigate('cart')
+      },
+    },
+  ])
 
-  // Only register keyboard handlers when NOT in form view
-  useKeyboardHandlers(
-    'shipping',
-    !isFormView
-      ? [
-          {
-            keys: ['ArrowDown', 'j'],
-            handler: () => {
-              setSelectedIndex((prev) => Math.min(prev + 1, addresses.length))
-            },
-          },
-          {
-            keys: ['ArrowUp', 'k'],
-            handler: () => {
-              setSelectedIndex((prev) => Math.max(0, prev - 1))
-            },
-          },
-          {
-            keys: ['Enter'],
-            handler: () => {
-              if (selectedIndex === addresses.length) {
-                setIsFormView(true)
-              } else {
-                navigate('payment')
-              }
-            },
-          },
-          {
-            keys: ['Escape'],
-            handler: () => navigate('cart'),
-          },
-        ]
-      : [],
-  )
+  if (!addresses || !cart) return Text('Loading...', styles.gray)
 
   return CheckoutLayout({
     current: 'shipping',

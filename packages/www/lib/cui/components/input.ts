@@ -2,7 +2,7 @@ import { Component } from '../component'
 import { Box, Break, Flex, Stack, Text } from './'
 import { styles } from '../render'
 import type { Style } from '../style'
-import { useModalKeyboardHandlers } from '../keyboard'
+import { useModalHandlers } from '../keyboard'
 
 export type ValidationResult = {
   valid: boolean
@@ -18,12 +18,6 @@ export type InputProps = {
   error?: string
   validate?: (value: string) => ValidationResult
   onChange?: (value: string, error?: string) => void
-  onFocusChange?: (focused: boolean) => void
-  parentHandlers?: {
-    Enter?: () => void
-    Tab?: (shift: boolean) => void
-    Escape?: () => void
-  }
 }
 
 export const Input = Component<InputProps>((props) => {
@@ -35,18 +29,13 @@ export const Input = Component<InputProps>((props) => {
     error,
     validate,
     onChange,
-    onFocusChange,
-    parentHandlers,
   } = props
 
-  // Only register handlers when focused
   if (focused) {
-    useModalKeyboardHandlers([
-      // Special key handlers
+    useModalHandlers([
       {
         keys: ['Backspace'],
-        handler: (event: KeyboardEvent) => {
-          event.preventDefault()
+        handler: () => {
           const newValue = value.slice(0, -1)
           let newError: string | undefined
 
@@ -58,45 +47,9 @@ export const Input = Component<InputProps>((props) => {
           }
 
           onChange?.(newValue, newError)
+          return true // Stop propagation
         },
-        stopPropagation: true,
       },
-      // Let parent handle Enter
-      {
-        keys: ['Enter'],
-        handler: (event: KeyboardEvent) => {
-          event.preventDefault()
-          if (parentHandlers?.Enter) {
-            parentHandlers.Enter()
-          }
-        },
-        stopPropagation: true,
-      },
-      // Let parent handle Tab
-      {
-        keys: ['Tab'],
-        handler: (event: KeyboardEvent) => {
-          event.preventDefault()
-          if (parentHandlers?.Tab) {
-            parentHandlers.Tab(event.shiftKey)
-          }
-        },
-        stopPropagation: true,
-      },
-      // Let parent handle Escape if provided
-      {
-        keys: ['Escape'],
-        handler: (event: KeyboardEvent) => {
-          event.preventDefault()
-          if (parentHandlers?.Escape) {
-            parentHandlers.Escape()
-          } else {
-            onFocusChange?.(false)
-          }
-        },
-        stopPropagation: true,
-      },
-      // Default handler for any printable character
       {
         handler: (event: KeyboardEvent) => {
           if (
@@ -105,8 +58,6 @@ export const Input = Component<InputProps>((props) => {
             !event.metaKey &&
             !event.altKey
           ) {
-            event.preventDefault()
-
             const newValue = value + event.key
             let newError: string | undefined
 
@@ -118,10 +69,10 @@ export const Input = Component<InputProps>((props) => {
             }
 
             onChange?.(newValue, newError)
+            return true // Stop propagation
           }
+          return false // Let event bubble
         },
-        priority: 100,
-        stopPropagation: true,
       },
     ])
   }
