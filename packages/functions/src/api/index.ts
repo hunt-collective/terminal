@@ -17,7 +17,6 @@ import { Resource } from "sst";
 import { subjects } from "../subject";
 import { openAPISpecs } from "hono-openapi";
 import { ZodError } from "zod";
-import { Converter } from "@apiture/openapi-down-convert";
 import { HTTPException } from "hono/http-exception";
 import { AddressApi } from "./address";
 import { Api } from "@terminal/core/api/api";
@@ -151,14 +150,6 @@ const routes = app
 
 app.get(
   "/doc",
-  // async (c, next) => {
-  //   await next();
-  //   const original = c.res.clone();
-  //   const body = await original.json();
-  //   const converted = new Converter(body as object, {}).convert();
-  //   c.res = undefined;
-  //   c.res = c.json(converted);
-  // },
   openAPISpecs(routes, {
     documentation: {
       info: {

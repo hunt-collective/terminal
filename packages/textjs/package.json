@@ -1,0 +1,44 @@
+{
+  "name": "@textjs/core",
+  "version": "0.0.1",
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "build": "bun run script/build.ts"
+  },
+  "devDependencies": {
+    "typescript": "5.5.4"
+  },
+  "dependencies": {
+    "yoga-layout": "3.2.1"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "types": "./dist/types/index.d.ts"
+    },
+    "./*": {
+      "import": "./dist/esm/*.js",
+      "types": "./dist/types/*.d.ts"
+    },
+    "./components": {
+      "import": "./dist/esm/components/index.js",
+      "types": "./dist/types/components/index.d.ts"
+    },
+    "./query": {
+      "import": "./dist/esm/hooks/use-query.js",
+      "types": "./dist/types/hooks/use-query.d.ts"
+    },
+    "./jsx": {
+      "import": "./dist/esm/jsx-runtime.js",
+      "types": "./dist/types/jsx-runtime.d.ts"
+    }
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "prettier": {
+    "semi": false
+  }
+}
