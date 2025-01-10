@@ -3,6 +3,7 @@
 # of a dependency, you should resolve that
 /node_modules
 packages/www/node_modules/.vite
+packages/cui/node_modules/.vite
 
 dist
 .DS_Store
