@@ -1,6 +1,0 @@
-#!/bin/bash
-
-url=$(echo $SST_RESOURCE_Api | jq -r '.url')
-doc=$(curl $url/doc)
-echo $doc > openapi.json
-
