@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "sst shell -- vite",
-    "build": "sst shell -- tsc && vite build",
-    "preview": "sst shell -- vite preview"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   },
   "devDependencies": {
     "typescript": "5.5.4",
