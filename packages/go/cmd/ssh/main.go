@@ -65,11 +65,15 @@ func main() {
 			activeterm.Middleware(), // Bubble Tea apps usually require a PTY.
 			logging.Middleware(),
 		),
-		wish.WithPublicKeyAuth(func(_ ssh.Context, key ssh.PublicKey) bool {
+		wish.WithPublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
+			hash := md5.Sum(key.Marshal())
+			fingerprint := hex.EncodeToString(hash[:])
+			ctx.SetValue("fingerprint", fingerprint)
 			return true
 		}),
 		wish.WithKeyboardInteractiveAuth(
 			func(ctx ssh.Context, challenger gossh.KeyboardInteractiveChallenge) bool {
+				ctx.SetValue("fingerprint", uuid.NewString())
 				return true
 			},
 		),
@@ -132,12 +136,7 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 		tty:     pty.Slave,
 	}
 	renderer := bubbletea.MakeRenderer(sessionBridge)
-	fingerprint := uuid.New().String()
-	publicKey := s.PublicKey()
-	if publicKey != nil {
-		hash := md5.Sum(publicKey.Marshal())
-		fingerprint = hex.EncodeToString(hash[:])
-	}
+	fingerprint := s.Context().Value("fingerprint").(string)
 	slog.Info("got fingerprint", "fingerprint", fingerprint)
 	model, err := tui.NewModel(renderer, fingerprint)
 	if err != nil {
