@@ -15,7 +15,7 @@ declare global {
 
 class Logger {
   private logs: LogEntry[] = []
-  private maxLogs: number = 20 // Keep last 20 logs
+  private maxLogs: number = 40 // Keep last 20 logs
 
   constructor() {
     // Override console methods to capture logs

@@ -4,6 +4,6 @@
     "module": "esnext",
     "jsx": "react-jsx",
     "moduleResolution": "bundler",
-    "noUncheckedIndexedAccess": true,
+    "noUncheckedIndexedAccess": true
   }
 }

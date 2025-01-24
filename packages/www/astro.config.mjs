@@ -16,7 +16,7 @@ export default defineConfig({
       rehypePlugins: [remarkCode],
     }),
     tailwind({ applyBaseStyles: false }),
-    solid(),
+    solid({ exclude: '**/cui/**/*' }),
   ],
   server: { host: true },
   adapter: aws(),
@@ -24,5 +24,20 @@ export default defineConfig({
   redirects: {
     '/report': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     '/feud': 'https://jean-types-icq-calls.trycloudflare.com',
+  },
+  vite: {
+    esbuild: {
+      supported: {
+        'top-level-await': true, //browsers can handle top-level-await features
+      },
+    },
+    optimizeDeps: {
+      esbuildOptions: {
+        target: 'esnext',
+      },
+    },
+    build: {
+      target: 'esnext', //browsers can handle the latest ES features
+    },
   },
 })

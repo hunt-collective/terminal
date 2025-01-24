@@ -1,4 +1,4 @@
-import { createContext } from "./context"
+import { createContext, useContext, useEffect } from "react"
 import type { Route } from "./router"
 
 type KeyHandler = (event: KeyboardEvent) => boolean | void
@@ -11,6 +11,7 @@ interface HandlerRegistration {
 export interface KeyboardManager {
   currentRoute: Route | null
   handlerStack: HandlerRegistration[][]
+  handleKeyEvent(event: KeyboardEvent): void
   setCurrentRoute(route: Route): void
   setRouteHandlers(route: Route, handlers: HandlerRegistration[]): void
   pushModalHandlers(handlers: HandlerRegistration[]): void
@@ -18,37 +19,9 @@ export interface KeyboardManager {
   setGlobalHandlers(handlers: HandlerRegistration[]): void
 }
 
-export const KeyboardContext = createContext<KeyboardManager>()
-
-let activeManager: KeyboardManager | null = null
-
-const handleKeyEvent = (event: KeyboardEvent) => {
-  if (
-    document.activeElement instanceof HTMLInputElement ||
-    document.activeElement instanceof HTMLTextAreaElement ||
-    (document.activeElement instanceof HTMLElement &&
-      document.activeElement.isContentEditable)
-  )
-    return
-
-  const manager = activeManager
-  if (!manager) return
-
-  for (const handlers of manager.handlerStack) {
-    for (const { keys, handler } of handlers) {
-      if (
-        !keys ||
-        keys.some((k) => k.toLowerCase() === event.key.toLowerCase())
-      ) {
-        // If handler returns true, stop propagation
-        if (handler(event) === true) {
-          event.preventDefault()
-          return
-        }
-      }
-    }
-  }
-}
+export const KeyboardContext = createContext<KeyboardManager | undefined>(
+  undefined,
+)
 
 function createManager(): KeyboardManager {
   const routeHandlers = new Map<Route, HandlerRegistration[]>()
@@ -69,6 +42,31 @@ function createManager(): KeyboardManager {
       }
       if (globalHandlers.length) stack.push(globalHandlers)
       return stack
+    },
+
+    handleKeyEvent(event: KeyboardEvent) {
+      if (
+        document.activeElement instanceof HTMLInputElement ||
+        document.activeElement instanceof HTMLTextAreaElement ||
+        (document.activeElement instanceof HTMLElement &&
+          document.activeElement.isContentEditable)
+      )
+        return
+
+      for (const handlers of manager.handlerStack) {
+        for (const { keys, handler } of handlers) {
+          if (
+            !keys ||
+            keys.some((k) => k.toLowerCase() === event.key.toLowerCase())
+          ) {
+            // If handler returns true, stop propagation
+            if (handler(event) === true) {
+              event.preventDefault()
+              return
+            }
+          }
+        }
+      }
     },
 
     setCurrentRoute(route: Route) {
@@ -98,19 +96,16 @@ function createManager(): KeyboardManager {
 }
 
 export function createKeyboardManager(): KeyboardManager {
-  if (activeManager) return activeManager
-
-  activeManager = createManager()
-  window.addEventListener("keydown", handleKeyEvent)
-
-  return activeManager
+  const keyboardManager = createManager()
+  window.addEventListener("keydown", keyboardManager.handleKeyEvent)
+  return keyboardManager
 }
 
 export function useKeyboardHandlers(
   route: Route,
   registrations: HandlerRegistration | HandlerRegistration[],
 ) {
-  const [manager] = KeyboardContext.useContext()
+  const manager = useContext(KeyboardContext)
   const handlers = Array.isArray(registrations)
     ? registrations
     : [registrations]
@@ -120,18 +115,21 @@ export function useKeyboardHandlers(
 export function useModalHandlers(
   registrations: HandlerRegistration | HandlerRegistration[],
 ) {
-  const [manager] = KeyboardContext.useContext()
+  const manager = useContext(KeyboardContext)
   const handlers = Array.isArray(registrations)
     ? registrations
     : [registrations]
   manager.pushModalHandlers(handlers)
-  return () => manager.popModalHandlers()
+
+  useEffect(() => {
+    return () => manager.popModalHandlers()
+  }, [])
 }
 
 export function useGlobalKeyboardHandlers(
   registrations: HandlerRegistration | HandlerRegistration[],
 ) {
-  const [manager] = KeyboardContext.useContext()
+  const manager = useContext(KeyboardContext)
   const handlers = Array.isArray(registrations)
     ? registrations
     : [registrations]
@@ -139,7 +137,7 @@ export function useGlobalKeyboardHandlers(
 }
 
 export function useKeyboardManager() {
-  const [keyboardManager] = KeyboardContext.useContext()
+  const keyboardManager = useContext(KeyboardContext)
   return keyboardManager
 }
 
