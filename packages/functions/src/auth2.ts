@@ -134,6 +134,10 @@ const app = issuer({
       email = primary.email;
     }
 
+    if (value.provider === "password") {
+      email = value.email;
+    }
+
     console.log("found email", email);
 
     if (email) {
