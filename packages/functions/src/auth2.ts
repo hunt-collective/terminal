@@ -14,6 +14,7 @@ import { handle } from "hono/aws-lambda";
 import { User } from "@terminal/core/user/index";
 import { Api } from "@terminal/core/api/api";
 import { Email } from "@terminal/core/email/index";
+import { logger } from "hono/logger";
 
 const app = issuer({
   subjects,
@@ -165,7 +166,7 @@ const app = issuer({
 
     return new Response("something went wrong", { status: 500 });
   },
-});
+}).use(logger());
 
 // @ts-ignore
 export const handler = handle(app);
