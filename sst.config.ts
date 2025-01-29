@@ -15,11 +15,11 @@ export default $config({
               ? "terminal-production"
               : "terminal-dev",
         },
-        planetscale: true,
         cloudflare: true,
         "pulumi-stripe": true,
         random: true,
         tls: true,
+        planetscale: "0.2.2",
       },
     };
   },
