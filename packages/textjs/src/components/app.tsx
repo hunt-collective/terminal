@@ -1,12 +1,12 @@
-import { PropsWithChildren } from "react"
 import { createKeyboardManager, KeyboardContext } from "../keyboard"
+import { Router } from "../router"
 
 const keyboardManager = createKeyboardManager()
 
-export default function App(props: PropsWithChildren) {
+export default function App() {
   return (
     <KeyboardContext.Provider value={keyboardManager}>
-      {props.children}
+      <Router />
     </KeyboardContext.Provider>
   )
 }

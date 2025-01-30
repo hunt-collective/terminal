@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect } from "react"
-import type { Route } from "./router"
+import type { Route } from "textjs:routes"
 
 type KeyHandler = (event: KeyboardEvent) => boolean | void
 
@@ -16,7 +16,8 @@ export interface KeyboardManager {
   setRouteHandlers(route: Route, handlers: HandlerRegistration[]): void
   pushModalHandlers(handlers: HandlerRegistration[]): void
   popModalHandlers(): void
-  setGlobalHandlers(handlers: HandlerRegistration[]): void
+  pushGlobalHandlers(handlers: HandlerRegistration[]): void
+  popGlobalHandlers(): void
 }
 
 export const KeyboardContext = createContext<KeyboardManager | undefined>(
@@ -25,7 +26,7 @@ export const KeyboardContext = createContext<KeyboardManager | undefined>(
 
 function createManager(): KeyboardManager {
   const routeHandlers = new Map<Route, HandlerRegistration[]>()
-  const globalHandlers: HandlerRegistration[] = []
+  const globalStack: HandlerRegistration[][] = []
   const modalStack: HandlerRegistration[][] = []
   let currentRoute: Route | null = null
 
@@ -40,8 +41,7 @@ function createManager(): KeyboardManager {
         const routeHandlerList = routeHandlers.get(currentRoute)
         if (routeHandlerList) stack.push(routeHandlerList)
       }
-      if (globalHandlers.length) stack.push(globalHandlers)
-      return stack
+      return [...stack, ...globalStack]
     },
 
     handleKeyEvent(event: KeyboardEvent) {
@@ -72,6 +72,7 @@ function createManager(): KeyboardManager {
     setCurrentRoute(route: Route) {
       currentRoute = route
       modalStack.length = 0 // Clear modal stack on route change
+      globalStack.length = 0 // Clear global stack on route change
     },
 
     setRouteHandlers(route: Route, handlers: HandlerRegistration[]) {
@@ -86,9 +87,12 @@ function createManager(): KeyboardManager {
       modalStack.pop()
     },
 
-    setGlobalHandlers(handlers: HandlerRegistration[]) {
-      globalHandlers.length = 0
-      globalHandlers.push(...handlers)
+    pushGlobalHandlers(handlers: HandlerRegistration[]) {
+      globalStack.push(handlers)
+    },
+
+    popGlobalHandlers() {
+      globalStack.pop()
     },
   }
 
@@ -101,7 +105,7 @@ export function createKeyboardManager(): KeyboardManager {
   return keyboardManager
 }
 
-export function useKeyboardHandlers(
+export function useCurrentRouteHandlers(
   route: Route,
   registrations: HandlerRegistration | HandlerRegistration[],
 ) {
@@ -126,14 +130,18 @@ export function useModalHandlers(
   }, [])
 }
 
-export function useGlobalKeyboardHandlers(
+export function useGlobalHandlers(
   registrations: HandlerRegistration | HandlerRegistration[],
 ) {
   const manager = useContext(KeyboardContext)
   const handlers = Array.isArray(registrations)
     ? registrations
     : [registrations]
-  manager.setGlobalHandlers(handlers)
+  manager.pushGlobalHandlers(handlers)
+
+  useEffect(() => {
+    return () => manager.popGlobalHandlers()
+  }, [])
 }
 
 export function useKeyboardManager() {

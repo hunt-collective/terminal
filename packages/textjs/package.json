@@ -12,6 +12,8 @@
     "typescript": "5.5.4"
   },
   "dependencies": {
+    "classnames": "2.5.1",
+    "glob": "11.0.1",
     "react-reconciler": "0.31.0",
     "yoga-layout": "3.2.1"
   },
@@ -26,24 +28,51 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
-      "types": "./dist/types/index.d.ts"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./*": {
-      "import": "./dist/esm/*.js",
-      "types": "./dist/types/*.d.ts"
+      "import": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     },
+    "./types": {
+      "types": "./dist/types.d.ts"
+    },
+    "./router": {
+      "import": "./dist/router/index.js",
+      "types": "./dist/router/index.d.ts"
+    },
+    "./router/utilities": {
+      "import": "./dist/router/utilities.js",
+      "types": "./dist/router/utilities.d.ts"
+    },
+    "./router/*": "./dist/router/*",
     "./components": {
-      "import": "./dist/esm/components/index.js",
-      "types": "./dist/types/components/index.d.ts"
+      "import": "./dist/components/index.js",
+      "types": "./dist/components/index.d.ts"
     },
-    "./query": {
-      "import": "./dist/esm/hooks/use-query.js",
-      "types": "./dist/types/hooks/use-query.d.ts"
+    "./components/*": "./dist/components/*",
+    "./config": {
+      "import": "./dist/config/index.js",
+      "types": "./dist/config/index.d.ts"
     },
-    "./jsx": {
-      "import": "./dist/esm/jsx-runtime.js",
-      "types": "./dist/types/jsx-runtime.d.ts"
+    "./config/*": "./dist/config/*",
+    "./vite": {
+      "import": "./dist/vite-plugin-textjs.js",
+      "types": "./dist/vite-plugin-textjs.d.ts"
+    },
+    "./tsconfigs/*.json": "./tsconfigs/*",
+    "./tsconfigs/*": "./tsconfigs/*.json"
+  },
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "vite": [
+        "./dist/vite-plugin-textjs.d.ts"
+      ],
+      "*": [
+        "./dist/index.d.ts"
+      ]
     }
   },
   "files": [

@@ -1,4 +1,4 @@
-import type Terminal from "@terminaldotshop/sdk"
+import type Terminal from '@terminaldotshop/sdk'
 
 type CartItemQuantityProps = {
   item: Terminal.Cart.Item

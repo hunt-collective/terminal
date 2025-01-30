@@ -1,9 +1,9 @@
 import { useRouter } from '@textjs/core/router'
-import { useCart, useProducts } from '../hooks'
+import { useCart, useProducts } from '../../hooks'
 import React from 'react'
-import { Logo } from '../components/logo'
+import { Logo } from '../../components/logo'
 
-export const SplashPage = () => {
+export default function SplashPage() {
   const router = useRouter()
   const [delayed, setDelayed] = React.useState(false)
   const { isSuccess: cart } = useCart()
@@ -16,7 +16,7 @@ export const SplashPage = () => {
 
   React.useEffect(() => {
     if (!cart || !products || !delayed) return
-    router.navigate('shop')
+    router.navigate('/shop')
   }, [cart, products, delayed])
 
   return (

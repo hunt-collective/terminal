@@ -7,6 +7,7 @@ import remarkDirective from 'remark-directive'
 import { remarkAsides } from './lib/unified/asides'
 import { remarkVhs } from './lib/unified/vhs'
 import { remarkCode } from './lib/unified/code'
+import { textjsPlugin } from '@textjs/core/vite'
 
 export default defineConfig({
   integrations: [
@@ -26,18 +27,6 @@ export default defineConfig({
     '/feud': 'https://jean-types-icq-calls.trycloudflare.com',
   },
   vite: {
-    esbuild: {
-      supported: {
-        'top-level-await': true, //browsers can handle top-level-await features
-      },
-    },
-    optimizeDeps: {
-      esbuildOptions: {
-        target: 'esnext',
-      },
-    },
-    build: {
-      target: 'esnext', //browsers can handle the latest ES features
-    },
+    plugins: [textjsPlugin('./src/cui')],
   },
 })

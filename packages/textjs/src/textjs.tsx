@@ -74,8 +74,7 @@ export class Textjs {
     this.lastOutput = key
   }
 
-  render(node: ReactNode): void {
-    const tree = <App>{node}</App>
-    reconciler.updateContainer(tree, this.container, null, noop)
+  render(): void {
+    reconciler.updateContainer(<App />, this.container, null, noop)
   }
 }

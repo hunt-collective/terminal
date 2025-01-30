@@ -2,12 +2,9 @@ import { useRouter } from '@textjs/core/router'
 import React from 'react'
 import { callback, init, login } from '../auth'
 import { Logo } from '../components/logo'
-import cn from 'classnames'
-import { Button } from '../components/button'
+import { Button } from '@textjs/core/components'
 
-let pending = false
-
-export const HomePage = () => {
+export default function HomePage() {
   const router = useRouter()
   const [initialized, setInitialized] = React.useState(false)
   const [signedIn, setSignedIn] = React.useState(false)
@@ -22,33 +19,32 @@ export const HomePage = () => {
       const token = await init()
       setInitialized(true)
       setSignedIn(!!token)
-      if (token) router.navigate('splash')
+      if (token) router.navigate('/splash')
     }
 
-    if (pending) return
-    pending = true
     auth()
   }, [])
 
   return (
-    <div className="items-center justify-center size-full gap-3">
+    <div
+      key={Math.random()}
+      className="items-center justify-center size-full gap-3"
+    >
       <div
-        key={Math.random()}
-        className={cn({
+        className={{
           'h-3': true,
           hidden: !initialized || signedIn,
-        })}
+        }}
       />
       <Logo />
       <div
-        key={Math.random()}
-        className={cn({
+        className={{
           'items-center justify-center gap-1': true,
           hidden: !initialized || signedIn,
-        })}
+        }}
       >
         <span className="text-gray">sign in to the console.log shop</span>
-        <Button key="enter" onClick={login}>
+        <Button keys={['enter']} onClick={login}>
           sign in
         </Button>
       </div>

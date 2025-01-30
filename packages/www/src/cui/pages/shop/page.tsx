@@ -1,13 +1,12 @@
 import type Terminal from '@terminaldotshop/sdk'
-import { formatPrice } from '../styles'
-import { Layout } from '../layouts/base'
-import { useProducts, useCart, useUpdateCartItem } from '../hooks'
-import { CartItemQuantity } from '../components'
+import { formatPrice } from '../../styles'
+import { Layout } from '../../layouts/base'
+import { useProducts, useCart, useUpdateCartItem } from '../../hooks'
+import { CartItemQuantity } from '../../components'
 import { useRouter } from '@textjs/core/router'
-import { useKeyboardHandlers } from '@textjs/core/keyboard'
+import { useCurrentRouteHandlers } from '@textjs/core/keyboard'
 import React from 'react'
-import cn from 'classnames'
-import { Button } from '../components/button'
+import { Button } from '@textjs/core/components'
 
 function ProductSection(props: {
   title: string
@@ -30,10 +29,10 @@ function ProductSection(props: {
           }}
         >
           <span
-            className={cn({
+            className={{
               'text-gray': true,
               'text-white': props.selectedProduct?.id === product.id,
-            })}
+            }}
           >
             {product.name}
           </span>
@@ -60,14 +59,14 @@ function getHighlightColor(productName: string): string {
   }
 }
 
-export const ShopPage = () => {
+export default function ShopPage() {
   const [selectedIndex, setSelectedIndex] = React.useState(0)
   const router = useRouter()
   const { data: products } = useProducts()
   const { data: cart } = useCart()
   const { mutate: updateItem } = useUpdateCartItem()
 
-  useKeyboardHandlers('shop', [
+  useCurrentRouteHandlers('/shop', [
     {
       keys: ['ArrowDown', 'j'],
       handler: () => {
@@ -115,7 +114,7 @@ export const ShopPage = () => {
     },
     {
       keys: ['enter'],
-      handler: () => router.navigate('cart'),
+      handler: () => router.navigate('/cart'),
     },
   ])
 

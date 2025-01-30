@@ -1,5 +1,6 @@
 import { DOMElement, setStyle, TextNode } from "./dom"
 import { classNameToStyle } from "./tailwind"
+import cn from "classnames"
 import {
   Align as YogaAlign,
   BoxSizing,
@@ -220,11 +221,8 @@ export function getInheritedStyles(style: Style) {
 export const reconcileStyle = (node: DOMElement | TextNode): void => {
   const style =
     "attributes" in node ? (node.attributes?.style?.valueOf() as Style) : {}
-  const className =
-    "attributes" in node
-      ? (node.attributes?.className?.valueOf() as string)
-      : ""
-  const twStyle = className ? classNameToStyle(className) : {}
+  const className = "attributes" in node ? node.attributes?.className : ""
+  const twStyle = className ? classNameToStyle(cn(className)) : {}
   setStyle(node, { ...twStyle, ...style })
   if (node.yogaNode) applyStyles(node.yogaNode, node.style)
 }

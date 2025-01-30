@@ -13,7 +13,7 @@ export const Header = () => {
           <span>s</span>
           <span
             style={{
-              color: router?.route === 'shop' ? 'white' : 'gray',
+              color: router.route === '/shop' ? 'white' : 'gray',
             }}
           >
             shop
@@ -24,7 +24,7 @@ export const Header = () => {
           <span
             className="line-through"
             style={{
-              color: router?.route === 'account' ? 'white' : 'gray',
+              color: 'gray', // router.route === '/account' ? 'white' : 'gray',
             }}
           >
             account
@@ -34,7 +34,7 @@ export const Header = () => {
           <span>c</span>
           <span
             style={{
-              color: router?.route === 'cart' ? 'white' : 'gray',
+              color: router.route === '/cart' ? 'white' : 'gray',
             }}
           >
             cart

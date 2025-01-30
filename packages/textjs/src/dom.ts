@@ -1,6 +1,7 @@
 import Yoga, { type Node as YogaNode } from "yoga-layout"
 import { measureText, wrapText } from "./text"
 import { type Style } from "./style"
+import cn from "classnames"
 
 type TextjsNode = {
   parentNode: DOMElement | undefined
@@ -14,7 +15,10 @@ export type NodeNames = ElementNames | TextName
 
 export type DOMElement = {
   nodeName: ElementNames
-  attributes: Record<string, DOMNodeAttribute>
+  attributes: { className?: string | cn.Argument } & Record<
+    string,
+    DOMNodeAttribute
+  >
   childNodes: DOMNode[]
   onComputeLayout?: () => void
   onRender?: () => void

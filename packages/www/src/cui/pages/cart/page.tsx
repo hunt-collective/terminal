@@ -1,11 +1,10 @@
-import { useCart, useProducts, useUpdateCartItem } from '../hooks'
-import { CheckoutLayout } from '../layouts/checkout'
+import { useCart, useProducts, useUpdateCartItem } from '../../hooks'
+import { CheckoutLayout } from '../../layouts/checkout'
 import type Terminal from '@terminaldotshop/sdk'
-import { CartItemQuantity } from '../components'
-import { formatPrice } from '../styles'
+import { CartItemQuantity } from '../../components'
+import { formatPrice } from '../../styles'
 import { useRouter } from '@textjs/core/router'
-import { useKeyboardHandlers } from '@textjs/core/keyboard'
-import cn from 'classnames'
+import { useCurrentRouteHandlers } from '@textjs/core/keyboard'
 import React from 'react'
 
 interface CartItemProps {
@@ -18,12 +17,13 @@ interface CartItemProps {
 const CartItem = ({ item, product, variant, selected }: CartItemProps) => {
   return (
     <div
+      key={variant.id}
       className="border border-double"
       style={{ borderColor: selected ? 'white' : 'gray' }}
     >
       <div>
         <div className="flex justify-between">
-          <span className={cn({ 'text-white': selected })}>{product.name}</span>
+          <span className={{ 'text-white': selected }}>{product.name}</span>
           <div className="flex gap-1">
             <CartItemQuantity item={item} />
             <span className="text-gray">
@@ -37,14 +37,14 @@ const CartItem = ({ item, product, variant, selected }: CartItemProps) => {
   )
 }
 
-export const CartPage = () => {
+export default function CartPage() {
   const [selectedIndex, setSelectedIndex] = React.useState(0)
   const { data: cart } = useCart()
   const { data: products } = useProducts()
   const { navigate } = useRouter()
   const { mutate: updateItem } = useUpdateCartItem()
 
-  useKeyboardHandlers('cart', [
+  useCurrentRouteHandlers('/cart', [
     {
       keys: ['ArrowDown', 'j'],
       handler: () => {
@@ -88,11 +88,11 @@ export const CartPage = () => {
     },
     {
       keys: ['Escape'],
-      handler: () => navigate('shop'),
+      handler: () => navigate('/shop'),
     },
     {
       keys: ['Enter', 'c'],
-      handler: () => navigate('shipping'),
+      handler: () => navigate('/shipping'),
     },
   ])
 
@@ -119,7 +119,6 @@ export const CartPage = () => {
 
             return (
               <CartItem
-                key={variant.id}
                 item={item}
                 product={product}
                 variant={variant}

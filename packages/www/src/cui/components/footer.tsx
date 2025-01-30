@@ -1,24 +1,24 @@
-import { useRouter } from "@textjs/core/router"
+import { useRouter } from '@textjs/core/router'
 
 export const Footer = () => {
   const router = useRouter()
 
   let parts: { hint: string; text: string }[] = []
-  switch (router?.route) {
-    case "shop":
+  switch (router.route) {
+    case '/shop':
       parts = [
-        { hint: "↑/↓", text: "products" },
-        { hint: "+/-", text: "qty" },
-        { hint: "c", text: "cart" },
-        { hint: "q", text: "quit" },
+        { hint: '↑/↓', text: 'products' },
+        { hint: '+/-', text: 'qty' },
+        { hint: 'c', text: 'cart' },
+        { hint: 'q', text: 'quit' },
       ]
       break
-    case "cart":
+    case '/cart':
       parts = [
-        { hint: "esc", text: "back" },
-        { hint: "↑/↓", text: "items" },
-        { hint: "+/-", text: "qty" },
-        { hint: "c", text: "checkout" },
+        { hint: 'esc', text: 'back' },
+        { hint: '↑/↓', text: 'items' },
+        { hint: '+/-', text: 'qty' },
+        { hint: 'c', text: 'checkout' },
       ]
       break
   }
