@@ -9,6 +9,7 @@ import {
 import { dollar, id, ulid, timestamps } from "../drizzle/types";
 import { inventoryTable } from "../inventory/inventory.sql";
 import { SubscriptionSetting } from "../subscription/subscription";
+import { Filter } from "./filter";
 
 export const productTable = mysqlTable("product", {
   ...id,
@@ -20,6 +21,7 @@ export const productTable = mysqlTable("product", {
     length: 255,
   }).$type<SubscriptionSetting>(),
   tags: json("tags").$type<Record<string, string>>(),
+  filters: json("filters").default([]).$type<Filter[]>().notNull(),
 });
 
 export const productVariantTable = mysqlTable("product_variant", {

@@ -43,6 +43,7 @@ export module Examples {
     order: 100,
     subscription: "allowed" as const,
     tags: { featured: "true" },
+    filters: [],
   };
 
   export const CartItem = {

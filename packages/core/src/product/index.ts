@@ -12,6 +12,7 @@ import { createID } from "../util/id";
 import { SubscriptionSetting } from "../subscription/subscription";
 import { Common } from "../common";
 import { Examples } from "../examples";
+import { filter, FilterContext, useFilterContext } from "./filter";
 
 export module Product {
   export const Variant = z
@@ -66,6 +67,7 @@ export module Product {
         description: "Tags for the product.",
         example: Examples.Product.tags,
       }),
+      filters: z.array(z.union([z.literal("eu"), z.literal("na")])),
     })
     .openapi({
       ref: "Product",
@@ -92,6 +94,7 @@ export module Product {
         map(
           (group): Info => ({
             id: group[0].product.id,
+            filters: group[0].product.filters || [],
             name: group[0].product.name,
             description: group[0].product.description,
             order: group[0].product.order || undefined,
@@ -106,7 +109,7 @@ export module Product {
             tags: group[0].product.tags || undefined,
           }),
         ),
-      );
+      ).filter((item) => filter(useFilterContext(), item.filters));
       return result as Info[];
     });
 
@@ -129,6 +132,7 @@ export module Product {
             id: group[0].product.id,
             name: group[0].product.name,
             description: group[0].product.description,
+            filters: group[0].product.filters || [],
             variants: !group[0].product_variant
               ? []
               : group.map((item) => ({
@@ -153,12 +157,21 @@ export module Product {
       order: true,
       subscription: true,
       tags: true,
-    }).partial({
-      name: true,
-      description: true,
-      order: true,
-      tags: true,
-    }),
+    })
+      .partial({
+        name: true,
+        description: true,
+        order: true,
+        tags: true,
+      })
+      .merge(
+        z.object({
+          filters: z
+            .union([z.literal("eu"), z.literal("na")])
+            .array()
+            .optional(),
+        }),
+      ),
     (input) =>
       useTransaction(async (tx) => {
         await tx
@@ -169,6 +182,7 @@ export module Product {
             order: input.order,
             subscription: input.subscription || null,
             tags: input.tags || null,
+            filters: input.filters,
           })
           .where(eq(productTable.id, input.id));
       }),

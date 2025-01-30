@@ -20,6 +20,7 @@ import {
 } from "drizzle-orm";
 import { cartItemTable, cartTable } from "../cart/cart.sql";
 import {
+  productTable,
   productVariantInventoryTable,
   productVariantTable,
 } from "../product/product.sql";
@@ -41,6 +42,7 @@ import { Address } from "../address";
 import { addressTable } from "../address/address.sql";
 import { Product } from "../product";
 import { Cart } from "../cart";
+import { filter, useFilterContext } from "../product/filter";
 
 export module Order {
   export const Item = z
@@ -226,6 +228,7 @@ export module Order {
       const items = await tx
         .select({
           productVariantID: cartItemTable.productVariantID,
+          filters: productTable.filters,
           quantity: cartItemTable.quantity,
           subtotal: sql`(${cartItemTable.quantity} * ${productVariantTable.price})`,
         })
@@ -233,6 +236,10 @@ export module Order {
         .innerJoin(
           productVariantTable,
           eq(cartItemTable.productVariantID, productVariantTable.id),
+        )
+        .innerJoin(
+          productTable,
+          eq(productVariantTable.productID, productTable.id),
         )
         .where(eq(cartItemTable.userID, userID))
         .then((rows) =>
@@ -260,6 +267,15 @@ export module Order {
       return { items, cart };
     });
     if (!cart) throw new Error("No cart found");
+    const filterCtx = {
+      ...useFilterContext(),
+      region: undefined,
+      country: cart.shipping.country,
+    };
+    for (const item of items) {
+      if (!filter(filterCtx, item.filters))
+        throw new Error("This product cannot be purchased.");
+    }
     const orderID = createID("order");
     const subtotal = items.reduce((acc, item) => acc + item.subtotal, 0);
     const shipping = cart.shippingAmount;
@@ -364,14 +380,20 @@ export module Order {
       const items = await useTransaction(async (tx) =>
         tx
           .select({
+            filters: productTable.filters,
             id: productVariantTable.id,
             price: productVariantTable.price,
           })
           .from(productVariantTable)
           .where(inArray(productVariantTable.id, Object.keys(input.variants)))
+          .innerJoin(
+            productTable,
+            eq(productVariantTable.productID, productTable.id),
+          )
           .then((rows) =>
             rows.map((row) => ({
               id: row.id,
+              filters: row.filters,
               price: row.price * (input.variants[row.id] ?? 0),
               quantity: input.variants[row.id] ?? 0,
               weight:
@@ -380,6 +402,16 @@ export module Order {
             })),
           ),
       );
+
+      const filterCtx = {
+        ...useFilterContext(),
+        region: undefined,
+        country: match.shipping.country,
+      };
+      for (const item of items) {
+        if (!filter(filterCtx, item.filters))
+          throw new Error("This product cannot be purchased.");
+      }
 
       const subtotal = items.reduce((acc, item) => acc + item.price, 0);
       const weight = items.reduce((acc, item) => acc + item.weight, 0);

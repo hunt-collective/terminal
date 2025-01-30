@@ -2,6 +2,7 @@ import { Action, Page, io, ctx, Layout } from "@forgeapp/sdk";
 import { eq } from "@terminal/core/drizzle/index";
 import { useTransaction } from "@terminal/core/drizzle/transaction";
 import { inventoryTable } from "@terminal/core/inventory/inventory.sql";
+import { Filter, Filters } from "@terminal/core/product/filter";
 import { Product } from "@terminal/core/product/index";
 import { productVariantInventoryTable } from "@terminal/core/product/product.sql";
 
@@ -161,7 +162,7 @@ export default new Page({
       unlisted: true,
       async handler() {
         const product = await selectProduct();
-        const [name, description, order, subscription, featured] =
+        const [name, description, order, subscription, featured, filters] =
           await io.group([
             io.input.text("name", {
               defaultValue: product.name,
@@ -180,12 +181,21 @@ export default new Page({
             io.input.boolean("featured", {
               defaultValue: product.tags?.["featured"] === "true" || false,
             }),
+            io.select.multiple("filters", {
+              options: Object.keys(Filters).map((key) => ({
+                label: key,
+                value: key,
+              })),
+              defaultValue: product.filters,
+            }),
           ]);
+        console.log(filters);
         await Product.edit({
           id: product.id,
           name,
           description,
           order,
+          filters: filters.map((item) => item.value as Filter),
           subscription:
             subscription === "none" ? undefined : (subscription as any),
           tags: { ...product.tags, featured: featured ? "true" : "false" },

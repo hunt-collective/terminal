@@ -24,11 +24,13 @@ import { ProfileApi } from "./profile";
 import { ViewApi } from "./view";
 import { AppApi } from "./app";
 import { TokenApi } from "./token";
+import { FilterContext } from "@terminal/core/product/filter";
 
 const client = createClient({
   clientID: "api",
   issuer: Resource.Auth.url,
 });
+
 const auth: MiddlewareHandler = async (c, next) => {
   const authHeader =
     c.req.query("authorization") ?? c.req.header("authorization");
@@ -85,13 +87,24 @@ const auth: MiddlewareHandler = async (c, next) => {
   return ActorContext.with({ type: "public", properties: {} }, next);
 };
 
+const filter: MiddlewareHandler = async (c, next) => {
+  return FilterContext.with(
+    {
+      region: c.req.header("x-terminal-region") as any,
+      country: c.req.header("x-terminal-country"),
+    },
+    next,
+  );
+};
+
 const app = new Hono();
 app
   .use(logger(), async (c, next) => {
     c.header("Cache-Control", "no-store");
     return next();
   })
-  .use(auth);
+  .use(auth)
+  .use(filter);
 
 const routes = app
   .route("/product", ProductApi.route)

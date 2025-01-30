@@ -176,6 +176,13 @@
       "when": 1734225766959,
       "tag": "0024_even_rattler",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1738270038581,
+      "tag": "0025_chunky_maximus",
+      "breakpoints": true
     }
   ]
 }
