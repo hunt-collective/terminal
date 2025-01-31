@@ -1,12 +1,12 @@
 FROM mirror.gcr.io/tsl0922/ttyd:alpine as ttyd
 
-FROM golang:alpine AS terminal
+FROM mirror.gcr.io/golang:alpine AS terminal
 WORKDIR /app
 COPY packages/go/. .
 RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux go build -o terminal ./cmd/cli/main.go
 
-FROM oven/bun:1.1.40
+FROM mirror.gcr.io/oven/bun:1.1.40
 WORKDIR /app
 RUN mkdir packages
 COPY package.json ./
