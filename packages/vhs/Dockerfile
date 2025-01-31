@@ -1,4 +1,4 @@
-FROM tsl0922/ttyd:alpine as ttyd
+FROM mirror.gcr.io/tsl0922/ttyd:alpine as ttyd
 
 FROM golang:alpine AS terminal
 WORKDIR /app
