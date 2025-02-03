@@ -33,7 +33,7 @@ cluster.addService("SSH", {
             name: domain,
             dns: sst.cloudflare.dns(),
           },
-    ports: [
+    rules: [
       { listen: "22/tcp", forward: "2222/tcp" },
       { listen: "80/tcp", forward: "8000/tcp" },
     ],
