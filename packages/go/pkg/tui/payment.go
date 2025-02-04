@@ -459,25 +459,20 @@ func (m model) paymentFormView() string {
 }
 
 func (m model) paymentCostsView() string {
-	if m.IsSubscribing() {
-		price := m.state.subscribe.product.Variants[m.state.subscribe.selected].Price
-		view := strings.Builder{}
-		view.WriteString(fmt.Sprintf("Subtotal: %s", formatUSD(int(price))) + ", ")
-		view.WriteString(fmt.Sprintf("Shipping: %s", formatUSD(int(0))) + ", ")
-		view.WriteString(
-			m.theme.TextAccent().
-				Render(fmt.Sprintf("Total: %s", formatUSD(int(price)))),
-		)
+	view := strings.Builder{}
+	price := m.cart.Amount.Subtotal
+	shipping := m.cart.Amount.Shipping
 
-		return view.String()
+	if m.IsSubscribing() {
+		price = m.state.subscribe.product.Variants[m.state.subscribe.selected].Price
+		shipping = 0
 	}
 
-	view := strings.Builder{}
-	view.WriteString(fmt.Sprintf("Subtotal: %s", formatUSD(int(m.cart.Amount.Subtotal))) + "\n")
-	view.WriteString(fmt.Sprintf("Shipping: %s", formatUSD(int(m.cart.Amount.Shipping))) + "\n")
+	view.WriteString(fmt.Sprintf("Subtotal: %s", formatUSD(int(price))) + ", ")
+	view.WriteString(fmt.Sprintf("Shipping: %s", formatUSD(int(shipping))) + ", ")
 	view.WriteString(
 		m.theme.TextAccent().
-			Render(fmt.Sprintf("Total:    %s", formatUSD(int(m.cart.Amount.Subtotal+m.cart.Amount.Shipping)))),
+			Render(fmt.Sprintf("Total: %s", formatUSD(int(price+shipping)))),
 	)
 
 	return view.String()
