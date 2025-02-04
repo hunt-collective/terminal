@@ -26,8 +26,5 @@
   },
   "devDependencies": {
     "typescript": "5.5.4"
-  },
-  "patchedDependencies": {
-    "hono-openapi@0.2.1": "patches/hono-openapi@0.2.1.patch"
   }
 }
