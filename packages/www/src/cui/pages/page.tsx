@@ -44,7 +44,7 @@ export default function HomePage() {
         }}
       >
         <span className="text-gray">sign in to the console.log shop</span>
-        <Button keys={['enter']} onClick={login}>
+        <Button trigger="enter" color="#FF5C00" onClick={login}>
           sign in
         </Button>
       </div>

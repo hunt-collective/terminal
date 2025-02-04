@@ -3,6 +3,7 @@ import '@styles/global.css'
 // import Banner from '@components/banner.astro'
 import Button from '@components/button.astro'
 import { Resource } from 'sst'
+import TextJS from '../cui/components/textjs'
 
 const title = 'wip: terminal (initial commit)'
 const description =
@@ -277,7 +278,8 @@ if (current) current.active = true
         </main>
       )
     }
+    <TextJS client:only="react" />
   </body>
 </html>
 
-<script src="../cui/main.tsx"></script>
+<script src="@textjs/core/main"></script>

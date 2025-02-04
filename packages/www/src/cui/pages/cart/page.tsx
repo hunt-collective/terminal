@@ -119,6 +119,8 @@ export default function CartPage() {
 
             return (
               <CartItem
+                // @ts-expect-error
+                key={item.id}
                 item={item}
                 product={product}
                 variant={variant}

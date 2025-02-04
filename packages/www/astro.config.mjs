@@ -7,7 +7,8 @@ import remarkDirective from 'remark-directive'
 import { remarkAsides } from './lib/unified/asides'
 import { remarkVhs } from './lib/unified/vhs'
 import { remarkCode } from './lib/unified/code'
-import { textjsPlugin } from '@textjs/core/vite'
+import textjs from '@textjs/core/vite'
+import react from '@astrojs/react'
 
 export default defineConfig({
   integrations: [
@@ -18,6 +19,7 @@ export default defineConfig({
     }),
     tailwind({ applyBaseStyles: false }),
     solid({ exclude: '**/cui/**/*' }),
+    react({ include: '**/cui/**/*' }),
   ],
   server: { host: true },
   adapter: aws(),
@@ -27,6 +29,6 @@ export default defineConfig({
     '/feud': 'https://jean-types-icq-calls.trycloudflare.com',
   },
   vite: {
-    plugins: [textjsPlugin('./src/cui')],
+    plugins: [textjs('./src/cui')],
   },
 })

@@ -163,7 +163,12 @@ export default function ShopPage() {
               </span>
               <span className="text-gray">{selectedProduct.description}</span>
               {selectedProduct.subscription === 'required' ? (
-                <Button onClick={() => console.warn('clicked')}>
+                <Button
+                  trigger="enter"
+                  hintType="after"
+                  color={highlightColor}
+                  onClick={() => console.warn('clicked')}
+                >
                   subscribe
                 </Button>
               ) : (
